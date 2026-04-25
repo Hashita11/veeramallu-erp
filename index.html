@@ -97,7 +97,7 @@
         getLocation((lat, lon) => {
             let c = document.getElementById("campus").value;
             let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d >500) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
+            if(d >20000) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
 
             db.collection("attendance").add({
                 teacher: firebase.auth().currentUser.email,
@@ -113,7 +113,7 @@
         getLocation((lat, lon) => {
             let c = document.getElementById("campus").value;
             let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d > 500) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
+            if(d > 20000) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
 
             db.collection("attendance").add({
                 teacher: firebase.auth().currentUser.email,
