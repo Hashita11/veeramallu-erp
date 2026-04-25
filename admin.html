@@ -1,29 +1,66 @@
-
 <!DOCTYPE html>
 <html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Veeramallu ERP - Admin</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; background-color: #f4f4f9; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 14px; }
+        th { background-color: #007bff; color: white; }
+        h2 { color: #333; }
+    </style>
+</head>
 <body>
 
-<h2>Admin Dashboard</h2>
-<button onclick="load()">Load Attendance</button>
-<pre id="data"></pre>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+<div class="container">
+    <h2>Admin Dashboard</h2>
+    <h3>Attendance Logs</h3>
+    <table id="attendance-table">
+        <thead>
+            <tr>
+                <th>Teacher</th>
+                <th>Campus</th>
+                <th>Action</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody id="logs-body">
+            </tbody>
+    </table>
+</div>
 
 <script>
-firebase.initializeApp(YOUR_CONFIG);
-const db = firebase.firestore();
+  const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
+    messagingSenderId: "379339569496",
+    appId: "1:379339569496:web:5c2bec87e35b7190d6350d"
+  };
 
-function load(){
-db.collection("attendance").get().then(snapshot=>{
-let out="";
-snapshot.forEach(doc=>{
-out+=JSON.stringify(doc.data())+"\n";
-});
-data.innerText=out;
-});
-}
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // Fetch logs sorted by newest first
+  db.collection("attendance").orderBy("timestamp", "desc").onSnapshot((querySnapshot) => {
+    const tbody = document.getElementById("logs-body");
+    tbody.innerHTML = ""; // Clear table
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const row = `<tr>
+        <td>${data.email}</td>
+        <td>${data.campus}</td>
+        <td>${data.type}</td>
+        <td>${data.timestamp.toDate().toLocaleString()}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  });
 </script>
-
 </body>
 </html>
