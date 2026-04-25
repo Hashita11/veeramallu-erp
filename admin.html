@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Admin Dashboard</h2>
+<button onclick="load()">Load Attendance</button>
+<pre id="data"></pre>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+
+<script>
+firebase.initializeApp(YOUR_CONFIG);
+const db = firebase.firestore();
+
+function load(){
+db.collection("attendance").get().then(snapshot=>{
+let out="";
+snapshot.forEach(doc=>{
+out+=JSON.stringify(doc.data())+"\n";
+});
+data.innerText=out;
+});
+}
+</script>
+
+</body>
+</html>
