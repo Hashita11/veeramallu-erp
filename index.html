@@ -69,10 +69,10 @@
 
     // 📍 UPDATE THESE TO YOUR ACTUAL CAMPUS COORDINATES
     const campuses = {
-        Velpur: {lat: 16.6967, lon: 81.7041},
-        Relangi: {lat: 16.7111, lon: 81.7222},
-        Undrajavaram: {lat: 16.7455, lon: 81.6788}
-    };
+    Velpur: {lat: 16.7172, lon: 81.6671}, // Updated for PM96+XW3
+    Relangi: {lat: 16.7111, lon: 81.7222},
+    Undrajavaram: {lat: 16.7455, lon: 81.6788}
+};
 
     function distance(lat1, lon1, lat2, lon2){
         let R = 6371;
@@ -97,7 +97,7 @@
         getLocation((lat, lon) => {
             let c = document.getElementById("campus").value;
             let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d > 300) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
+            if(d >500) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
 
             db.collection("attendance").add({
                 teacher: firebase.auth().currentUser.email,
@@ -113,7 +113,7 @@
         getLocation((lat, lon) => {
             let c = document.getElementById("campus").value;
             let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d > 300) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
+            if(d > 500) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
 
             db.collection("attendance").add({
                 teacher: firebase.auth().currentUser.email,
