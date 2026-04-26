@@ -2,56 +2,73 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Veeramallu School ERP</title>
+    <title>VGA - Teacher Panel</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
     <style>
-        body { font-family: Arial; text-align:center; background-color: #f4f4f9; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
-        input, select, button { padding:12px; margin:10px; width:250px; border-radius: 5px; border: 1px solid #ccc; }
-        button { background-color: #007bff; color: white; font-weight: bold; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        
+        .main-container { background: #ffffff; width: 100%; max-width: 450px; border-radius: 20px; padding: 25px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); margin-top: 15px; box-sizing: border-box; text-align: center; }
+        
+        /* Official VGA Header Section */
+        .header-section { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .academy-logo { width: 100px; height: auto; margin-bottom: 12px; }
+        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .panel-title { font-size: 16px; color: #d32f2f; margin-top: 5px; font-weight: 600; }
+
+        /* Inputs & Buttons */
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; outline: none; }
+        
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; transition: 0.3s; color: white; }
+        .btn-login { background-color: #007bff; }
+        .btn-in { background-color: #28a745; } /* Green for IN */
+        .btn-out { background-color: #1a237e; } /* Navy for OUT */
+
+        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 
 <body>
-<div class="container">
-    <h2>Veeramallu Global Academy</h2>
+
+<div class="main-container">
+    <div class="header-section">
+        <img src="logo.png" alt="VGA Logo" class="academy-logo">
+        <h1 class="academy-name">Veeramallu Global Academy</h1>
+        <h2 class="panel-title" id="panel-label">School ERP Login</h2>
+    </div>
 
     <div id="login-div">
-        <input id="email" placeholder="Email"><br>
+        <input id="email" placeholder="Email Address"><br>
         <input id="password" type="password" placeholder="Password"><br>
-        <button onclick="login()">Login</button>
+        <button class="btn btn-login" onclick="login()">Login to Panel</button>
     </div>
 
     <div id="app" style="display:none;">
-        <h3>Teacher Panel</h3>
         <select id="campus">
-            <option value="Velpur">Velpur</option>
-            <option value="Relangi">Relangi</option>
-            <option value="Undrajavaram">Undrajavaram</option>
+            <option value="Velpur">Velpur Campus</option>
+            <option value="Relangi">Relangi Campus</option>
+            <option value="Undrajavaram">Undrajavaram Campus</option>
         </select><br>
 
-        <button onclick="checkIn()">Check IN</button>
-        <button onclick="checkOut()">Check OUT</button>
+        <button class="btn btn-in" onclick="checkIn()">Check IN</button>
+        <button class="btn btn-out" onclick="checkOut()">Check OUT</button>
         <p id="msg"></p>
     </div>
 </div>
 
 <script>
-    // 🔥 PASTE YOUR SAVED CONFIG HERE
-          const firebaseConfig = {
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
-    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-    projectId: "veeramalluerp-6cac5",
-    storageBucket: "veeramalluerp-6cac5.appspot.com",
-    messagingSenderId: "379339569496",
-    appId: "1:379339569496:web:5c2bec87e35b7190d6350d"
-  };
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339569496",
+        appId: "1:379339569496:web:5c2becb87e35b7190d6350d"
+    };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -63,16 +80,16 @@
         .then(()=>{
             document.getElementById("login-div").style.display="none";
             document.getElementById("app").style.display="block";
+            document.getElementById("panel-label").innerText = "Teacher Attendance Panel";
         })
         .catch(err => alert("Login Failed: " + err.message));
     }
 
-    // 📍 UPDATE THESE TO YOUR ACTUAL CAMPUS COORDINATES
     const campuses = {
-    Velpur: {lat: 16.7172, lon: 81.6671}, // Updated for PM96+XW3
-    Relangi: {lat: 16.7111, lon: 81.7222},
-    Undrajavaram: {lat: 16.7455, lon: 81.6788}
-};
+        Velpur: {lat: 16.7172, lon: 81.6671},
+        Relangi: {lat: 16.7111, lon: 81.7222},
+        Undrajavaram: {lat: 16.7455, lon: 81.6788}
+    };
 
     function distance(lat1, lon1, lat2, lon2){
         let R = 6371;
@@ -86,74 +103,79 @@
     }
 
     function getLocation(callback){
+        document.getElementById("msg").innerText = "⏳ Checking Location...";
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(pos => {
                 callback(pos.coords.latitude, pos.coords.longitude);
-            }, err => alert("Please enable GPS/Location"));
+            }, err => {
+                alert("Please enable GPS/Location");
+                document.getElementById("msg").innerText = "❌ GPS Error";
+            });
         }
     }
-function checkIn() {
-    getLocation((lat, lon) => {
-        let c = document.getElementById("campus").value;
-        let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-        if (d > 20000) { document.getElementById("msg").innerText = "❌ Outside Campus"; return; }
 
-        db.collection("attendance").add({
-            teacher: firebase.auth().currentUser.email,
-            type: "IN",
-            campus: c,
-            time: firebase.firestore.FieldValue.serverTimestamp(),
-            lat, lon
-        }).then(() => {
-            document.getElementById("msg").innerText = "✅ Checked IN";
-            
-            // Sends data to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbymgNCA5beIqL1tQrrOQJCyECQqE8qHtNY3SdMFZiH3SbIODydfJg_ZVcf6mS7n9eEQ/exec',{
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({
-                    teacher: firebase.auth().currentUser.email,
-                    type: "IN",
-                    campus: c,
-                    lat: lat,
-                    lon: lon
-                })
+    function checkIn() {
+        getLocation((lat, lon) => {
+            let c = document.getElementById("campus").value;
+            let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
+            if (d > 200) { // Standard 200m geofence
+                document.getElementById("msg").innerText = "❌ Outside Campus (" + Math.round(d) + "m)"; 
+                return; 
+            }
+
+            const timeNow = new Date().toLocaleString('en-IN');
+
+            db.collection("attendance").add({
+                teacher: firebase.auth().currentUser.email,
+                type: "IN",
+                campus: c,
+                time: timeNow,
+                lat, lon
+            }).then(() => {
+                document.getElementById("msg").innerHTML = "<span style='color:green'>✅ Checked IN Success</span>";
+                sendToGoogleSheet("IN", c, lat, lon);
             });
         });
-    });
-}
+    }
 
-function checkOut() {
-    getLocation((lat, lon) => {
-        let c = document.getElementById("campus").value;
-        let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-        if (d > 20000) { document.getElementById("msg").innerText = "❌ Outside Campus"; return; }
+    function checkOut() {
+        getLocation((lat, lon) => {
+            let c = document.getElementById("campus").value;
+            let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
+            if (d > 200) { 
+                document.getElementById("msg").innerText = "❌ Outside Campus (" + Math.round(d) + "m)"; 
+                return; 
+            }
 
-        db.collection("attendance").add({
-            teacher: firebase.auth().currentUser.email,
-            type: "OUT",
-            campus: c,
-            time: firebase.firestore.FieldValue.serverTimestamp(),
-            lat, lon
-        }).then(() => {
-            document.getElementById("msg").innerText = "✅ Checked OUT";
-            
-            // Sends data to Google Sheet
-            fetch('https://script.google.com/macros/s/AKfycbymgNCA5beIqL1tQrrOQJCyECQqE8qHtNY3SdMFZiH3SbIODydfJg_ZVcf6mS7n9eEQ/exec',{
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({
-                    teacher: firebase.auth().currentUser.email,
-                    type: "OUT",
-                    campus: c,
-                    lat: lat,
-                    lon: lon
-                })
+            const timeNow = new Date().toLocaleString('en-IN');
+
+            db.collection("attendance").add({
+                teacher: firebase.auth().currentUser.email,
+                type: "OUT",
+                campus: c,
+                time: timeNow,
+                lat, lon
+            }).then(() => {
+                document.getElementById("msg").innerHTML = "<span style='color:navy'>✅ Checked OUT Success</span>";
+                sendToGoogleSheet("OUT", c, lat, lon);
             });
         });
-    });
-}
+    }
 
+    function sendToGoogleSheet(type, campus, lat, lon) {
+        fetch('https://script.google.com/macros/s/AKfycbymgNCA5beIqL1tQrrOQJCyECQqE8qHtNY3SdMFZiH3SbIODydfJg_ZVcf6mS7n9eEQ/exec',{
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({
+                teacher: firebase.auth().currentUser.email,
+                type: type,
+                campus: campus,
+                lat: lat,
+                lon: lon
+            })
+        });
+    }
 </script>
 </body>
 </html>
+
