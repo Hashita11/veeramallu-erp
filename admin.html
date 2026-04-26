@@ -3,46 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Office Admin Dashboard</title>
+    <title>VGA Admin - Full Office Console</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .main-container { background: #ffffff; width: 100%; max-width: 550px; border-radius: 15px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
+        .main-container { background: #ffffff; width: 100%; max-width: 600px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
         
-        .header-section { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .academy-logo { width: 80px; height: auto; }
-        .academy-name { font-size: 18px; color: #1a237e; margin: 5px 0; font-weight: 800; text-transform: uppercase; }
-        .panel-title { font-size: 14px; color: #d32f2f; margin: 0; font-weight: 600; }
+        .header-section { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .academy-logo { width: 80px; height: auto; margin-bottom: 10px; }
+        .academy-name { font-size: 18px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; }
+        .panel-title { font-size: 14px; color: #d32f2f; margin-top: 5px; font-weight: 600; }
 
-        /* 1. Manual Entry Console Styling */
-        .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 12px; margin-bottom: 15px; text-align: left; }
+        /* Manual Entry Box (For Basic Phones) */
+        .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left; }
         .console-title { font-size: 12px; font-weight: bold; color: #f57f17; display: block; margin-bottom: 10px; text-transform: uppercase; }
         
-        /* 2. Filters Section Styling */
-        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Filters Section */
+        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         
-        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 3px; }
-        select, input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px; box-sizing: border-box; }
+        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
 
-        .btn-row { display: flex; gap: 8px; margin-top: 10px; }
-        .btn { flex: 1; padding: 10px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
         .btn-office-in { background: #28a745; }
         .btn-office-out { background: #1a237e; }
-        .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; padding: 12px; }
+        .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; padding: 15px; font-size: 16px; }
 
         /* Table Styling */
-        .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; }
+        .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        thead th { background-color: #007bff; color: white; padding: 10px 2px; font-size: 11px; }
-        td { padding: 10px 2px; border: 1px solid #eee; font-size: 10px; text-align: center; word-wrap: break-word; }
+        thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 12px; }
+        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10.5px; text-align: center; word-wrap: break-word; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         .manual-row { background-color: #fffde7 !important; }
 
-        .report-box { background: #fafafa; border: 1px solid #ddd; padding: 12px; border-radius: 10px; margin-top: 15px; display: none; text-align: left; }
-        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 11px; }
+        /* Report Output */
+        .report-box { background: #fdfdfd; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; text-align: left; display: none; margin-top: 10px; }
+        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 12px; color: #333; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -51,15 +52,15 @@
     <div class="header-section">
         <img src="logo.png" alt="VGA Logo" class="academy-logo">
         <h1 class="academy-name">Veeramallu Global Academy</h1>
-        <h2 class="panel-title">Office Admin Dashboard</h2>
+        <h2 class="panel-title">Office Admin Console</h2>
     </div>
 
     <div class="manual-console">
-        <span class="console-title">📍 Manual Entry (Office Log)</span>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <span class="console-title">📍 Manual Entry (Basic Phones)</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
                 <label>Teacher Email</label>
-                <input type="text" id="m-teacher" placeholder="e.g. teacher1@gmail.com">
+                <input type="text" id="m-teacher" placeholder="e.g. name@gmail.com">
             </div>
             <div>
                 <label>Campus</label>
@@ -79,11 +80,11 @@
     <div class="filter-section">
         <div class="filter-group">
             <label>Filter Teacher</label>
-            <input type="text" id="f-teacher" placeholder="All Teachers" oninput="refreshUI()">
+            <input type="text" id="f-teacher" placeholder="All Teachers" oninput="refreshTable()">
         </div>
         <div class="filter-group">
             <label>Filter Campus</label>
-            <select id="f-campus" onchange="refreshUI()">
+            <select id="f-campus" onchange="refreshTable()">
                 <option value="All">All Campuses</option>
                 <option value="Velpur">Velpur</option>
                 <option value="Relangi">Relangi</option>
@@ -92,11 +93,11 @@
         </div>
         <div class="filter-group">
             <label>From Date</label>
-            <input type="date" id="f-start" onchange="refreshUI()">
+            <input type="date" id="f-start" onchange="refreshTable()">
         </div>
         <div class="filter-group">
             <label>To Date</label>
-            <input type="date" id="f-end" onchange="refreshUI()">
+            <input type="date" id="f-end" onchange="refreshTable()">
         </div>
     </div>
     
@@ -110,17 +111,21 @@
                     <th style="width: 25%;">Time</th>
                 </tr>
             </thead>
-            <tbody id="attendance-list"></tbody>
+            <tbody id="attendance-list">
+                <tr><td colspan="4">Syncing...</td></tr>
+            </tbody>
         </table>
     </div>
 
     <button class="btn btn-report" onclick="runSalaryReport()">Generate Salary Cut Report</button>
     <div id="report-container" class="report-box">
+        <h3 style="margin:0 0 10px 0; color:#1a237e; border-bottom:1px solid #ddd; font-size: 14px;">Monthly Deduction Summary</h3>
         <pre id="report-content"></pre>
     </div>
 </div>
 
 <script>
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -132,7 +137,9 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const holidays = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
+    // Date Helper: Converts "26/04/2026, 10:17:51" into JS Date
     function parseVgaDate(str) {
         if (!str || typeof str !== 'string') return null;
         const [datePart] = str.split(',');
@@ -140,27 +147,27 @@
         return new Date(y, m - 1, d);
     }
 
-    // 1. Save Manual Entry
+    // A. MANUAL LOGGING
     function saveManual(type) {
         const teacher = document.getElementById('m-teacher').value;
         const campus = document.getElementById('m-campus').value;
         const timeNow = new Date().toLocaleString('en-IN');
-        if(!teacher) return alert("Enter Teacher Email");
+        if(!teacher) return alert("Please enter Teacher Email");
 
         db.collection("attendance").add({
             teacher: teacher,
             campus: campus,
             type: type,
             time: timeNow,
-            entryMode: "Manual"
+            method: "Manual"
         }).then(() => {
-            alert("Entry Saved");
+            alert("Office Entry Saved!");
             document.getElementById('m-teacher').value = "";
         });
     }
 
-    // 2. Real-time Filtered Logs
-    function refreshUI() {
+    // B. REAL-TIME TABLE UPDATE (WITH FILTERS)
+    function refreshTable() {
         const tSearch = document.getElementById('f-teacher').value.toLowerCase();
         const cSearch = document.getElementById('f-campus').value;
         const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
@@ -172,115 +179,100 @@
             snapshot.forEach((doc) => {
                 const d = doc.data();
                 const logDate = parseVgaDate(d.time);
+                
+                // Filter Checks
                 if (tSearch && !(d.teacher||"").toLowerCase().includes(tSearch)) return;
                 if (cSearch !== "All" && d.campus !== cSearch) return;
                 if (start && logDate < start) return;
                 if (end && logDate > end) return;
 
+                const rowClass = d.method === "Manual" ? "manual-row" : "";
                 list.innerHTML += `
-                    <tr class="${d.entryMode==='Manual'?'manual-row':''}">
+                    <tr class="${rowClass}">
                         <td style="text-align:left; padding-left:5px;">${d.teacher}</td>
                         <td>${d.campus}</td>
                         <td style="color:${d.type==='IN'?'green':'red'}; font-weight:bold;">${d.type}</td>
                         <td style="font-size:9px;">${d.time}</td>
                     </tr>`;
             });
+            if(list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No matching logs.</td></tr>";
         });
     }
 
-    // 3. FULL SALARY & DEDUCTION REPORT
-    const holidays = ["2026-01-26", "2026-08-15", "2026-10-02"];
-function runSalaryReport() {
-    const tSearch = document.getElementById('f-teacher').value.toLowerCase();
-    const startDate = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
-    const endDate = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
+    // C. FINAL SALARY REPORT LOGIC
+    function runSalaryReport() {
+        const tSearch = document.getElementById('f-teacher').value.toLowerCase();
+        const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
+        const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
 
-    let dataMap = {};
-    let allDatesInRange = new Set();
+        let dataMap = {};
+        let allDatesInRange = new Set();
 
-    db.collection("attendance").get().then(snapshot => {
-        snapshot.forEach(doc => {
-            const d = doc.data();
-            const teacher = d.teacher || "Unknown";
-            const logDate = parseVgaDate(d.time); // Uses the helper function we wrote
-            
-            if (!logDate) return;
+        db.collection("attendance").get().then(snapshot => {
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const teacher = d.teacher || "Unknown";
+                const logDate = parseVgaDate(d.time);
+                if (!logDate) return;
 
-            // Apply Filters (Teacher & Date Range)
-            if (tSearch && !teacher.toLowerCase().includes(tSearch)) return;
-            if (startDate && logDate < startDate) return;
-            if (endDate && logDate > endDate) return;
+                // Filter logic
+                if (tSearch && !teacher.toLowerCase().includes(tSearch)) return;
+                if (start && logDate < start) return;
+                if (end && logDate > end) return;
 
-            const dateKey = logDate.toISOString().split('T')[0];
-            allDatesInRange.add(dateKey);
+                const dateKey = logDate.toISOString().split('T')[0];
+                allDatesInRange.add(dateKey);
 
-            if (!dataMap[teacher]) {
-                dataMap[teacher] = { 
-                    presentDates: new Set(), 
-                    lateCount: 0 
-                };
-            }
-
-            dataMap[teacher].presentDates.add(dateKey);
-            
-            // If the record was marked as late in the app
-            if (d.late === true) {
-                dataMap[teacher].lateCount++;
-            }
-        });
-
-        let sortedDates = Array.from(allDatesInRange).sort();
-        let output = "";
-
-        for (let teacher in dataMap) {
-            let present = dataMap[teacher].presentDates.size;
-            let late = dataMap[teacher].lateCount;
-            let absentCount = 0;
-            let holidayLoss = 0;
-
-            // Logic for Absents and Sandwich Rule
-            sortedDates.forEach((date, i) => {
-                const prev = sortedDates[i - 1];
-                const next = sortedDates[i + 1];
-
-                if (holidays.includes(date)) {
-                    // Sandwich Rule: Absent before OR after a holiday = Holiday Pay Cut
-                    let beforeAbsent = prev && !dataMap[teacher].presentDates.has(prev);
-                    let afterAbsent = next && !dataMap[teacher].presentDates.has(next);
-                    if (beforeAbsent || afterAbsent) holidayLoss++;
-                } else {
-                    if (!dataMap[teacher].presentDates.has(date)) {
-                        absentCount++;
-                    }
+                if (!dataMap[teacher]) {
+                    dataMap[teacher] = { presentDays: new Set(), lateCount: 0 };
                 }
+                dataMap[teacher].presentDays.add(dateKey);
+                if (d.late === true) dataMap[teacher].lateCount++;
             });
 
-            // VBA Calculation Rules
-            let lateCuts = Math.floor(late / 3); // 3 Late = 1 Day Cut
-            let absentCuts = absentCount * 2;   // 1 Absent = 2 Days Cut
-            let totalCuts = lateCuts + absentCuts + holidayLoss;
+            let sortedDates = Array.from(allDatesInRange).sort();
+            let output = "";
 
-            output += `TEACHER: ${teacher}\n`;
-            output += `----------------------------------\n`;
-            output += `Present: ${present} Days\n`;
-            output += `Late:    ${late} (Cuts: ${lateCuts})\n`;
-            output += `Absent:  ${absentCount} (Cuts: ${absentCuts})\n`;
-            output += `Sandwich Loss: ${holidayLoss} Days\n`;
-            output += `----------------------------------\n`;
-            output += `TOTAL DEDUCTION: ${totalCuts} DAYS\n\n\n`;
-        }
+            for (let teacher in dataMap) {
+                let present = dataMap[teacher].presentDays.size;
+                let late = dataMap[teacher].lateCount;
+                let absent = 0;
+                let sandwich = 0;
 
-        const container = document.getElementById('report-container');
-        const content = document.getElementById('report-content');
-        
-        container.style.display = "block";
-        content.innerText = output || "No records found for the selected filters.";
-    }).catch(err => {
-        console.error("Report Error: ", err);
-        alert("Failed to generate report. Check console.");
-    });
-}
+                sortedDates.forEach((date, i) => {
+                    const prev = sortedDates[i-1];
+                    const next = sortedDates[i+1];
 
+                    if (holidays.includes(date)) {
+                        let bAbs = prev && !dataMap[teacher].presentDays.has(prev);
+                        let aAbs = next && !dataMap[teacher].presentDays.has(next);
+                        if (bAbs || aAbs) sandwich++;
+                    } else {
+                        if (!dataMap[teacher].presentDays.has(date)) absent++;
+                    }
+                });
+
+                let lateCut = Math.floor(late / 3);
+                let totalCut = lateCut + (absent * 2) + sandwich;
+
+                output += `NAME: ${teacher}\n`;
+                output += `PRESENT: ${present} Days | LATE: ${late}\n`;
+                output += `DEDUCTIONS:\n`;
+                output += `- Late Cut (3=1): ${lateCut}\n`;
+                output += `- Absent (x2):    ${absent * 2}\n`;
+                output += `- Sandwich:      ${sandwich}\n`;
+                output += `------------------------------\n`;
+                output += `TOTAL CUT: ${totalCut} DAYS\n\n`;
+            }
+
+            document.getElementById('report-container').style.display = "block";
+            document.getElementById('report-content').innerText = output || "No data for selected filters.";
+        });
+    }
+
+    // Initialize UI
+    refreshTable();
 </script>
+
 </body>
 </html>
