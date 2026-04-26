@@ -134,6 +134,92 @@
             <span>UNDRAJAVARAM: ${counts.Undrajavaram}</span>
         `;
     });
+    <form id="admissionForm">
+    <h3>Student Admission 2026-27</h3>
+    
+    <label>Student Name:</label>
+    <input type="text" id="studentName" required><br>
+
+    <label>Admission No:</label>
+    <input type="text" id="admissionNo"><br>
+
+    <hr>
+    <h4>Fee Details</h4>
+    <label>Tuition Fee:</label>
+    <input type="number" id="tuitionFee" value="0" oninput="calculateTotal()"><br>
+    
+    <label>Books Fee:</label>
+    <input type="number" id="booksFee" value="0" oninput="calculateTotal()"><br>
+    
+    <label>Uniform Fee:</label>
+    <input type="number" id="uniformFee" value="0" oninput="calculateTotal()"><br>
+    
+    <label>Exam Fee:</label>
+    <input type="number" id="examFee" value="0" oninput="calculateTotal()"><br>
+    
+    <label>Stationery Fee:</label>
+    <input type="number" id="stationeryFee" value="0" oninput="calculateTotal()"><br>
+    
+    <label>Transport Fee:</label>
+    <input type="number" id="transportFee" value="0" oninput="calculateTotal()"><br>
+
+    <hr>
+    <label><strong>Total Fees:</strong></label>
+    <input type="number" id="totalFees" value="0" readonly><br>
+
+    <label>Paid Amount:</label>
+    <input type="number" id="paidAmount" value="0" oninput="calculateTotal()"><br>
+
+    <label><strong>Balance Due:</strong></label>
+    <input type="number" id="balance" value="0" readonly style="color: red; font-weight: bold;"><br>
+
+    <button type="button" onclick="submitToFirebase()">Submit Admission</button>
+</form>
+    <script>
+function calculateTotal() {
+    // Get all fee values
+    const tuition = parseFloat(document.getElementById('tuitionFee').value) || 0;
+    const books = parseFloat(document.getElementById('booksFee').value) || 0;
+    const uniform = parseFloat(document.getElementById('uniformFee').value) || 0;
+    const exam = parseFloat(document.getElementById('examFee').value) || 0;
+    const stationery = parseFloat(document.getElementById('stationeryFee').value) || 0;
+    const transport = parseFloat(document.getElementById('transportFee').value) || 0;
+    const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
+
+    // Calculate Total
+    const total = tuition + books + uniform + exam + stationery + transport;
+    document.getElementById('totalFees').value = total;
+
+    // Calculate Balance
+    const balance = total - paid;
+    document.getElementById('balance').value = balance;
+}
+
+// If you are using Firebase for VGA website:
+function submitToFirebase() {
+    const studentData = {
+        name: document.getElementById('studentName').value,
+        admNo: document.getElementById('admissionNo').value,
+        fees: {
+            tuition: document.getElementById('tuitionFee').value,
+            books: document.getElementById('booksFee').value,
+            uniform: document.getElementById('uniformFee').value,
+            exam: document.getElementById('examFee').value,
+            stationery: document.getElementById('stationeryFee').value,
+            transport: document.getElementById('transportFee').value
+        },
+        total: document.getElementById('totalFees').value,
+        paid: document.getElementById('paidAmount').value,
+        balance: document.getElementById('balance').value,
+        timestamp: new Date().toISOString()
+    };
+
+    console.log("Saving Admission Data:", studentData);
+    // Replace with your firebase.database().ref('admissions/').push(studentData);
+    alert("Admission for " + studentData.name + " saved successfully!");
+}
+</script>
+
 </script>
 </body>
 </html>
