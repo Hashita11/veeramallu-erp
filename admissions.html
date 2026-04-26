@@ -1,1 +1,124 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGA Student Admissions 2026-27</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .main-container { background: white; width: 100%; max-width: 500px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .vga-title { color: #1a237e; font-weight: 800; margin: 0; font-size: 18px; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        
+        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #1a237e; text-decoration: none; font-size: 13px; font-weight: bold; }
+        
+        .stat-box { margin-top: 20px; background: #e3f2fd; padding: 15px; border-radius: 10px; border-left: 5px solid #1a237e; }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header">
+        <h1 class="vga-title">Student Admission 2026-27</h1>
+        <p style="color:red; font-weight:bold; font-size:12px; margin:5px 0;">New Registration Entry</p>
+    </div>
+
+    <div class="form-group">
+        <label>Student Name</label>
+        <input type="text" id="s-name" placeholder="Full Name">
+    </div>
+
+    <div class="form-group">
+        <label>Campus</label>
+        <select id="s-campus">
+            <option>Velpur</option>
+            <option>Relangi</option>
+            <option>Undrajavaram</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Class for Admission</label>
+        <input type="text" id="s-class" placeholder="e.g. 1st Class, LKG">
+    </div>
+
+    <div class="form-group">
+        <label>Parent Contact Number</label>
+        <input type="number" id="s-phone" placeholder="10 Digit Mobile">
+    </div>
+
+    <div class="form-group">
+        <label>Registration Fee Paid?</label>
+        <select id="s-fee">
+            <option value="Paid">YES - Paid</option>
+            <option value="Unpaid">NO - Pending</option>
+        </select>
+    </div>
+
+    <button class="btn-save" onclick="saveAdmission()">REGISTER STUDENT</button>
+
+    <div class="stat-box" id="admission-count">
+        Loading campus stats...
+    </div>
+
+    <a href="admin.html" class="back-link">← Return to Admin Dashboard</a>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339569496",
+        appId: "1:379339569496:web:5c2becb87e35b7190d6350d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function saveAdmission() {
+        const name = document.getElementById('s-name').value;
+        const campus = document.getElementById('s-campus').value;
+        const sClass = document.getElementById('s-class').value;
+        const phone = document.getElementById('s-phone').value;
+        const fee = document.getElementById('s-fee').value;
+
+        if(!name || !phone) return alert("Please fill Name and Phone!");
+
+        db.collection("admissions_26_27").add({
+            studentName: name,
+            campus: campus,
+            class: sClass,
+            parentPhone: phone,
+            feeStatus: fee,
+            timestamp: new Date().toLocaleString('en-IN')
+        }).then(() => {
+            alert("Student Registered Successfully!");
+            location.reload(); 
+        });
+    }
+
+    // LIVE STATS COUNTER
+    db.collection("admissions_26_27").onSnapshot(snap => {
+        let counts = { Velpur: 0, Relangi: 0, Undrajavaram: 0 };
+        snap.forEach(doc => {
+            const data = doc.data();
+            if(counts[data.campus] !== undefined) counts[data.campus]++;
+        });
+        document.getElementById('admission-count').innerHTML = `
+            <b>Current Admissions:</b><br>
+            Velpur: ${counts.Velpur} | Relangi: ${counts.Relangi} | Undrajavaram: ${counts.Undrajavaram}
+        `;
+    });
+</script>
+</body>
+</html>
