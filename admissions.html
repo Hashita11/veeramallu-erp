@@ -3,240 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admin | Student Admission 2026-27</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>VGA Admin Portal | 2026-27</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --vga-blue: #1e3a8a;
-            --vga-gold: #c5a021;
-            --light-gray: #f8fafc;
-            --border: #e2e8f0;
+            --vga-navy: #0f172a;
+            --vga-gold: #eab308;
+            --vga-blue: #2563eb;
+            --vga-green: #16a34a;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: #f1f5f9;
             margin: 0;
-            padding: 10px;
-            color: #1e293b;
+            padding: 20px;
         }
 
-        .main-card {
-            max-width: 900px;
-            margin: 20px auto;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border-top: 10px solid var(--vga-blue);
+        .admission-card {
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            border-top: 12px solid var(--vga-navy);
         }
 
         .header {
+            background: white;
+            padding: 30px;
             text-align: center;
-            padding: 30px 20px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .logo { max-width: 140px; margin-bottom: 10px; }
+        .logo { max-width: 150px; }
 
-        .form-section { padding: 30px; }
+        .form-body { padding: 40px; }
 
-        .section-title {
+        .section-header {
             font-size: 14px;
             font-weight: 700;
-            color: var(--vga-blue);
+            color: var(--vga-navy);
             text-transform: uppercase;
-            border-left: 4px solid var(--vga-gold);
-            padding-left: 10px;
-            margin: 25px 0 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Responsive Grid Adjustments */
-        .grid-layout {
+        .section-header::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        /* Identity Grid - 4 Columns for top info */
+        .identity-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
-        /* 3-Column Fee Layout */
-        .fee-grid {
+        /* Fee Grid - Explicitly 3 Columns */
+        .fee-grid-3col {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            background: var(--light-gray);
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .grid-layout, .fee-grid { grid-template-columns: 1fr; }
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
         .form-group { display: flex; flex-direction: column; }
 
-        label { font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        label { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #64748b; }
 
         input, select {
             padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
-            transition: 0.2s;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: 0.3s;
         }
 
-        input:focus { outline: none; border-color: var(--vga-blue); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        input:focus { border-color: var(--vga-blue); outline: none; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        /* Colorful Fee Box Adjustments */
+        .fee-box {
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid;
+        }
+        .bg-blue { background: #eff6ff; border-left-color: var(--vga-blue); }
+        .bg-green { background: #f0fdf4; border-left-color: var(--vga-green); }
+        .bg-gold { background: #fefce8; border-left-color: var(--vga-gold); }
 
         /* Summary Dashboard */
-        .dashboard {
-            background: var(--vga-blue);
+        .summary-dashboard {
+            background: var(--vga-navy);
             color: white;
-            padding: 25px;
-            margin-top: 25px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 30px;
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            text-align: center;
         }
 
-        .stat { text-align: center; flex: 1; }
-        .stat-label { font-size: 12px; opacity: 0.8; text-transform: uppercase; }
-        .stat-value { font-size: 22px; font-weight: 700; display: block; margin-top: 5px; }
-        .balance-box { border-left: 1px solid rgba(255,255,255,0.2); }
+        .val { font-size: 28px; font-weight: 700; display: block; }
+        .lbl { font-size: 12px; text-transform: uppercase; opacity: 0.7; letter-spacing: 1px; }
 
-        .btn-save {
+        .btn-submit {
             width: 100%;
-            background: var(--vga-gold);
-            color: #fff;
-            padding: 18px;
+            background: var(--vga-navy);
+            color: white;
+            padding: 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 20px;
-            transition: filter 0.2s;
+            margin-top: 25px;
+            transition: 0.3s;
         }
 
-        .btn-save:hover { filter: brightness(1.1); }
+        .btn-submit:hover { background: #1e293b; transform: translateY(-2px); }
+
+        @media (max-width: 850px) {
+            .fee-grid-3col { grid-template-columns: repeat(2, 1fr); }
+            .identity-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 500px) {
+            .fee-grid-3col, .identity-grid, .summary-dashboard { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-<div class="main-card">
+<div class="admission-card">
     <div class="header">
         <img src="logo.png" alt="VGA Logo" class="logo">
-        <h1 style="margin:0; font-size:24px; color:var(--vga-blue);">Admission Entry 2026-27</h1>
+        <h1 style="margin:0; font-size:26px; color:var(--vga-navy);">Admission Portal 2026-27</h1>
     </div>
 
-    <form class="form-section" id="admissionForm">
-        <div class="section-title">Student & Guardian Details</div>
-        <div class="grid-layout">
-            <div class="form-group">
-                <label>Admission Number</label>
-                <input type="text" id="admNo" placeholder="e.g. 2026/001" required>
-            </div>
+    <form class="form-body" id="vgaForm">
+        <div class="section-header">Student Identity</div>
+        <div class="identity-grid">
+            <div class="form-group"><label>Adm No</label><input type="text" placeholder="1530"></div>
             <div class="form-group">
                 <label>Campus</label>
-                <select id="campus">
-                    <option>Velpur Campus</option>
-                    <option>Relangi Campus</option>
-                    <option>Undrajavaram Campus</option>
+                <select>
+                    <option>Velpur</option><option>Relangi</option><option>Undrajavaram</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>Student Name</label>
-                <input type="text" id="stuName" placeholder="Full Name" required>
-            </div>
-            <div class="form-group">
-                <label>Parent Name</label>
-                <input type="text" id="parentName" placeholder="Father/Mother Name">
-            </div>
-            <div class="form-group">
-                <label>Aadhaar Number</label>
-                <input type="text" id="aadhaar" placeholder="12-Digit Number" maxlength="12">
-            </div>
-            <div class="form-group">
-                <label>Place / City</label>
-                <input type="text" id="place" placeholder="e.g. Tanuku">
-            </div>
-            <div class="form-group">
-                <label>Class & Section</label>
-                <input type="text" id="classSec" placeholder="e.g. 5th - A">
-            </div>
-            <div class="form-group">
-                <label>Parent Phone</label>
-                <input type="tel" id="phone" placeholder="10-digit mobile">
-            </div>
+            <div class="form-group"><label>Student Name</label><input type="text" required></div>
+            <div class="form-group"><label>Parent Name</label><input type="text"></div>
+            <div class="form-group"><label>Aadhaar No</label><input type="text" maxlength="12"></div>
+            <div class="form-group"><label>Place</label><input type="text"></div>
+            <div class="form-group"><label>Class / Sec</label><input type="text"></div>
+            <div class="form-group"><label>Parent Mobile</label><input type="tel"></div>
         </div>
 
-        <div class="section-title">Fee Breakdown (3-Column Adjustment)</div>
-        <div class="fee-grid">
-            <div class="form-group">
+        <div class="section-header">Fee Breakdown (3 Columns)</div>
+        <div class="fee-grid-3col">
+            <div class="form-group fee-box bg-blue">
                 <label>Admission Fee</label>
-                <input type="number" id="f1" value="0" oninput="calc()">
+                <input type="number" id="f1" value="0" oninput="runTotal()">
             </div>
-            <div class="form-group">
+            <div class="form-group fee-box bg-blue">
                 <label>Tuition Fee</label>
-                <input type="number" id="f2" value="0" oninput="calc()">
+                <input type="number" id="f2" value="0" oninput="runTotal()">
             </div>
-            <div class="form-group">
+            <div class="form-group fee-box bg-green">
                 <label>Books & Stationery</label>
-                <input type="number" id="f3" value="0" oninput="calc()">
+                <input type="number" id="f3" value="0" oninput="runTotal()">
             </div>
-            <div class="form-group">
+            <div class="form-group fee-box bg-green">
                 <label>Uniform Fee</label>
-                <input type="number" id="f4" value="0" oninput="calc()">
+                <input type="number" id="f4" value="0" oninput="runTotal()">
             </div>
-            <div class="form-group">
+            <div class="form-group fee-box bg-gold">
                 <label>Exam Fee</label>
-                <input type="number" id="f5" value="0" oninput="calc()">
+                <input type="number" id="f5" value="0" oninput="runTotal()">
             </div>
-            <div class="form-group">
+            <div class="form-group fee-box bg-gold">
                 <label>Transport Fee</label>
-                <input type="number" id="f6" value="0" oninput="calc()">
+                <input type="number" id="f6" value="0" oninput="runTotal()">
             </div>
         </div>
 
-        <div class="dashboard">
-            <div class="stat">
-                <span class="stat-label">Total Fees</span>
-                <span class="stat-value" id="totalDisplay">₹ 0</span>
+        <div class="summary-dashboard">
+            <div>
+                <span class="lbl">Grand Total</span>
+                <span class="val" id="total">₹ 0</span>
             </div>
-            <div class="stat" style="border-left: 1px solid rgba(255,255,255,0.2);">
-                <span class="stat-label">Paid Amount</span>
-                <input type="number" id="paid" value="0" oninput="calc()" 
-                       style="width: 100px; background: rgba(255,255,255,0.1); border: 1px solid #fff; color: white; text-align: center;">
+            <div>
+                <span class="lbl">Paid Amount</span>
+                <input type="number" id="paid" value="0" oninput="runTotal()" 
+                       style="background:rgba(255,255,255,0.1); border:1px solid white; color:white; width:120px; text-align:center; font-size:20px; margin-top:5px; border-radius:5px;">
             </div>
-            <div class="stat balance-box">
-                <span class="stat-label">Balance Due</span>
-                <span class="stat-value" id="balanceDisplay" style="color:var(--vga-gold);">₹ 0</span>
+            <div>
+                <span class="lbl" style="color:var(--vga-gold);">Balance Due</span>
+                <span class="val" id="balance" style="color:var(--vga-gold);">₹ 0</span>
             </div>
         </div>
 
-        <button type="button" class="btn-save" onclick="submitForm()">Save Admission Record</button>
+        <button type="button" class="btn-submit" onclick="alert('Admission Saved Successfully!')">Confirm Admission Record</button>
     </form>
 </div>
 
 <script>
-    function calc() {
-        let total = 0;
-        for(let i=1; i<=6; i++) {
-            total += parseFloat(document.getElementById('f'+i).value) || 0;
+    function runTotal() {
+        let sum = 0;
+        for(let i=1; i<=6; i++){
+            sum += parseFloat(document.getElementById('f'+i).value) || 0;
         }
         const paid = parseFloat(document.getElementById('paid').value) || 0;
-        const balance = total - paid;
+        const bal = sum - paid;
 
-        document.getElementById('totalDisplay').innerText = "₹ " + total.toLocaleString('en-IN');
-        document.getElementById('balanceDisplay').innerText = "₹ " + balance.toLocaleString('en-IN');
-    }
-
-    function submitForm() {
-        const name = document.getElementById('stuName').value;
-        const balance = document.getElementById('balanceDisplay').innerText;
-        if(!name) { alert("Student Name is Required!"); return; }
-        
-        // Final Redaction Check: We do not display Aadhaar digits in the final success alert
-        alert("Success! Admission for " + name + " saved.\nPending Balance: " + balance);
+        document.getElementById('total').innerText = "₹ " + sum.toLocaleString('en-IN');
+        document.getElementById('balance').innerText = "₹ " + bal.toLocaleString('en-IN');
     }
 </script>
 
