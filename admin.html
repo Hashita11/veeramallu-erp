@@ -3,37 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admin - Monitoring & Salary</title>
+    <title>VGA Admin - Advanced Monitoring</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .main-container { background: #ffffff; width: 100%; max-width: 600px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
         
-        .main-container { background: #ffffff; width: 100%; max-width: 550px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
-        
-        /* Official VGA Header Section */
         .header-section { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
-        .academy-logo { width: 90px; height: auto; margin-bottom: 10px; }
-        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-        .panel-title { font-size: 15px; color: #d32f2f; margin-top: 5px; font-weight: 600; text-transform: uppercase; }
+        .academy-logo { width: 80px; height: auto; }
+        .academy-name { font-size: 18px; color: #1a237e; margin: 5px 0; font-weight: 800; text-transform: uppercase; }
+        .panel-title { font-size: 14px; color: #d32f2f; margin: 0; font-weight: 600; }
 
-        /* Table Styling */
+        /* Filter Section Styling */
+        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+        .filter-group { display: flex; flex-direction: column; width: 47%; }
+        label { font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #555; }
+        select, input { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 12px; }
+
         .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th:nth-child(1) { width: 35%; } th:nth-child(2) { width: 25%; } th:nth-child(3) { width: 18%; } th:nth-child(4) { width: 22%; }
-        thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 12px; border-right: 1px solid rgba(255,255,255,0.3); }
-        td { padding: 12px 2px; border: 1px solid #eee; font-size: 10.5px; text-align: center; word-wrap: break-word; }
+        thead th { background-color: #007bff; color: white; padding: 10px 2px; font-size: 12px; }
+        td { padding: 10px 2px; border: 1px solid #eee; font-size: 10px; text-align: center; word-wrap: break-word; }
         tr:nth-child(even) { background-color: #f8f9fa; }
-        .status-in { color: #28a745; font-weight: bold; }
-        .status-out { color: #dc3545; font-weight: bold; }
 
-        /* Salary Report Section */
-        .btn-report { background-color: #d32f2f; color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn-report:hover { background-color: #a32424; }
+        .btn-report { background-color: #d32f2f; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; }
         .report-box { background: #fafafa; border: 1px solid #ccc; padding: 15px; border-radius: 10px; text-align: left; margin-top: 15px; display: none; }
-        #report-content { font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; font-size: 12px; color: #333; line-height: 1.4; }
+        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 11px; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -44,27 +42,48 @@
         <h1 class="academy-name">Veeramallu Global Academy</h1>
         <h2 class="panel-title">Admin Dashboard</h2>
     </div>
+
+    <div class="filter-section">
+        <div class="filter-group">
+            <label>Teacher Email</label>
+            <input type="text" id="filter-teacher" placeholder="All Teachers">
+        </div>
+        <div class="filter-group">
+            <label>Campus</label>
+            <select id="filter-campus">
+                <option value="All">All Campuses</option>
+                <option value="Velpur">Velpur</option>
+                <option value="Relangi">Relangi</option>
+                <option value="Undrajavaram">Undrajavaram</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>From Date</label>
+            <input type="date" id="filter-from">
+        </div>
+        <div class="filter-group">
+            <label>To Date</label>
+            <input type="date" id="filter-to">
+        </div>
+    </div>
     
     <div class="table-container">
         <table>
             <thead>
                 <tr><th>Teacher</th><th>Campus</th><th>Action</th><th>Time</th></tr>
             </thead>
-            <tbody id="attendance-list">
-                <tr><td colspan="4">Connecting to VGA Cloud...</td></tr>
-            </tbody>
+            <tbody id="attendance-list"></tbody>
         </table>
     </div>
 
-    <button class="btn-report" onclick="calculateSalaryReport()">Generate Salary Cut Report</button>
+    <button class="btn-report" onclick="calculateSalaryReport()">Generate Filtered Report</button>
     <div id="report-container" class="report-box">
-        <h3 style="margin-top:0; color:#1a237e; border-bottom:1px solid #ddd;">Monthly Deduction Summary</h3>
+        <h3 style="margin:0 0 10px 0; font-size:14px; border-bottom:1px solid #ddd;">Deduction Summary</h3>
         <pre id="report-content"></pre>
     </div>
 </div>
 
 <script>
-    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -78,94 +97,85 @@
     const db = firebase.firestore();
     const holidays = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
-    // A. LIVE LOGS UPDATE
-    db.collection("attendance").orderBy("time", "desc").limit(50).onSnapshot((snapshot) => {
-        const list = document.getElementById('attendance-list');
-        list.innerHTML = ""; 
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            let displayTime = data.time;
-            if (data.time && data.time.toDate) displayTime = data.time.toDate().toLocaleString('en-IN');
-            
-            list.innerHTML += `
-                <tr>
-                    <td style="text-align: left; padding-left: 5px;">${data.teacher || 'N/A'}</td>
-                    <td>${data.campus || 'N/A'}</td>
-                    <td class="${data.type === 'IN' ? 'status-in' : 'status-out'}">${data.type || 'N/A'}</td>
-                    <td style="font-size: 9px; color: #555;">${displayTime || 'N/A'}</td>
-                </tr>`;
+    // Function to parse your date string "26/04/2026, 10:17:51" into a Date object
+    function parseVgaDate(dateStr) {
+        if(!dateStr || typeof dateStr !== 'string') return new Date(0);
+        const [datePart] = dateStr.split(',');
+        const [d, m, y] = datePart.trim().split('/');
+        return new Date(y, m - 1, d);
+    }
+
+    // LIVE LOGS WITH FILTERS
+    function loadLogs() {
+        const teacherFilter = document.getElementById('filter-teacher').value.toLowerCase();
+        const campusFilter = document.getElementById('filter-campus').value;
+
+        db.collection("attendance").orderBy("time", "desc").onSnapshot((snapshot) => {
+            const list = document.getElementById('attendance-list');
+            list.innerHTML = ""; 
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const teacher = data.teacher || "";
+                const campus = data.campus || "";
+
+                if ((teacherFilter === "" || teacher.toLowerCase().includes(teacherFilter)) &&
+                    (campusFilter === "All" || campus === campusFilter)) {
+                    
+                    list.innerHTML += `
+                        <tr>
+                            <td style="text-align:left; padding-left:4px;">${teacher}</td>
+                            <td>${campus}</td>
+                            <td style="color:${data.type==='IN'?'green':'red'}; font-weight:bold;">${data.type}</td>
+                            <td style="font-size:9px;">${data.time}</td>
+                        </tr>`;
+                }
+            });
         });
-    });
+    }
 
-    // B. SALARY CALCULATION LOGIC
+    // Listen for filter changes
+    document.getElementById('filter-teacher').addEventListener('input', loadLogs);
+    document.getElementById('filter-campus').addEventListener('change', loadLogs);
+    loadLogs();
+
     function calculateSalaryReport() {
-        let dataMap = {};
-        let allDates = new Set();
-        const reportBox = document.getElementById("report-container");
-        const content = document.getElementById("report-content");
+        const fromDate = document.getElementById('filter-from').value ? new Date(document.getElementById('filter-from').value) : null;
+        const toDate = document.getElementById('filter-to').value ? new Date(document.getElementById('filter-to').value) : null;
+        const teacherMatch = document.getElementById('filter-teacher').value.toLowerCase();
 
+        let dataMap = {};
         db.collection("attendance").get().then(snapshot => {
             snapshot.forEach(doc => {
-                let d = doc.data();
-                let teacher = d.teacher;
-                let dateStr = "";
-                
-                // Handle different date formats
-                if(d.time && typeof d.time === 'string') dateStr = d.time.split(',')[0].trim();
-                else if(d.time && d.time.toDate) dateStr = d.time.toDate().toISOString().split('T')[0];
+                const d = doc.data();
+                const recordDate = parseVgaDate(d.time);
+                const teacher = d.teacher || "Unknown";
 
-                if (!dateStr) return;
-                allDates.add(dateStr);
+                // Filter logic
+                if (fromDate && recordDate < fromDate) return;
+                if (toDate && recordDate > toDate) return;
+                if (teacherMatch !== "" && !teacher.toLowerCase().includes(teacherMatch)) return;
+
+                const dateKey = recordDate.toISOString().split('T')[0];
 
                 if (!dataMap[teacher]) {
                     dataMap[teacher] = { presentDates: new Set(), late: 0 };
                 }
-                dataMap[teacher].presentDates.add(dateStr);
+                dataMap[teacher].presentDates.add(dateKey);
                 if (d.late) dataMap[teacher].late++;
             });
 
-            let sortedDates = Array.from(allDates).sort();
             let output = "";
-
             for (let teacher in dataMap) {
                 let present = dataMap[teacher].presentDates.size;
                 let late = dataMap[teacher].late;
-                let absent = 0;
-                let holidayLoss = 0;
-
-                sortedDates.forEach((date, i) => {
-                    let prev = sortedDates[i - 1];
-                    let next = sortedDates[i + 1];
-
-                    if (holidays.includes(date)) {
-                        let beforeAbsent = prev && !dataMap[teacher].presentDates.has(prev);
-                        let afterAbsent = next && !dataMap[teacher].presentDates.has(next);
-                        if (beforeAbsent || afterAbsent) holidayLoss++;
-                    } else {
-                        if (!dataMap[teacher].presentDates.has(date)) absent++;
-                    }
-                });
-
                 let lateCut = Math.floor(late / 3);
-                let absentCut = absent * 2;
-                let totalCut = lateCut + absentCut + holidayLoss;
-
-                output += `NAME: ${teacher}\n`;
-                output += `PRESENT: ${present} | LATE: ${late} | ABSENT: ${absent}\n`;
-                output += `DEDUCTIONS:\n`;
-                output += `- Late Cut (3=1): ${lateCut}\n- Absent Cut (x2): ${absentCut}\n- Sandwich Rule:  ${holidayLoss}\n`;
-                output += `------------------------------\n`;
-                output += `TOTAL CUT DAYS: ${totalCut}\n\n`;
+                output += `NAME: ${teacher}\nPRESENT DAYS: ${present}\nLATE COUNT: ${late}\nLATE CUTS: ${lateCut}\n--------------------------\n`;
             }
-            reportBox.style.display = "block";
-            content.innerText = output;
+            document.getElementById("report-container").style.display = "block";
+            document.getElementById("report-content").innerText = output || "No records found for these filters.";
         });
     }
 </script>
 
 </body>
 </html>
-
-
-
-
