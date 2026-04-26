@@ -68,7 +68,9 @@ let row = `
 <td>${d.user || "Teacher"}</td>
 <td>${d.campus}</td>
 <td>${d.type}</td>
-<td>${d.time}</td>
+<td>
+${data.time ? data.time.toDate().toLocaleString() : "Loading..."}
+</td>
 </tr>
 `;
 
