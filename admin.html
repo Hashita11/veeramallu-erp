@@ -188,28 +188,99 @@
         });
     }
 
-    // 3. Salary Report
-    function runSalaryReport() {
-        const tSearch = document.getElementById('f-teacher').value.toLowerCase();
-        let dataMap = {};
-        db.collection("attendance").get().then(snapshot => {
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                if (tSearch && !(d.teacher||"").toLowerCase().includes(tSearch)) return;
-                if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
-                const dateKey = (d.time||"").split(',')[0];
-                dataMap[d.teacher].present.add(dateKey);
-            });
-            let output = "";
-            for (let t in dataMap) {
-                output += `Teacher: ${t}\nPresent Days: ${dataMap[t].present.size}\n------------------\n`;
-            }
-            document.getElementById('report-container').style.display = "block";
-            document.getElementById('report-content').innerText = output || "No records.";
-        });
-    }
+    // 3. FULL SALARY & DEDUCTION REPORT
+    const holidays = ["2026-01-26", "2026-08-15", "2026-10-02"];
+function runSalaryReport() {
+    const tSearch = document.getElementById('f-teacher').value.toLowerCase();
+    const startDate = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
+    const endDate = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
 
-    refreshUI();
+    let dataMap = {};
+    let allDatesInRange = new Set();
+
+    db.collection("attendance").get().then(snapshot => {
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const teacher = d.teacher || "Unknown";
+            const logDate = parseVgaDate(d.time); // Uses the helper function we wrote
+            
+            if (!logDate) return;
+
+            // Apply Filters (Teacher & Date Range)
+            if (tSearch && !teacher.toLowerCase().includes(tSearch)) return;
+            if (startDate && logDate < startDate) return;
+            if (endDate && logDate > endDate) return;
+
+            const dateKey = logDate.toISOString().split('T')[0];
+            allDatesInRange.add(dateKey);
+
+            if (!dataMap[teacher]) {
+                dataMap[teacher] = { 
+                    presentDates: new Set(), 
+                    lateCount: 0 
+                };
+            }
+
+            dataMap[teacher].presentDates.add(dateKey);
+            
+            // If the record was marked as late in the app
+            if (d.late === true) {
+                dataMap[teacher].lateCount++;
+            }
+        });
+
+        let sortedDates = Array.from(allDatesInRange).sort();
+        let output = "";
+
+        for (let teacher in dataMap) {
+            let present = dataMap[teacher].presentDates.size;
+            let late = dataMap[teacher].lateCount;
+            let absentCount = 0;
+            let holidayLoss = 0;
+
+            // Logic for Absents and Sandwich Rule
+            sortedDates.forEach((date, i) => {
+                const prev = sortedDates[i - 1];
+                const next = sortedDates[i + 1];
+
+                if (holidays.includes(date)) {
+                    // Sandwich Rule: Absent before OR after a holiday = Holiday Pay Cut
+                    let beforeAbsent = prev && !dataMap[teacher].presentDates.has(prev);
+                    let afterAbsent = next && !dataMap[teacher].presentDates.has(next);
+                    if (beforeAbsent || afterAbsent) holidayLoss++;
+                } else {
+                    if (!dataMap[teacher].presentDates.has(date)) {
+                        absentCount++;
+                    }
+                }
+            });
+
+            // VBA Calculation Rules
+            let lateCuts = Math.floor(late / 3); // 3 Late = 1 Day Cut
+            let absentCuts = absentCount * 2;   // 1 Absent = 2 Days Cut
+            let totalCuts = lateCuts + absentCuts + holidayLoss;
+
+            output += `TEACHER: ${teacher}\n`;
+            output += `----------------------------------\n`;
+            output += `Present: ${present} Days\n`;
+            output += `Late:    ${late} (Cuts: ${lateCuts})\n`;
+            output += `Absent:  ${absentCount} (Cuts: ${absentCuts})\n`;
+            output += `Sandwich Loss: ${holidayLoss} Days\n`;
+            output += `----------------------------------\n`;
+            output += `TOTAL DEDUCTION: ${totalCuts} DAYS\n\n\n`;
+        }
+
+        const container = document.getElementById('report-container');
+        const content = document.getElementById('report-content');
+        
+        container.style.display = "block";
+        content.innerText = output || "No records found for the selected filters.";
+    }).catch(err => {
+        console.error("Report Error: ", err);
+        alert("Failed to generate report. Check console.");
+    });
+}
+
 </script>
 </body>
 </html>
