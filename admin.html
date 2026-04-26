@@ -62,7 +62,7 @@ const row = `
 <td>${data.user || "Teacher"}</td>
 <td>${data.campus}</td>
 <td>${data.type}</td>
-<td>${new Date(data.time).toLocaleString()}</td>
+<td>${(data.time?.toDate ? data.time.toDate() : new Date(data.time)).toLocaleString()>
 </tr>
 `;
 
