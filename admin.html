@@ -35,6 +35,8 @@
 
 <script>
 
+<script>
+
 const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtM8n8M9Z6Y-vFv6I4",
   authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -48,7 +50,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 db.collection("attendance")
-.orderBy("time", "desc")
 .onSnapshot(snapshot => {
 
 const tbody = document.getElementById("logs-body");
@@ -62,13 +63,14 @@ const row = `
 <td>${data.user || "Teacher"}</td>
 <td>${data.campus}</td>
 <td>${data.type}</td>
-<td>${(data.time?.toDate ? data.time.toDate() : new Date(data.time)).toLocaleString()>
+<td>${(data.time?.toDate ? data.time.toDate() : new Date(data.time)).toLocaleString()}</td>
 </tr>
 `;
 
 tbody.innerHTML += row;
 
 });
+
 });
 
 </script>
