@@ -3,59 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Master Office Console</title>
+    <title>VGA Ultimate Admin Console</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .main-container { background: #ffffff; width: 100%; max-width: 600px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
+        .main-container { background: #ffffff; width: 100%; max-width: 650px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
         
-        .header-section { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .academy-logo { width: 80px; height: auto; }
-        .academy-name { font-size: 18px; color: #1a237e; margin: 5px 0; font-weight: 800; text-transform: uppercase; }
-        .panel-title { font-size: 14px; color: #d32f2f; margin: 0; font-weight: 600; }
+        /* Header & Tabs */
+        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .academy-logo { width: 80px; height: auto; margin-bottom: 5px; }
+        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; }
+        .tab-bar { display: flex; gap: 8px; margin-top: 15px; }
+        .tab { flex: 1; padding: 10px; background: #e3f2fd; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; color: #1a237e; transition: 0.3s; }
+        .tab.active { background: #1a237e; color: white; }
 
-        /* Manual Console */
+        /* Manual Entry Box */
         .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .console-title { font-size: 12px; font-weight: bold; color: #f57f17; display: block; margin-bottom: 10px; text-transform: uppercase; }
         
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        /* Filter Grid */
+        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
         label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
         select, input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
 
-        .btn-row { display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        /* Buttons */
+        .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-in { background: #28a745; }
         .btn-out { background: #1a237e; }
+        .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
         .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; font-size: 16px; }
 
-        /* Filters & Table */
-        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Table */
         .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 12px; }
-        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10px; text-align: center; }
+        thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 11px; }
+        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10px; text-align: center; word-wrap: break-word; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         .manual-row { background-color: #fffde7 !important; }
+        .late-text { color: #d32f2f; font-weight: bold; font-size: 9px; display: block; }
 
-        .report-box { background: #fdfdfd; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; text-align: left; }
+        /* Report Box */
+        .report-box { background: #fafafa; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; text-align: left; }
         #report-content { font-family: monospace; white-space: pre-wrap; font-size: 12px; color: #333; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
-    <div class="header-section">
+    <div class="header">
         <img src="logo.png" alt="VGA Logo" class="academy-logo">
         <h1 class="academy-name">Veeramallu Global Academy</h1>
-        <h2 class="panel-title">Master Office Console</h2>
+        <div class="tab-bar">
+            <button class="tab active">Attendance Logs</button>
+            <button class="tab" onclick="window.location.href='admissions.html'">Admissions 26-27</button>
+        </div>
     </div>
 
     <div class="manual-console">
-        <span class="console-title">📌 Office Log (Basic Phones)</span>
-        <div class="grid-2">
+        <span class="console-title">📌 Office Manual Entry (For Basic Phones)</span>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
             <div>
                 <label>Teacher Name</label>
                 <select id="m-teacher"></select>
@@ -69,27 +79,36 @@
                 </select>
             </div>
         </div>
-        <div class="btn-row">
-            <button class="btn btn-in" onclick="saveManual('IN')">OFFICE IN</button>
-            <button class="btn btn-out" onclick="saveManual('OUT')">OFFICE OUT</button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn btn-in" style="flex:1;" onclick="saveManual('IN')">OFFICE IN</button>
+            <button class="btn btn-out" style="flex:1;" onclick="saveManual('OUT')">OFFICE OUT</button>
         </div>
     </div>
 
     <div class="filter-section">
-        <div><label>Teacher</label><input type="text" id="f-teacher" oninput="refreshUI()" placeholder="Search..."></div>
-        <div><label>Campus</label><select id="f-campus" onchange="refreshUI()"><option value="All">All</option><option value="Velpur">Velpur</option><option value="Relangi">Relangi</option><option value="Undrajavaram">Undrajavaram</option></select></div>
+        <div><label>Teacher</label><input type="text" id="f-teacher" placeholder="Search..." oninput="refreshUI()"></div>
+        <div><label>Campus</label><select id="f-campus" onchange="refreshUI()"><option value="All">All</option><option>Velpur</option><option>Relangi</option><option>Undrajavaram</option></select></div>
         <div><label>From Date</label><input type="date" id="f-start" onchange="refreshUI()"></div>
         <div><label>To Date</label><input type="date" id="f-end" onchange="refreshUI()"></div>
     </div>
     
     <div class="table-container">
         <table>
-            <thead><tr><th style="width:35%">Teacher</th><th style="width:25%">Campus</th><th style="width:15%">Type</th><th style="width:25%">Time</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Teacher</th>
+                    <th style="width: 25%;">Campus</th>
+                    <th style="width: 15%;">Action</th>
+                    <th style="width: 25%;">Time</th>
+                </tr>
+            </thead>
             <tbody id="attendance-list"></tbody>
         </table>
     </div>
 
-    <button class="btn btn-report" onclick="runSalaryReport()">Generate Salary Deduction Report</button>
+    <button class="btn btn-csv" onclick="exportToCSV()">📥 Download CSV for Excel</button>
+    <button class="btn btn-report" onclick="generateSalaryReport()">📊 Generate Salary Deduction Report</button>
+    
     <div id="report-container" class="report-box">
         <pre id="report-content"></pre>
     </div>
@@ -97,20 +116,26 @@
 
 <script>
     // --- MASTER CONFIGURATION ---
+    const LATE_THRESHOLD = "09:10:00"; 
     const teacherList = [
-        { name: "Teacher One", email: "teacher1@gmail.com" },
-        { name: "Teacher Two", email: "teacher2@gmail.com" }
+        { name: "Suresh Kumar", email: "suresh@vga.com" },
+        { name: "Anitha Rao", email: "anitha@vga.com" },
+        { name: "V. Rajesh", email: "rajesh@vga.com" }
     ];
 
     const holidays = [
-        "2026-05-01","2026-08-15","2026-10-02","2026-11-08","2026-12-25",
-        "2026-01-04","2026-01-11","2026-01-18","2026-01-25","2026-02-01","2026-02-08","2026-02-15","2026-02-22",
-        "2026-03-01","2026-03-08","2026-03-15","2026-03-22","2026-03-29","2026-04-05","2026-04-12","2026-04-19","2026-04-26",
-        "2026-05-03","2026-05-10","2026-05-17","2026-05-24","2026-05-31","2026-06-07","2026-06-14","2026-06-21","2026-06-28",
-        "2026-07-05","2026-07-12","2026-07-19","2026-07-26","2026-08-02","2026-08-09","2026-08-16","2026-08-23","2026-08-30",
-        "2026-09-06","2026-09-13","2026-09-20","2026-09-27","2026-10-04","2026-10-11","2026-10-18","2026-10-25",
-        "2026-11-01","2026-11-08","2026-11-15","2026-11-22","2026-11-29","2026-12-06","2026-12-13","2026-12-20","2026-12-27",
-        "2027-01-14","2027-01-15","2027-02-05","2027-03-08","2027-03-25","2027-04-16"
+        // 2026 Sundays
+        "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22",
+        "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19",
+        "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07", "2026-06-14",
+        "2026-06-21", "2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19", "2026-07-26", "2026-08-02", "2026-08-09",
+        "2026-08-16", "2026-08-23", "2026-08-30", "2026-09-06", "2026-09-13", "2026-09-20", "2026-09-27", "2026-10-04",
+        "2026-10-11", "2026-10-18", "2026-10-25", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29",
+        "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27",
+        // 2027 Sundays & Festivals
+        "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21",
+        "2027-02-28", "2027-03-07", "2027-03-14", "2027-03-21", "2027-03-28", "2027-04-04", "2027-04-11", "2027-04-18",
+        "2027-01-14", "2027-01-15", "2027-03-08", "2027-04-16", "2026-10-02", "2026-12-25"
     ];
 
     const firebaseConfig = {
@@ -131,24 +156,33 @@
         return new Date(y, m - 1, d);
     }
 
-    // Initialize Dropdown
     window.onload = () => {
         const sel = document.getElementById('m-teacher');
-        sel.innerHTML = '<option value="">-- Select Teacher --</option>';
+        sel.innerHTML = '<option value="">-- Choose Teacher --</option>';
         teacherList.forEach(t => sel.innerHTML += `<option value="${t.email}">${t.name}</option>`);
         refreshUI();
     };
 
     function saveManual(type) {
-        const teacher = document.getElementById('m-teacher').value;
-        if(!teacher) return alert("Select Teacher");
+        const email = document.getElementById('m-teacher').value;
+        const campus = document.getElementById('m-campus').value;
+        if(!email) return alert("Select Teacher First");
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-GB'); // HH:MM:SS
+        const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
+
         db.collection("attendance").add({
-            teacher: teacher,
-            campus: document.getElementById('m-campus').value,
+            teacher: email,
+            campus: campus,
             type: type,
-            time: new Date().toLocaleString('en-IN'),
-            entry: "Manual"
-        }).then(() => alert("Saved"));
+            time: now.toLocaleString('en-IN'),
+            autoLate: isLate,
+            method: "Office-Manual"
+        }).then(() => {
+            alert("Attendance Saved");
+            document.getElementById('m-teacher').value = "";
+        });
     }
 
     function refreshUI() {
@@ -167,31 +201,57 @@
                 if (cS !== "All" && d.campus !== cS) return;
                 if (start && logD < start) return;
                 if (end && logD > end) return;
-                list.innerHTML += `<tr class="${d.entry==='Manual'?'manual-row':''}"><td>${d.teacher}</td><td>${d.campus}</td><td style="color:${d.type==='IN'?'green':'red'}">${d.type}</td><td style="font-size:9px">${d.time}</td></tr>`;
+
+                const rowClass = d.method === "Office-Manual" ? "manual-row" : "";
+                list.innerHTML += `<tr class="${rowClass}">
+                    <td style="text-align:left; padding-left:5px;">${d.teacher}</td>
+                    <td>${d.campus}</td>
+                    <td><span style="color:${d.type==='IN'?'green':'red'}; font-weight:bold;">${d.type}</span>
+                        ${d.autoLate ? '<span class="late-text">LATE</span>' : ''}
+                    </td>
+                    <td style="font-size:9px;">${d.time}</td>
+                </tr>`;
             });
         });
     }
 
-    function runSalaryReport() {
+    function exportToCSV() {
+        let csv = "Teacher,Campus,Type,Time,IsLate\n";
+        document.querySelectorAll("#attendance-list tr").forEach(row => {
+            const cols = row.querySelectorAll("td");
+            csv += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText.replace('LATE','').trim()},${cols[3].innerText},${cols[2].innerText.includes('LATE')}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
+        a.click();
+    }
+
+    function generateSalaryReport() {
         const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
         const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
+        if(!start || !end) return alert("Select Date Range First");
+
         let dataMap = {};
-        let datesInRange = new Set();
+        let rangeDates = new Set();
 
         db.collection("attendance").get().then(snap => {
             snap.forEach(doc => {
                 const d = doc.data();
                 const logD = parseVgaDate(d.time);
-                if (!logD || (start && logD < start) || (end && logD > end)) return;
-                const dateKey = logD.toISOString().split('T')[0];
-                datesInRange.add(dateKey);
+                if (!logD || logD < start || logD > end) return;
+                
+                const key = logD.toISOString().split('T')[0];
+                rangeDates.add(key);
                 if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
-                dataMap[d.teacher].present.add(dateKey);
-                if (d.late) dataMap[d.teacher].late++;
+                dataMap[d.teacher].present.add(key);
+                if (d.autoLate) dataMap[d.teacher].late++;
             });
 
-            let sorted = Array.from(datesInRange).sort();
-            let output = "";
+            let sorted = Array.from(rangeDates).sort();
+            let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
             for (let t in dataMap) {
                 let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0, sand = 0;
                 sorted.forEach((dt, i) => {
@@ -199,10 +259,11 @@
                         if ((sorted[i-1] && !dataMap[t].present.has(sorted[i-1])) || (sorted[i+1] && !dataMap[t].present.has(sorted[i+1]))) sand++;
                     } else if (!dataMap[t].present.has(dt)) abs++;
                 });
-                output += `NAME: ${t}\nPRESENT: ${p} | LATE: ${l}\nABSENT CUT (x2): ${abs*2} | SANDWICH: ${sand}\nTOTAL CUT: ${Math.floor(l/3) + abs*2 + sand} DAYS\n\n`;
+                let lateCuts = Math.floor(l/3);
+                out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs*2} | Sandwich: ${sand}\nLate Cuts: ${lateCuts}\nTOTAL CUTS: ${lateCuts + abs*2 + sand} DAYS\n------------------------------\n`;
             }
             document.getElementById('report-container').style.display = "block";
-            document.getElementById('report-content').innerText = output || "No Data.";
+            document.getElementById('report-content').innerText = out;
         });
     }
 </script>
