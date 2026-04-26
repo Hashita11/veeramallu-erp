@@ -86,21 +86,25 @@
     }
 
     const campuses = {
-        Velpur: {lat: 16.7172, lon: 81.6671},
-        Relangi: {lat: 16.7111, lon: 81.7222},
-        Undrajavaram: {lat: 16.7455, lon: 81.6788}
-    };
+    Velpur: { lat: 16.7172, lon: 81.6671 },
+    Relangi: { lat: 16.7111, lon: 81.7222 },
+    Undrajavaram: { lat: 16.7455, lon: 81.6788 },
+};
 
-    function distance(lat1, lon1, lat2, lon2){
-        let R = 6371;
-        let dLat = (lat2-lat1)*Math.PI/180;
-        let dLon = (lon2-lon1)*Math.PI/180;
-        let a = Math.sin(dLat/2)*Math.sin(dLat/2) +
-                Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
-                Math.sin(dLon/2)*Math.sin(dLon/2);
-        let c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-        return R*c*1000; 
-    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // metres
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; 
+}
+
 
     function getLocation(callback){
         document.getElementById("msg").innerText = "⏳ Checking Location...";
@@ -115,28 +119,49 @@
     }
 
     function checkIn() {
-        getLocation((lat, lon) => {
-            let c = document.getElementById("campus").value;
-            let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if (d > 200) { // Standard 200m geofence
-                document.getElementById("msg").innerText = "❌ Outside Campus (" + Math.round(d) + "m)"; 
-                return; 
+    if (!navigator.geolocation) return alert("Enable GPS");
+
+    navigator.geolocation.getCurrentPosition((position) => {
+        const uLat = position.coords.latitude;
+        const uLon = position.coords.longitude;
+        
+        let nearest = "Velpur";
+        let minDist = 999999;
+
+        // Auto-detect which VGA campus they are at
+        for (let name in campuses) {
+            let d = calculateDistance(uLat, uLon, campuses[name].lat, campuses[name].lon);
+            if (d < minDist) {
+                minDist = d;
+                nearest = name;
             }
+        }
 
-            const timeNow = new Date().toLocaleString('en-IN');
+        // --- GEOFENCING SECURITY (200 Meters) ---
+        if (minDist > 200) {
+            document.getElementById("msg").innerHTML = `<b style="color:red">❌ Error: You are ${Math.round(minDist)}m away from ${nearest} campus.</b>`;
+            return;
+        }
 
-            db.collection("attendance").add({
-                teacher: firebase.auth().currentUser.email,
-                type: "IN",
-                campus: c,
-                time: timeNow,
-                lat, lon
-            }).then(() => {
-                document.getElementById("msg").innerHTML = "<span style='color:green'>✅ Checked IN Success</span>";
-                sendToGoogleSheet("IN", c, lat, lon);
-            });
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-GB'); 
+        const isLate = (timeStr > "08:30:00"); 
+
+        // Save to Firebase
+        db.collection("attendance").add({
+            teacher: firebase.auth().currentUser.email,
+            type: "IN",
+            campus: nearest,
+            isLate: isLate,
+            time: now.toLocaleString('en-IN'),
+            lat: uLat,
+            lon: uLon
+        }).then(() => {
+            document.getElementById("msg").innerHTML = `<b style="color:green">✅ Checked IN at ${nearest} ${isLate ? "(LATE)" : ""}</b>`;
         });
-    }
+    });
+}
+
 
     function checkOut() {
         getLocation((lat, lon) => {
