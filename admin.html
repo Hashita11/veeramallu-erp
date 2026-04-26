@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admin - Full Office Console</title>
+    <title>VGA Master Office Console</title>
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,37 +13,35 @@
         .main-container { background: #ffffff; width: 100%; max-width: 600px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-top: 10px; box-sizing: border-box; }
         
         .header-section { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        .academy-logo { width: 80px; height: auto; margin-bottom: 10px; }
-        .academy-name { font-size: 18px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; }
-        .panel-title { font-size: 14px; color: #d32f2f; margin-top: 5px; font-weight: 600; }
+        .academy-logo { width: 80px; height: auto; }
+        .academy-name { font-size: 18px; color: #1a237e; margin: 5px 0; font-weight: 800; text-transform: uppercase; }
+        .panel-title { font-size: 14px; color: #d32f2f; margin: 0; font-weight: 600; }
 
-        /* Manual Entry Box (For Basic Phones) */
-        .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left; }
+        /* Manual Console */
+        .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
         .console-title { font-size: 12px; font-weight: bold; color: #f57f17; display: block; margin-bottom: 10px; text-transform: uppercase; }
         
-        /* Filters Section */
-        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 12px; padding: 15px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        
-        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
+        select, input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
 
-        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .btn-office-in { background: #28a745; }
-        .btn-office-out { background: #1a237e; }
-        .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; padding: 15px; font-size: 16px; }
+        .btn-row { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-in { background: #28a745; }
+        .btn-out { background: #1a237e; }
+        .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; font-size: 16px; }
 
-        /* Table Styling */
-        .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; margin-bottom: 20px; }
+        /* Filters & Table */
+        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 12px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 12px; }
-        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10.5px; text-align: center; word-wrap: break-word; }
+        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10px; text-align: center; }
         tr:nth-child(even) { background-color: #f9f9f9; }
         .manual-row { background-color: #fffde7 !important; }
 
-        /* Report Output */
-        .report-box { background: #fdfdfd; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; text-align: left; display: none; margin-top: 10px; }
-        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 12px; color: #333; line-height: 1.5; }
+        .report-box { background: #fdfdfd; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; text-align: left; }
+        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 12px; color: #333; }
     </style>
 </head>
 <body>
@@ -52,15 +50,15 @@
     <div class="header-section">
         <img src="logo.png" alt="VGA Logo" class="academy-logo">
         <h1 class="academy-name">Veeramallu Global Academy</h1>
-        <h2 class="panel-title">Office Admin Console</h2>
+        <h2 class="panel-title">Master Office Console</h2>
     </div>
 
     <div class="manual-console">
-        <span class="console-title">📍 Manual Entry (Basic Phones)</span>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <span class="console-title">📌 Office Log (Basic Phones)</span>
+        <div class="grid-2">
             <div>
-                <label>Teacher Email</label>
-                <input type="text" id="m-teacher" placeholder="e.g. name@gmail.com">
+                <label>Teacher Name</label>
+                <select id="m-teacher"></select>
             </div>
             <div>
                 <label>Campus</label>
@@ -72,60 +70,49 @@
             </div>
         </div>
         <div class="btn-row">
-            <button class="btn btn-office-in" onclick="saveManual('IN')">OFFICE IN</button>
-            <button class="btn btn-office-out" onclick="saveManual('OUT')">OFFICE OUT</button>
+            <button class="btn btn-in" onclick="saveManual('IN')">OFFICE IN</button>
+            <button class="btn btn-out" onclick="saveManual('OUT')">OFFICE OUT</button>
         </div>
     </div>
 
     <div class="filter-section">
-        <div class="filter-group">
-            <label>Filter Teacher</label>
-            <input type="text" id="f-teacher" placeholder="All Teachers" oninput="refreshTable()">
-        </div>
-        <div class="filter-group">
-            <label>Filter Campus</label>
-            <select id="f-campus" onchange="refreshTable()">
-                <option value="All">All Campuses</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Relangi">Relangi</option>
-                <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label>From Date</label>
-            <input type="date" id="f-start" onchange="refreshTable()">
-        </div>
-        <div class="filter-group">
-            <label>To Date</label>
-            <input type="date" id="f-end" onchange="refreshTable()">
-        </div>
+        <div><label>Teacher</label><input type="text" id="f-teacher" oninput="refreshUI()" placeholder="Search..."></div>
+        <div><label>Campus</label><select id="f-campus" onchange="refreshUI()"><option value="All">All</option><option value="Velpur">Velpur</option><option value="Relangi">Relangi</option><option value="Undrajavaram">Undrajavaram</option></select></div>
+        <div><label>From Date</label><input type="date" id="f-start" onchange="refreshUI()"></div>
+        <div><label>To Date</label><input type="date" id="f-end" onchange="refreshUI()"></div>
     </div>
     
     <div class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th style="width: 35%;">Teacher</th>
-                    <th style="width: 25%;">Campus</th>
-                    <th style="width: 15%;">Action</th>
-                    <th style="width: 25%;">Time</th>
-                </tr>
-            </thead>
-            <tbody id="attendance-list">
-                <tr><td colspan="4">Syncing...</td></tr>
-            </tbody>
+            <thead><tr><th style="width:35%">Teacher</th><th style="width:25%">Campus</th><th style="width:15%">Type</th><th style="width:25%">Time</th></tr></thead>
+            <tbody id="attendance-list"></tbody>
         </table>
     </div>
 
-    <button class="btn btn-report" onclick="runSalaryReport()">Generate Salary Cut Report</button>
+    <button class="btn btn-report" onclick="runSalaryReport()">Generate Salary Deduction Report</button>
     <div id="report-container" class="report-box">
-        <h3 style="margin:0 0 10px 0; color:#1a237e; border-bottom:1px solid #ddd; font-size: 14px;">Monthly Deduction Summary</h3>
         <pre id="report-content"></pre>
     </div>
 </div>
 
 <script>
-    // --- FIREBASE CONFIG ---
+    // --- MASTER CONFIGURATION ---
+    const teacherList = [
+        { name: "Teacher One", email: "teacher1@gmail.com" },
+        { name: "Teacher Two", email: "teacher2@gmail.com" }
+    ];
+
+    const holidays = [
+        "2026-05-01","2026-08-15","2026-10-02","2026-11-08","2026-12-25",
+        "2026-01-04","2026-01-11","2026-01-18","2026-01-25","2026-02-01","2026-02-08","2026-02-15","2026-02-22",
+        "2026-03-01","2026-03-08","2026-03-15","2026-03-22","2026-03-29","2026-04-05","2026-04-12","2026-04-19","2026-04-26",
+        "2026-05-03","2026-05-10","2026-05-17","2026-05-24","2026-05-31","2026-06-07","2026-06-14","2026-06-21","2026-06-28",
+        "2026-07-05","2026-07-12","2026-07-19","2026-07-26","2026-08-02","2026-08-09","2026-08-16","2026-08-23","2026-08-30",
+        "2026-09-06","2026-09-13","2026-09-20","2026-09-27","2026-10-04","2026-10-11","2026-10-18","2026-10-25",
+        "2026-11-01","2026-11-08","2026-11-15","2026-11-22","2026-11-29","2026-12-06","2026-12-13","2026-12-20","2026-12-27",
+        "2027-01-14","2027-01-15","2027-02-05","2027-03-08","2027-03-25","2027-04-16"
+    ];
+
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -137,189 +124,87 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    // --- FULL ACADEMIC HOLIDAYS (SUNDAYS 2026 + 2027 FESTIVALS) ---
-const holidays = [
-    // --- ALL SUNDAYS IN 2026 ---
-    "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25",
-    "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22",
-    "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29",
-    "2026-04-05", "2026-04-12", "2026-04-19", "2026-04-26",
-    "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31",
-    "2026-06-07", "2026-06-14", "2026-06-21", "2026-06-28",
-    "2026-07-05", "2026-07-12", "2026-07-19", "2026-07-26",
-    "2026-08-02", "2026-08-09", "2026-08-16", "2026-08-23", "2026-08-30",
-    "2026-09-06", "2026-09-13", "2026-09-20", "2026-09-27",
-    "2026-10-04", "2026-10-11", "2026-10-18", "2026-10-25",
-    "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29",
-    "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27",
 
-    // --- 2026 FESTIVALS ---
-    "2026-05-01", // May Day
-    "2026-05-27", // Bakrid
-    "2026-07-26", // Moharram
-    "2026-08-15", // Independence Day
-    "2026-08-25", // Milad-un-Nabi
-    "2026-08-28", // Varalakshmi Vratam
-    "2026-09-04", // Krishna Astami
-    "2026-09-14", // Vinayaka Chavithi
-    "2026-10-02", // Gandhi Jayanti
-    "2026-11-08", // Deepavali
-    "2026-11-24", // Karthika Poornima
-    "2026-12-15", // Subrahmanya Sasthi
-    "2026-12-25", // Christmas
-
-    // --- 2027 SUNDAYS (UPTO APRIL 24) ---
-    "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31",
-    "2027-02-07", "2027-02-14", "2027-02-21", "2027-02-28",
-    "2027-03-07", "2027-03-14", "2027-03-21", "2027-03-28",
-    "2027-04-04", "2027-04-11", "2027-04-18",
-
-    // --- 2027 FESTIVALS ---
-    "2027-01-14", // Pongal
-    "2027-01-15", // Kanuma
-    "2027-01-26", // Republic Day
-    "2027-02-05", // Maha Shivaratri
-    "2027-03-08", // Ugadi
-    "2027-03-20", // Ramzan
-    "2027-03-25", // Good Friday
-    "2027-04-05", // Babu Jagjivan Ram Jayanti
-    "2027-04-14", // Ambedkar Jayanti
-    "2027-04-16"  // Sri Rama Navami
-];
-    // Date Helper: Converts "26/04/2026, 10:17:51" into JS Date
     function parseVgaDate(str) {
         if (!str || typeof str !== 'string') return null;
-        const [datePart] = str.split(',');
-        const [d, m, y] = datePart.trim().split('/');
+        const [d, m, y] = str.split(',')[0].trim().split('/');
         return new Date(y, m - 1, d);
     }
 
-    // A. MANUAL LOGGING
+    // Initialize Dropdown
+    window.onload = () => {
+        const sel = document.getElementById('m-teacher');
+        sel.innerHTML = '<option value="">-- Select Teacher --</option>';
+        teacherList.forEach(t => sel.innerHTML += `<option value="${t.email}">${t.name}</option>`);
+        refreshUI();
+    };
+
     function saveManual(type) {
         const teacher = document.getElementById('m-teacher').value;
-        const campus = document.getElementById('m-campus').value;
-        const timeNow = new Date().toLocaleString('en-IN');
-        if(!teacher) return alert("Please enter Teacher Email");
-
+        if(!teacher) return alert("Select Teacher");
         db.collection("attendance").add({
             teacher: teacher,
-            campus: campus,
+            campus: document.getElementById('m-campus').value,
             type: type,
-            time: timeNow,
-            method: "Manual"
-        }).then(() => {
-            alert("Office Entry Saved!");
-            document.getElementById('m-teacher').value = "";
-        });
+            time: new Date().toLocaleString('en-IN'),
+            entry: "Manual"
+        }).then(() => alert("Saved"));
     }
 
-    // B. REAL-TIME TABLE UPDATE (WITH FILTERS)
-    function refreshTable() {
-        const tSearch = document.getElementById('f-teacher').value.toLowerCase();
-        const cSearch = document.getElementById('f-campus').value;
+    function refreshUI() {
+        const tS = document.getElementById('f-teacher').value.toLowerCase();
+        const cS = document.getElementById('f-campus').value;
         const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
         const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
 
-        db.collection("attendance").orderBy("time", "desc").onSnapshot((snapshot) => {
+        db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
             const list = document.getElementById('attendance-list');
-            list.innerHTML = ""; 
-            snapshot.forEach((doc) => {
+            list.innerHTML = "";
+            snap.forEach(doc => {
                 const d = doc.data();
-                const logDate = parseVgaDate(d.time);
-                
-                // Filter Checks
-                if (tSearch && !(d.teacher||"").toLowerCase().includes(tSearch)) return;
-                if (cSearch !== "All" && d.campus !== cSearch) return;
-                if (start && logDate < start) return;
-                if (end && logDate > end) return;
-
-                const rowClass = d.method === "Manual" ? "manual-row" : "";
-                list.innerHTML += `
-                    <tr class="${rowClass}">
-                        <td style="text-align:left; padding-left:5px;">${d.teacher}</td>
-                        <td>${d.campus}</td>
-                        <td style="color:${d.type==='IN'?'green':'red'}; font-weight:bold;">${d.type}</td>
-                        <td style="font-size:9px;">${d.time}</td>
-                    </tr>`;
+                const logD = parseVgaDate(d.time);
+                if (tS && !(d.teacher||"").toLowerCase().includes(tS)) return;
+                if (cS !== "All" && d.campus !== cS) return;
+                if (start && logD < start) return;
+                if (end && logD > end) return;
+                list.innerHTML += `<tr class="${d.entry==='Manual'?'manual-row':''}"><td>${d.teacher}</td><td>${d.campus}</td><td style="color:${d.type==='IN'?'green':'red'}">${d.type}</td><td style="font-size:9px">${d.time}</td></tr>`;
             });
-            if(list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No matching logs.</td></tr>";
         });
     }
 
-    // C. FINAL SALARY REPORT LOGIC
     function runSalaryReport() {
-        const tSearch = document.getElementById('f-teacher').value.toLowerCase();
         const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
         const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
-
         let dataMap = {};
-        let allDatesInRange = new Set();
+        let datesInRange = new Set();
 
-        db.collection("attendance").get().then(snapshot => {
-            snapshot.forEach(doc => {
+        db.collection("attendance").get().then(snap => {
+            snap.forEach(doc => {
                 const d = doc.data();
-                const teacher = d.teacher || "Unknown";
-                const logDate = parseVgaDate(d.time);
-                if (!logDate) return;
-
-                // Filter logic
-                if (tSearch && !teacher.toLowerCase().includes(tSearch)) return;
-                if (start && logDate < start) return;
-                if (end && logDate > end) return;
-
-                const dateKey = logDate.toISOString().split('T')[0];
-                allDatesInRange.add(dateKey);
-
-                if (!dataMap[teacher]) {
-                    dataMap[teacher] = { presentDays: new Set(), lateCount: 0 };
-                }
-                dataMap[teacher].presentDays.add(dateKey);
-                if (d.late === true) dataMap[teacher].lateCount++;
+                const logD = parseVgaDate(d.time);
+                if (!logD || (start && logD < start) || (end && logD > end)) return;
+                const dateKey = logD.toISOString().split('T')[0];
+                datesInRange.add(dateKey);
+                if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
+                dataMap[d.teacher].present.add(dateKey);
+                if (d.late) dataMap[d.teacher].late++;
             });
 
-            let sortedDates = Array.from(allDatesInRange).sort();
+            let sorted = Array.from(datesInRange).sort();
             let output = "";
-
-            for (let teacher in dataMap) {
-                let present = dataMap[teacher].presentDays.size;
-                let late = dataMap[teacher].lateCount;
-                let absent = 0;
-                let sandwich = 0;
-
-                sortedDates.forEach((date, i) => {
-                    const prev = sortedDates[i-1];
-                    const next = sortedDates[i+1];
-
-                    if (holidays.includes(date)) {
-                        let bAbs = prev && !dataMap[teacher].presentDays.has(prev);
-                        let aAbs = next && !dataMap[teacher].presentDays.has(next);
-                        if (bAbs || aAbs) sandwich++;
-                    } else {
-                        if (!dataMap[teacher].presentDays.has(date)) absent++;
-                    }
+            for (let t in dataMap) {
+                let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0, sand = 0;
+                sorted.forEach((dt, i) => {
+                    if (holidays.includes(dt)) {
+                        if ((sorted[i-1] && !dataMap[t].present.has(sorted[i-1])) || (sorted[i+1] && !dataMap[t].present.has(sorted[i+1]))) sand++;
+                    } else if (!dataMap[t].present.has(dt)) abs++;
                 });
-
-                let lateCut = Math.floor(late / 3);
-                let totalCut = lateCut + (absent * 2) + sandwich;
-
-                output += `NAME: ${teacher}\n`;
-                output += `PRESENT: ${present} Days | LATE: ${late}\n`;
-                output += `DEDUCTIONS:\n`;
-                output += `- Late Cut (3=1): ${lateCut}\n`;
-                output += `- Absent (x2):    ${absent * 2}\n`;
-                output += `- Sandwich:      ${sandwich}\n`;
-                output += `------------------------------\n`;
-                output += `TOTAL CUT: ${totalCut} DAYS\n\n`;
+                output += `NAME: ${t}\nPRESENT: ${p} | LATE: ${l}\nABSENT CUT (x2): ${abs*2} | SANDWICH: ${sand}\nTOTAL CUT: ${Math.floor(l/3) + abs*2 + sand} DAYS\n\n`;
             }
-
             document.getElementById('report-container').style.display = "block";
-            document.getElementById('report-content').innerText = output || "No data for selected filters.";
+            document.getElementById('report-content').innerText = output || "No Data.";
         });
     }
-
-    // Initialize UI
-    refreshTable();
 </script>
-
 </body>
 </html>
