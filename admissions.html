@@ -3,228 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admin | Admission 2026-27</title>
+    <title>VGA Admin Portal 2026-27</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --vga-blue: #1e40af; /* Royal Blue */
-            --vga-light-blue: #dbeafe;
-            --vga-gold: #facc15;
-            --text-main: #1e293b;
+            --royal-blue: #1e40af;
+            --soft-blue: #eff6ff;
+            --gold: #facc15;
+            --border: #e2e8f0;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f8fafc;
+            background-color: #f1f5f9;
             margin: 0;
             padding: 20px;
-            color: var(--text-main);
         }
 
-        .admission-card {
-            max-width: 900px;
+        .master-card {
+            max-width: 950px;
             margin: auto;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(30, 64, 175, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             overflow: hidden;
-            border-top: 10px solid var(--vga-blue);
+            border-top: 10px solid var(--royal-blue);
         }
 
         .header {
-            padding: 25px;
+            padding: 20px;
             text-align: center;
-            background: white;
-            border-bottom: 2px solid var(--vga-light-blue);
+            border-bottom: 1px solid var(--border);
         }
 
-        .logo { max-width: 140px; margin-bottom: 10px; }
+        .logo { max-width: 130px; }
 
-        .form-body { padding: 35px; }
+        .form-content { padding: 30px; }
 
-        .section-header {
-            font-size: 14px;
+        .section-label {
+            font-size: 13px;
             font-weight: 700;
-            color: var(--vga-blue);
+            color: var(--royal-blue);
             text-transform: uppercase;
-            margin: 25px 0 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 15px;
+            display: block;
+            border-left: 4px solid var(--gold);
+            padding-left: 10px;
         }
 
-        .section-header::after {
-            content: "";
-            flex: 1;
-            height: 2px;
-            background: var(--vga-light-blue);
-        }
-
-        /* Identity Info Grid */
-        .identity-grid {
+        /* Top 4-Column Layout */
+        .info-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        /* 3-Column Fee Grid Adjustment */
-        .fee-grid-3col {
+        /* Fee 3-Column Layout (3 across, 2 down) */
+        .fee-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 15px;
+            margin-bottom: 30px;
         }
 
         .form-group { display: flex; flex-direction: column; }
 
-        label { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #64748b; }
+        label { font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #64748b; }
 
         input, select {
-            padding: 12px;
-            border: 1.5px solid #cbd5e1;
+            padding: 10px;
+            border: 1.5px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
-            transition: 0.3s;
         }
 
-        input:focus { border-color: var(--vga-blue); outline: none; box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1); }
+        input:focus { outline: none; border-color: var(--royal-blue); background: var(--soft-blue); }
 
-        /* Colorful Independent Fee Boxes */
+        /* Colored Fee Boxes */
         .fee-box {
-            padding: 15px;
-            border-radius: 12px;
-            border: 1px solid var(--vga-light-blue);
+            padding: 12px;
+            border-radius: 10px;
+            background: var(--soft-blue);
+            border-left: 5px solid var(--royal-blue);
         }
-        .bg-blue { background: #f0f7ff; border-top: 4px solid var(--vga-blue); }
-        .bg-gold { background: #fffdf0; border-top: 4px solid var(--vga-gold); }
 
-        /* Summary Dashboard - Now Blue */
-        .summary-dashboard {
-            background: var(--vga-blue);
+        /* Footer Dashboard */
+        .footer-dashboard {
+            background: var(--royal-blue);
             color: white;
-            padding: 30px;
-            border-radius: 15px;
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
+            padding: 25px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             text-align: center;
-            margin-top: 30px;
         }
 
-        .val { font-size: 26px; font-weight: 700; display: block; }
-        .lbl { font-size: 11px; text-transform: uppercase; opacity: 0.9; letter-spacing: 1px; }
+        .stat-item { flex: 1; }
+        .stat-label { font-size: 11px; opacity: 0.8; text-transform: uppercase; }
+        .stat-val { font-size: 24px; font-weight: 700; display: block; }
 
-        .paid-input {
-            background: rgba(255, 255, 255, 0.2);
+        .paid-box {
+            background: rgba(255,255,255,0.2);
             border: 1px solid white;
             color: white;
-            width: 130px;
+            width: 120px;
             text-align: center;
             font-size: 20px;
-            border-radius: 6px;
-            margin-top: 5px;
+            border-radius: 5px;
+            padding: 5px;
         }
 
         .btn-submit {
             width: 100%;
-            background: var(--vga-blue);
+            background: var(--royal-blue);
             color: white;
-            padding: 20px;
+            padding: 18px;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 18px;
             font-weight: 700;
             cursor: pointer;
-            margin-top: 25px;
-            transition: 0.3s;
+            margin-top: 20px;
         }
 
-        .btn-submit:hover { background: #172554; transform: translateY(-2px); }
-
-        @media (max-width: 850px) {
-            .identity-grid { grid-template-columns: repeat(2, 1fr); }
-            .fee-grid-3col { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 800px) {
+            .info-grid { grid-template-columns: 1fr 1fr; }
+            .fee-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="admission-card">
+<div class="master-card">
     <div class="header">
         <img src="logo.png" alt="VGA Logo" class="logo">
-        <h1 style="margin:0; font-size:24px; color:var(--vga-blue);">Student Admission 2026-27</h1>
+        <h1 style="margin:0; font-size:22px; color:var(--royal-blue);">Student Admission 2026-2027</h1>
     </div>
 
-    <form class="form-body" id="vgaAdmissionForm">
-        <div class="section-header">Academic & Personal Info</div>
-        <div class="identity-grid">
+    <form class="form-content" id="admissionForm">
+        <span class="section-label">Identity & Location Info</span>
+        <div class="info-grid">
             <div class="form-group"><label>Admission No</label><input type="text" placeholder="e.g. 1530"></div>
-            <div class="form-group"><label>Campus</label><select><option>Velpur</option><option>Relangi</option><option>Undrajavaram</option></select></div>
+            <div class="form-group">
+                <label>Campus</label>
+                <select>
+                    <option>Velpur</option><option>Relangi</option><option>Undrajavaram</option>
+                </select>
+            </div>
             <div class="form-group"><label>Student Name</label><input type="text" required></div>
             <div class="form-group"><label>Parent Name</label><input type="text"></div>
             <div class="form-group"><label>Aadhaar No</label><input type="text" maxlength="12"></div>
             <div class="form-group"><label>Place</label><input type="text"></div>
-            <div class="form-group"><label>Class / Sec</label><input type="text"></div>
-            <div class="form-group"><label>Parent Mobile</label><input type="tel"></div>
+            <div class="form-group"><label>Class / Section</label><input type="text"></div>
+            <div class="form-group"><label>Mobile Number</label><input type="tel"></div>
         </div>
 
-        <div class="section-header">Fee Details (3-Column Layout)</div>
-        <div class="fee-grid-3col">
-            <div class="form-group fee-box bg-blue">
-                <label>Admission Fee</label>
-                <input type="number" id="f1" value="0" oninput="calc()">
+        <span class="section-label">Fee Details (3-Column View)</span>
+        <div class="fee-grid">
+            <div class="form-group fee-box"><label>Admission Fee</label><input type="number" id="f1" value="0" oninput="calc()"></div>
+            <div class="form-group fee-box"><label>Tuition Fee</label><input type="number" id="f2" value="0" oninput="calc()"></div>
+            <div class="form-group fee-box"><label>Books Fee</label><input type="number" id="f3" value="0" oninput="calc()"></div>
+            <div class="form-group fee-box"><label>Uniform Fee</label><input type="number" id="f4" value="0" oninput="calc()"></div>
+            <div class="form-group fee-box"><label>Exam Fee</label><input type="number" id="f5" value="0" oninput="calc()"></div>
+            <div class="form-group fee-box"><label>Transport Fee</label><input type="number" id="f6" value="0" oninput="calc()"></div>
+        </div>
+
+        <div class="footer-dashboard">
+            <div class="stat-item">
+                <span class="stat-label">Total Amount</span>
+                <span class="stat-val" id="total">₹ 0</span>
             </div>
-            <div class="form-group fee-box bg-blue">
-                <label>Tuition Fee</label>
-                <input type="number" id="f2" value="0" oninput="calc()">
+            <div class="stat-item">
+                <span class="stat-label">Amount Paid Now</span><br>
+                <input type="number" id="paid" class="paid-box" value="0" oninput="calc()">
             </div>
-            <div class="form-group fee-box bg-gold">
-                <label>Books & Stationery</label>
-                <input type="number" id="f3" value="0" oninput="calc()">
-            </div>
-            <div class="form-group fee-box bg-gold">
-                <label>Uniform Fee</label>
-                <input type="number" id="f4" value="0" oninput="calc()">
-            </div>
-            <div class="form-group fee-box bg-blue">
-                <label>Exam Fee</label>
-                <input type="number" id="f5" value="0" oninput="calc()">
-            </div>
-            <div class="form-group fee-box bg-blue">
-                <label>Transport Fee</label>
-                <input type="number" id="f6" value="0" oninput="calc()">
+            <div class="stat-item">
+                <span class="stat-label" style="color:var(--gold);">Balance Due</span>
+                <span class="stat-val" id="balance" style="color:var(--gold);">₹ 0</span>
             </div>
         </div>
 
-        <div class="summary-dashboard">
-            <div>
-                <span class="lbl">Grand Total</span>
-                <span class="val" id="total">₹ 0</span>
-            </div>
-            <div>
-                <span class="lbl">Amount Paid</span>
-                <input type="number" id="paid" class="paid-input" value="0" oninput="calc()">
-            </div>
-            <div>
-                <span class="lbl" style="color:var(--vga-gold);">Balance Due</span>
-                <span class="val" id="balance" style="color:var(--vga-gold);">₹ 0</span>
-            </div>
-        </div>
-
-        <button type="button" class="btn-submit" onclick="alert('Record Saved Successfully!')">Submit Admission Record</button>
+        <button type="button" class="btn-submit" onclick="alert('Record Saved!')">Confirm & Save Admission</button>
     </form>
 </div>
 
 <script>
     function calc() {
-        let total = 0;
+        let sum = 0;
         for(let i=1; i<=6; i++) {
-            total += parseFloat(document.getElementById('f'+i).value) || 0;
+            sum += parseFloat(document.getElementById('f'+i).value) || 0;
         }
         const paid = parseFloat(document.getElementById('paid').value) || 0;
-        const bal = total - paid;
-
-        document.getElementById('total').innerText = "₹ " + total.toLocaleString('en-IN');
+        const bal = sum - paid;
+        document.getElementById('total').innerText = "₹ " + sum.toLocaleString('en-IN');
         document.getElementById('balance').innerText = "₹ " + bal.toLocaleString('en-IN');
     }
 </script>
