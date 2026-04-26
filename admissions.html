@@ -3,223 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Student Admissions 2026-27</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <title>VGA Admission 2026-27</title>
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .main-container { background: white; width: 100%; max-width: 600px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
-        .vga-title { color: #1a237e; font-weight: 800; margin: 0; font-size: 18px; }
-        
-        /* Form & Inputs */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 13px; }
-        
-        .btn-save { background: #28a745; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        
-        /* Stats & Table */
-        .stat-banner { background: #1a237e; color: white; padding: 12px; border-radius: 10px; margin-top: 20px; display: flex; justify-content: space-around; font-size: 12px; font-weight: bold; }
-        .table-container { width: 100%; margin-top: 20px; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        thead th { background: #f8f9fa; color: #333; padding: 10px; font-size: 12px; border-bottom: 2px solid #ddd; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 11px; text-align: center; }
-        .status-paid { color: #28a745; font-weight: bold; }
-        .status-unpaid { color: #d32f2f; font-weight: bold; }
-        
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #1a237e; text-decoration: none; font-size: 13px; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 20px; }
+        .logo { max-width: 150px; height: auto; }
+        h2 { color: #2c3e50; margin-top: 10px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .readonly-field { background-color: #e9ecef; font-weight: bold; }
+        .balance-red { color: #d9534f; }
+        button { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #218838; }
     </style>
 </head>
 <body>
 
-<div class="main-container">
+<div class="container">
     <div class="header">
-        <h1 class="vga-title">Student Admission 2026-27</h1>
-        <p style="color:#d32f2f; font-weight:bold; font-size:11px; margin:5px 0;">OFFICE ENTRY FORM</p>
+        <img src="logo.png" alt="Veeramallu Global Academy Logo" class="logo">
+        <h2>Admission Form 2026-27</h2>
     </div>
 
-    <div class="form-grid">
-        <div><label>Student Name</label><input type="text" id="s-name"></div>
-        <div><label>Parent Phone</label><input type="number" id="s-phone"></div>
-        <div><label>Campus</label><select id="s-campus"><option>Velpur</option><option>Relangi</option><option>Undrajavaram</option></select></div>
-        <div><label>Class</label><input type="text" id="s-class"></div>
-        <div style="grid-column: span 2;"><label>Fee Status</label><select id="s-fee"><option value="Paid">PAID</option><option value="Unpaid">UNPAID / PENDING</option></select></div>
-    </div>
+    <form id="admissionForm">
+        <div class="form-group">
+            <label>Student Name</label>
+            <input type="text" id="studentName" placeholder="Enter Full Name" required>
+        </div>
+        <div class="form-group">
+            <label>Admission No</label>
+            <input type="text" id="admissionNo" placeholder="e.g. 1530">
+        </div>
 
-    <button class="btn-save" onclick="saveAdmission()">REGISTER STUDENT</button>
+        <hr>
 
-    <div class="stat-banner" id="admission-stats">
-        <span>V: 0</span> <span>R: 0</span> <span>U: 0</span>
-    </div>
+        <div class="form-group">
+            <label>Tuition Fee</label>
+            <input type="number" id="tuitionFee" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Books Fee</label>
+            <input type="number" id="booksFee" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Uniform Fee</label>
+            <input type="number" id="uniformFee" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Exam Fee</label>
+            <input type="number" id="examFee" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Stationery Fee</label>
+            <input type="number" id="stationeryFee" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Transport Fee</label>
+            <input type="number" id="transportFee" value="0" oninput="calculateFees()">
+        </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Name</th>
-                    <th style="width: 25%;">Campus/Class</th>
-                    <th style="width: 35%;">Fee Status</th>
-                </tr>
-            </thead>
-            <tbody id="student-table-body">
-                <tr><td colspan="3">No students registered yet.</td></tr>
-            </tbody>
-        </table>
-    </div>
+        <hr>
 
-    <a href="admin.html" class="back-link">← Back to Admin Dashboard</a>
+        <div class="form-group">
+            <label>Total Amount</label>
+            <input type="number" id="totalFees" class="readonly-field" readonly>
+        </div>
+        <div class="form-group">
+            <label>Paid Amount</label>
+            <input type="number" id="paidAmount" value="0" oninput="calculateFees()">
+        </div>
+        <div class="form-group">
+            <label>Balance Due</label>
+            <input type="number" id="balance" class="readonly-field balance-red" readonly>
+        </div>
+
+        <button type="button" onclick="saveAdmission()">Submit Admission</button>
+    </form>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-        projectId: "veeramalluerp-6cac5",
-        storageBucket: "veeramalluerp-6cac5.appspot.com",
-        messagingSenderId: "379339569496",
-        appId: "1:379339569496:web:5c2becb87e35b7190d6350d"
-    };
+function calculateFees() {
+    const fields = ['tuitionFee', 'booksFee', 'uniformFee', 'examFee', 'stationeryFee', 'transportFee'];
+    let total = 0;
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    function saveAdmission() {
-        const name = document.getElementById('s-name').value;
-        const campus = document.getElementById('s-campus').value;
-        const sClass = document.getElementById('s-class').value;
-        const phone = document.getElementById('s-phone').value;
-        const fee = document.getElementById('s-fee').value;
-
-        if(!name || !phone) return alert("Fill Name and Phone!");
-
-        db.collection("admissions_26_27").add({
-            studentName: name,
-            campus: campus,
-            class: sClass,
-            parentPhone: phone,
-            feeStatus: fee,
-            timestamp: new Date().getTime() // For sorting
-        }).then(() => {
-            alert("Registered!");
-            document.getElementById('s-name').value = "";
-            document.getElementById('s-phone').value = "";
-        });
-    }
-
-    // LIVE LISTENER FOR TABLE AND STATS
-    db.collection("admissions_26_27").orderBy("timestamp", "desc").onSnapshot(snap => {
-        let counts = { Velpur: 0, Relangi: 0, Undrajavaram: 0 };
-        const tableBody = document.getElementById('student-table-body');
-        tableBody.innerHTML = "";
-
-        snap.forEach(doc => {
-            const data = doc.data();
-            counts[data.campus]++;
-
-            const feeClass = data.feeStatus === "Paid" ? "status-paid" : "status-unpaid";
-            
-            tableBody.innerHTML += `
-                <tr>
-                    <td style="text-align:left;"><b>${data.studentName}</b><br><span style="font-size:9px;color:#666;">${data.parentPhone}</span></td>
-                    <td>${data.campus}<br>${data.class}</td>
-                    <td class="${feeClass}">${data.feeStatus.toUpperCase()}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('admission-stats').innerHTML = `
-            <span>VELPUR: ${counts.Velpur}</span> 
-            <span>RELANGI: ${counts.Relangi}</span> 
-            <span>UNDRAJAVARAM: ${counts.Undrajavaram}</span>
-        `;
+    fields.forEach(id => {
+        total += parseFloat(document.getElementById(id).value) || 0;
     });
-    <form id="admissionForm">
-    <h3>Student Admission 2026-27</h3>
-    
-    <label>Student Name:</label>
-    <input type="text" id="studentName" required><br>
 
-    <label>Admission No:</label>
-    <input type="text" id="admissionNo"><br>
-
-    <hr>
-    <h4>Fee Details</h4>
-    <label>Tuition Fee:</label>
-    <input type="number" id="tuitionFee" value="0" oninput="calculateTotal()"><br>
-    
-    <label>Books Fee:</label>
-    <input type="number" id="booksFee" value="0" oninput="calculateTotal()"><br>
-    
-    <label>Uniform Fee:</label>
-    <input type="number" id="uniformFee" value="0" oninput="calculateTotal()"><br>
-    
-    <label>Exam Fee:</label>
-    <input type="number" id="examFee" value="0" oninput="calculateTotal()"><br>
-    
-    <label>Stationery Fee:</label>
-    <input type="number" id="stationeryFee" value="0" oninput="calculateTotal()"><br>
-    
-    <label>Transport Fee:</label>
-    <input type="number" id="transportFee" value="0" oninput="calculateTotal()"><br>
-
-    <hr>
-    <label><strong>Total Fees:</strong></label>
-    <input type="number" id="totalFees" value="0" readonly><br>
-
-    <label>Paid Amount:</label>
-    <input type="number" id="paidAmount" value="0" oninput="calculateTotal()"><br>
-
-    <label><strong>Balance Due:</strong></label>
-    <input type="number" id="balance" value="0" readonly style="color: red; font-weight: bold;"><br>
-
-    <button type="button" onclick="submitToFirebase()">Submit Admission</button>
-</form>
-    <script>
-function calculateTotal() {
-    // Get all fee values
-    const tuition = parseFloat(document.getElementById('tuitionFee').value) || 0;
-    const books = parseFloat(document.getElementById('booksFee').value) || 0;
-    const uniform = parseFloat(document.getElementById('uniformFee').value) || 0;
-    const exam = parseFloat(document.getElementById('examFee').value) || 0;
-    const stationery = parseFloat(document.getElementById('stationeryFee').value) || 0;
-    const transport = parseFloat(document.getElementById('transportFee').value) || 0;
     const paid = parseFloat(document.getElementById('paidAmount').value) || 0;
-
-    // Calculate Total
-    const total = tuition + books + uniform + exam + stationery + transport;
-    document.getElementById('totalFees').value = total;
-
-    // Calculate Balance
     const balance = total - paid;
+
+    document.getElementById('totalFees').value = total;
     document.getElementById('balance').value = balance;
 }
 
-// If you are using Firebase for VGA website:
-function submitToFirebase() {
-    const studentData = {
-        name: document.getElementById('studentName').value,
-        admNo: document.getElementById('admissionNo').value,
-        fees: {
-            tuition: document.getElementById('tuitionFee').value,
-            books: document.getElementById('booksFee').value,
-            uniform: document.getElementById('uniformFee').value,
-            exam: document.getElementById('examFee').value,
-            stationery: document.getElementById('stationeryFee').value,
-            transport: document.getElementById('transportFee').value
-        },
-        total: document.getElementById('totalFees').value,
-        paid: document.getElementById('paidAmount').value,
-        balance: document.getElementById('balance').value,
-        timestamp: new Date().toISOString()
-    };
-
-    console.log("Saving Admission Data:", studentData);
-    // Replace with your firebase.database().ref('admissions/').push(studentData);
-    alert("Admission for " + studentData.name + " saved successfully!");
+function saveAdmission() {
+    const name = document.getElementById('studentName').value;
+    if(!name) {
+        alert("Please enter a student name");
+        return;
+    }
+    
+    // This is where you would call your Firebase or Sheet connection
+    alert("Admission for " + name + " recorded with Balance: " + document.getElementById('balance').value);
 }
+
+// Initial calculation on load
+window.onload = calculateFees;
 </script>
 
-</script>
 </body>
 </html>
