@@ -92,38 +92,68 @@
             }, err => alert("Please enable GPS/Location"));
         }
     }
+function checkIn() {
+    getLocation((lat, lon) => {
+        let c = document.getElementById("campus").value;
+        let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
+        if (d > 20000) { document.getElementById("msg").innerText = "❌ Outside Campus"; return; }
 
-    function checkIn(){
-        getLocation((lat, lon) => {
-            let c = document.getElementById("campus").value;
-            let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d >20000) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
-
-            db.collection("attendance").add({
-                teacher: firebase.auth().currentUser.email,
-                type: "IN",
-                campus: c,
-                time: new Date().toLocaleString(),
-                lat, lon
-            }).then(() => document.getElementById("msg").innerText="✅ Checked IN");
+        db.collection("attendance").add({
+            teacher: firebase.auth().currentUser.email,
+            type: "IN",
+            campus: c,
+            time: new Date().toLocaleString(),
+            lat, lon
+        }).then(() => {
+            document.getElementById("msg").innerText = "✅ Checked IN";
+            
+            // Sends data to Google Sheet
+            fetch('https://script.google.com/macros/s/AKfycbymgNCA5beIqL1tQrrOQJCyECQqE8qHtNY3SdMFZiH3SbIODydfJg_ZVcf6mS7n9eEQ/exec',{
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    teacher: firebase.auth().currentUser.email,
+                    type: "IN",
+                    campus: c,
+                    lat: lat,
+                    lon: lon
+                })
+            });
         });
-    }
+    });
+}
 
-    function checkOut(){
-        getLocation((lat, lon) => {
-            let c = document.getElementById("campus").value;
-            let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
-            if(d > 20000) { document.getElementById("msg").innerText="❌ Outside Campus"; return; }
+function checkOut() {
+    getLocation((lat, lon) => {
+        let c = document.getElementById("campus").value;
+        let d = distance(lat, lon, campuses[c].lat, campuses[c].lon);
+        if (d > 20000) { document.getElementById("msg").innerText = "❌ Outside Campus"; return; }
 
-            db.collection("attendance").add({
-                teacher: firebase.auth().currentUser.email,
-                type: "OUT",
-                campus: c,
-                time: new Date().toLocaleString(),
-                lat, lon
-            }).then(() => document.getElementById("msg").innerText="✅ Checked OUT");
+        db.collection("attendance").add({
+            teacher: firebase.auth().currentUser.email,
+            type: "OUT",
+            campus: c,
+            time: new Date().toLocaleString(),
+            lat, lon
+        }).then(() => {
+            document.getElementById("msg").innerText = "✅ Checked OUT";
+            
+            // Sends data to Google Sheet
+            fetch('https://script.google.com/macros/s/AKfycbymgNCA5beIqL1tQrrOQJCyECQqE8qHtNY3SdMFZiH3SbIODydfJg_ZVcf6mS7n9eEQ/exec',{
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({
+                    teacher: firebase.auth().currentUser.email,
+                    type: "OUT",
+                    campus: c,
+                    lat: lat,
+                    lon: lon
+                })
+            });
         });
-    }
+    });
+}
+
 </script>
 </body>
 </html>
