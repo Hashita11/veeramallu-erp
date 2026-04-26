@@ -102,7 +102,7 @@ function checkIn() {
             teacher: firebase.auth().currentUser.email,
             type: "IN",
             campus: c,
-            time: new Date().toLocaleString(),
+            time: new Date(),
             lat, lon
         }).then(() => {
             document.getElementById("msg").innerText = "✅ Checked IN";
@@ -133,7 +133,7 @@ function checkOut() {
             teacher: firebase.auth().currentUser.email,
             type: "OUT",
             campus: c,
-            time: new Date().toLocaleString(),
+            time: new Date(),
             lat, lon
         }).then(() => {
             document.getElementById("msg").innerText = "✅ Checked OUT";
