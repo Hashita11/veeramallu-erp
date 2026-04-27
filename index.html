@@ -85,23 +85,38 @@
         .catch(err => alert("Login Failed: " + err.message));
     }
 // Configuration: Precise Campus Coordinates
-const CAMPUS_LOCATIONS = {
-  "Velpur": { lat: 16.7165, lng: 81.6625 },
-  "Undrajavaram": { lat: 16.7450, lng: 81.6820 }, // Update as needed
-  "Relangi": { lat: 16.6920, lng: 81.6450 }      // Update as needed
-};
+// 1. Updated coordinates to match the physical gate area more closely
+const VELPUR_GATE = { lat: 16.7118, lng: 81.6625 }; 
 
-const ALLOWED_RADIUS_KM = 0.2; // 200 meters buffer for GPS accuracy
+// 2. Increase the 'Acceptable' radius to 300 meters to account for mobile GPS drift
+const VALID_RADIUS_KM = 0.3; 
 
-function checkLocation() {
-  if (!navigator.geolocation) {
-    console.log("Geolocation not supported");
-    return;
-  }
+function getDistance() {
+    navigator.geolocation.getCurrentPosition(position => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        
+        // Log these to the console so you can see what the phone sees
+        console.log("Current Lat: " + userLat + " | Current Lng: " + userLng);
 
-  navigator.geolocation.getCurrentPosition((position) => {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
+        const dist = calculateDistance(userLat, userLng, VELPUR_GATE.lat, VELPUR_GATE.lng);
+        
+        const display = document.getElementById("status");
+        if (dist <= VALID_RADIUS_KM) {
+            display.innerHTML = "<span style='color:green;'>Inside Campus</span>";
+        } else {
+            // Converts distance to meters for the error message
+            const meters = (dist * 1000).toFixed(0);
+            display.innerHTML = `<span style='color:red;'>Error: You are ${meters}m away from Velpur campus.</span>`;
+        }
+    }, error => {
+        alert("Please enable GPS/Location permissions");
+    }, {
+        enableHighAccuracy: true, // Forces GPS over Wi-Fi
+        maximumAge: 0            // Prevents using old/cached location data
+    });
+}
+
     
     // Select the campus you are currently at
     const target = CAMPUS_LOCATIONS["Velpur"];
