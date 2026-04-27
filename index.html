@@ -43,7 +43,7 @@
 </div>
 
 <script>
-    // VERIFIED FIREBASE CONFIGURATION
+    // CORRECTED FIREBASE CONFIGURATION
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFPu2mTmQvPtXZx6h-2Mz4D1piE",
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -95,7 +95,7 @@
             const target = campuses[selCampus];
             const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
 
-            // 300m safety buffer
+            // 300m safety buffer to cover the gate area
             if (dist > 300) {
                 msg.innerHTML = "❌ Too far (" + Math.round(dist) + "m away)";
                 msg.style.color = "red";
@@ -112,7 +112,7 @@
                 msg.innerHTML = "✅ " + type + " Success!";
                 msg.style.color = "green";
             });
-        }, (err) => alert("Please enable GPS."), { enableHighAccuracy: true });
+        }, (err) => alert("Please enable GPS/Location."), { enableHighAccuracy: true });
     }
 </script>
 </body>
