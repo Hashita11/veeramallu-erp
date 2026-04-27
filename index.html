@@ -84,12 +84,57 @@
         })
         .catch(err => alert("Login Failed: " + err.message));
     }
-
-    const campuses = {
-    Velpur: { lat: 16.7172, lon: 81.6671 },
-    Relangi: { lat: 16.7111, lon: 81.7222 },
-    Undrajavaram: { lat: 16.7455, lon: 81.6788 },
+// Configuration: Precise Campus Coordinates
+const CAMPUS_LOCATIONS = {
+  "Velpur": { lat: 16.7165, lng: 81.6625 },
+  "Undrajavaram": { lat: 16.7450, lng: 81.6820 }, // Update as needed
+  "Relangi": { lat: 16.6920, lng: 81.6450 }      // Update as needed
 };
+
+const ALLOWED_RADIUS_KM = 0.2; // 200 meters buffer for GPS accuracy
+
+function checkLocation() {
+  if (!navigator.geolocation) {
+    console.log("Geolocation not supported");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition((position) => {
+    const userLat = position.coords.latitude;
+    const userLng = position.coords.longitude;
+    
+    // Select the campus you are currently at
+    const target = CAMPUS_LOCATIONS["Velpur"];
+    const distance = calculateDistance(userLat, userLng, target.lat, target.lng);
+
+    const statusElement = document.getElementById("status"); // Ensure you have this ID in your HTML
+    
+    if (distance <= ALLOWED_RADIUS_KM) {
+      statusElement.innerHTML = "Status: <span style='color:green;'>Inside Campus</span>";
+    } else {
+      statusElement.innerHTML = `Status: <span style='color:red;'>Outside Campus</span> (${distance.toFixed(2)} km away)`;
+    }
+  }, (error) => {
+    console.error("Error getting location: ", error);
+  }, {
+    enableHighAccuracy: true,
+    timeout: 5000,
+    maximumAge: 0
+  });
+}
+
+// Haversine Formula to calculate distance between two points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
