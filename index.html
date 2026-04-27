@@ -3,142 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Attendance System</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>VGA - Teacher Panel</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; }
-        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        button { background-color: #28a745; color: white; cursor: pointer; border: none; font-weight: bold; }
-        button:hover { background-color: #218838; }
-        #status { margin-top: 20px; font-weight: bold; padding: 10px; border-radius: 5px; }
-        .outside { color: #721c24; background-color: #f8d7da; }
-        .inside { color: #155724; background-color: #d4edda; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .main-container { background: #ffffff; width: 100%; max-width: 450px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        .header-section { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+        .academy-logo { width: 100px; height: auto; margin-bottom: 12px; }
+        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .panel-title { font-size: 16px; color: #3d3f3f; margin-top: 5px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; }
+        .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 10px; }
+        .btn-login { background-color: #007bff; }
+        .btn-in { background-color: #28a745; }
+        .btn-out { background-color: #1a237e; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>VGA Staff Attendance</h2>
-    
-    <div id="login-form">
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+<div class="main-container">
+    <div class="header-section">
+        <img src="logo.png" alt="VGA Logo" class="academy-logo">
+        <h1 class="academy-name">Veeramallu Global Academy</h1>
+        <h2 class="panel-title" id="panel-label">Teacher ERP Login</h2>
     </div>
 
-    <div id="attendance-section" style="display:none;">
-        <p id="user-display"></p>
-        <select id="campus-select">
+    <div id="login-div">
+        <input id="email" type="email" placeholder="Email Address">
+        <input id="password" type="password" placeholder="Password">
+        <button class="btn btn-login" onclick="login()">Login to Panel</button>
+    </div>
+
+    <div id="app" style="display:none;">
+        <select id="campus">
             <option value="Velpur">Velpur Campus</option>
             <option value="Relangi">Relangi Campus</option>
             <option value="Undrajavaram">Undrajavaram Campus</option>
         </select>
-        <button onclick="processAttendance('Check-In')">Check-In</button>
-        <button onclick="processAttendance('Check-Out')" style="background-color: #dc3545;">Check-Out</button>
-        <div id="status">Ready...</div>
+        <button class="btn btn-in" onclick="checkIn()">Check IN</button>
+        <button class="btn btn-out" onclick="checkOut()">Check OUT</button>
+        <p id="msg"></p>
     </div>
 </div>
 
 <script>
-    // 1. Firebase Configuration
+    // 1. Your Actual Firebase Config (Restored from your screenshot)
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY", // Ensure this is your actual key
-        authDomain: "hashita11.firebaseapp.com",
-        databaseURL: "https://hashita11-default-rtdb.firebaseio.com",
-        projectId: "hashita11",
-        storageBucket: "hashita11.appspot.com",
-        messagingSenderId: "338870347895",
-        appId: "1:338870347895:web:86f67198a25f82216be510"
+        apiKey: "AIzaSyCn7jBoFPu2mTmQvPtXZx6h-2Mz4D1piE",
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339569496",
+        appId: "1:379339569496:web:5c28ecb87c35b7190d6350d"
     };
+
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    // 2. Campus Coordinates (Updated for the Gate)
+    // 2. Campus Coordinates (Corrected for Velpur Gate)
     const campuses = {
         "Velpur": { lat: 16.711812, lon: 81.662585 },
         "Relangi": { lat: 16.6920, lon: 81.6450 },
         "Undrajavaram": { lat: 16.7450, lon: 81.6820 }
     };
 
-    const ALLOWED_RADIUS_METERS = 200; // 200m radius is safe for campus
-
-    // 3. Authentication
+    // 3. Login Logic
     function login() {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+        const userEmail = document.getElementById("email").value.trim();
+        const userPass = document.getElementById("password").value;
 
-        auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                document.getElementById("login-form").style.display = "none";
-                document.getElementById("attendance-section").style.display = "block";
-                document.getElementById("user-display").innerText = "Welcome: " + email;
-            })
-            .catch((error) => {
-                alert("Login Error: " + error.message);
-            });
+        firebase.auth().signInWithEmailAndPassword(userEmail, userPass)
+        .then(() => {
+            document.getElementById("login-div").style.display = "none";
+            document.getElementById("app").style.display = "block";
+            document.getElementById("panel-label").innerText = "Teacher Attendance Panel";
+        })
+        .catch(err => alert("Login Failed: " + err.message));
     }
 
-    // 4. Attendance Logic
-    function processAttendance(type) {
-        const statusDiv = document.getElementById("status");
-        const campusName = document.getElementById("campus-select").value;
-        const target = campuses[campusName];
-
-        statusDiv.innerHTML = "Fetching location...";
-        statusDiv.className = "";
-
-        if (!navigator.geolocation) {
-            statusDiv.innerHTML = "Geolocation not supported";
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLon = position.coords.longitude;
-
-            const distance = calculateDistance(userLat, userLon, target.lat, target.lon);
-
-            if (distance <= ALLOWED_RADIUS_METERS) {
-                statusDiv.innerHTML = `Success: ${type} at ${campusName}`;
-                statusDiv.className = "inside";
-                saveToDatabase(type, campusName, distance);
-            } else {
-                statusDiv.innerHTML = `Denied: Outside Campus (${distance.toFixed(0)}m away)`;
-                statusDiv.className = "outside";
-            }
-        }, (error) => {
-            alert("Location Error: Please enable High Accuracy GPS.");
-        }, { enableHighAccuracy: true, maximumAge: 0 });
-    }
-
-    // 5. Distance Formula (Haversine)
+    // 4. Distance Calculation (ONE version only)
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000; // Earth's radius in meters
+        const R = 6371000; // Meters
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
 
-    // 6. Save Data
-    function saveToDatabase(type, campus, dist) {
-        const userId = auth.currentUser.uid;
-        const timestamp = new Date().toLocaleString();
-        db.ref('attendance/' + userId + '/' + Date.now()).set({
-            type: type,
-            campus: campus,
-            distance: dist.toFixed(2) + "m",
-            time: timestamp
-        });
+    // 5. Check-In Logic
+    function checkIn() {
+        const msg = document.getElementById("msg");
+        msg.innerHTML = "⏳ Checking Location...";
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const uLat = position.coords.latitude;
+            const uLon = position.coords.longitude;
+            const selectedCampus = document.getElementById("campus").value;
+            const target = campuses[selectedCampus];
+
+            const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
+
+            if (dist > 200) { // 200 Meters limit
+                msg.innerHTML = `<span style="color:red;">❌ Error: You are ${Math.round(dist)}m away from ${selectedCampus} campus.</span>`;
+                return;
+            }
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-GB');
+            const isLate = (timeStr > "08:30:00");
+
+            db.collection("attendance").add({
+                teacher: firebase.auth().currentUser.email,
+                type: "IN",
+                campus: selectedCampus,
+                isLate: isLate,
+                time: now.toLocaleString('en-IN'),
+                lat: uLat,
+                lon: uLon
+            }).then(() => {
+                msg.innerHTML = `<span style="color:green;">✅ Checked IN at ${selectedCampus} ${isLate ? '(Late)' : ''}</span>`;
+            });
+
+        }, (err) => {
+            alert("Please enable GPS/Location permissions");
+        }, { enableHighAccuracy: true });
+    }
+
+    // 6. Check-Out Logic
+    function checkOut() {
+        const msg = document.getElementById("msg");
+        msg.innerHTML = "⏳ Checking Location...";
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const uLat = position.coords.latitude;
+            const uLon = position.coords.longitude;
+            const selectedCampus = document.getElementById("campus").value;
+            const target = campuses[selectedCampus];
+
+            const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
+
+            if (dist > 200) {
+                msg.innerHTML = `<span style="color:red;">❌ Outside Campus (${Math.round(dist)}m)</span>`;
+                return;
+            }
+
+            db.collection("attendance").add({
+                teacher: firebase.auth().currentUser.email,
+                type: "OUT",
+                campus: selectedCampus,
+                time: new Date().toLocaleString('en-IN'),
+                lat: uLat,
+                lon: uLon
+            }).then(() => {
+                msg.innerHTML = `<span style="color:navy;">✅ Checked OUT Success</span>`;
+            });
+        }, null, { enableHighAccuracy: true });
     }
 </script>
-
 </body>
 </html>
