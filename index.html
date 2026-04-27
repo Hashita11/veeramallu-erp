@@ -1,119 +1,258 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Attendance Panel</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .card { background: white; width: 100%; max-width: 400px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
-        h1 { font-size: 18px; color: #1a237e; margin-bottom: 20px; text-transform: uppercase; font-weight: 800; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 10px; }
-        .btn-login { background-color: #007bff; }
-        .btn-in { background-color: #28a745; }
-        .btn-out { background-color: #1a237e; }
-        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; min-height: 20px; }
-    </style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>School ERP</title>
+
+
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"></script>
+
+
+
+<style>
+
+body { font-family: Arial; text-align:center; }
+
+input, select, button { padding:10px; margin:10px; width:250px; }
+
+</style>
+
 </head>
+
+
+
 <body>
 
-<div class="card">
-    <h1>Veeramallu Global Academy</h1>
 
-    <div id="login-div">
-        <input id="email" type="email" placeholder="Email Address">
-        <input id="password" type="password" placeholder="Password">
-        <button class="btn-login" onclick="login()">Login to Panel</button>
-    </div>
 
-    <div id="app" style="display:none;">
-        <select id="campus">
-            <option value="Velpur">Velpur Campus</option>
-            <option value="Relangi">Relangi Campus</option>
-            <option value="Undrajavaram">Undrajavaram Campus</option>
-        </select>
-        <button class="btn-in" onclick="processAttendance('IN')">Check IN</button>
-        <button class="btn-out" onclick="processAttendance('OUT')">Check OUT</button>
-        <p id="msg"></p>
-    </div>
+<h2>Veeramallu Global Academy</h2>
+
+
+
+<div id="login">
+
+<input id="email" placeholder="Email"><br>
+
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
 </div>
 
+
+
+<div id="app" style="display:none;">
+
+<h3>Teacher Panel</h3>
+
+
+
+<select id="campus">
+
+<option>Velpur</option>
+
+<option>Relangi</option>
+
+<option>Undrajavaram</option>
+
+</select><br>
+
+
+
+<button onclick="checkIn()">Check IN</button>
+
+<button onclick="checkOut()">Check OUT</button>
+
+
+
+<p id="msg"></p>
+
+</div>
+
+
+
 <script>
-    // CORRECTED FIREBASE CONFIGURATION
-    const firebaseConfig = {
-        apiKey: "AIzaSyCn7jBoFPu2mTmQvPtXZx6h-2Mz4D1piE",
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-        projectId: "veeramalluerp-6cac5",
-        storageBucket: "veeramalluerp-6cac5.appspot.com",
-        messagingSenderId: "379339569496",
-        appId: "1:379339569496:web:5c28ecb87c35b7190d6350d"
-    };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
 
-    const campuses = {
-        "Velpur": { lat: 16.711812, lon: 81.662585 },
-        "Relangi": { lat: 16.6920, lon: 81.6450 },
-        "Undrajavaram": { lat: 16.7450, lon: 81.6820 }
-    };
 
-    function login() {
-        const email = document.getElementById("email").value.trim();
-        const pass = document.getElementById("password").value;
-        firebase.auth().signInWithEmailAndPassword(email, pass)
-        .then(() => {
-            document.getElementById("login-div").style.display = "none";
-            document.getElementById("app").style.display = "block";
-        })
-        .catch(err => alert("Login Error: " + err.message));
-    }
+// 🔥 PASTE YOUR FIREBASE CONFIG HERE
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000; // Meters
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    }
+const firebaseConfig = {};
 
-    function processAttendance(type) {
-        const msg = document.getElementById("msg");
-        msg.innerHTML = "⏳ Verifying Location...";
-        msg.style.color = "black";
 
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const uLat = pos.coords.latitude;
-            const uLon = pos.coords.longitude;
-            const selCampus = document.getElementById("campus").value;
-            const target = campuses[selCampus];
-            const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
 
-            // 300m safety buffer to cover the gate area
-            if (dist > 300) {
-                msg.innerHTML = "❌ Too far (" + Math.round(dist) + "m away)";
-                msg.style.color = "red";
-                return;
-            }
+// init
 
-            db.collection("attendance").add({
-                teacher: firebase.auth().currentUser.email,
-                type: type,
-                campus: selCampus,
-                time: new Date().toLocaleString('en-IN'),
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                msg.innerHTML = "✅ " + type + " Success!";
-                msg.style.color = "green";
-            });
-        }, (err) => alert("Please enable GPS/Location."), { enableHighAccuracy: true });
-    }
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+
+
+function login(){
+
+firebase.auth().signInWithEmailAndPassword(email.value,password.value)
+
+.then(()=>{
+
+login.style.display="none";
+
+app.style.display="block";
+
+});
+
+}
+
+
+
+// 📍 CAMPUS LOCATIONS (UPDATE REAL VALUES)
+
+const campuses = {
+
+Velpur:{lat:16.8,lon:81.6},
+
+Relangi:{lat:16.7,lon:81.7},
+
+Undrajavaram:{lat:16.75,lon:81.68}
+
+};
+
+
+
+// 📏 DISTANCE CHECK
+
+function distance(lat1, lon1, lat2, lon2){
+
+let R = 6371;
+
+let dLat = (lat2-lat1)*Math.PI/180;
+
+let dLon = (lon2-lon1)*Math.PI/180;
+
+let a =
+
+Math.sin(dLat/2)*Math.sin(dLat/2)+
+
+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+
+Math.sin(dLon/2)*Math.sin(dLon/2);
+
+let c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+
+return R*c*1000; // meters
+
+}
+
+
+
+function getLocation(callback){
+
+navigator.geolocation.getCurrentPosition(pos=>{
+
+callback(pos.coords.latitude,pos.coords.longitude);
+
+});
+
+}
+
+
+
+function checkIn(){
+
+getLocation((lat,lon)=>{
+
+let c = campus.value;
+
+let d = distance(lat,lon,campuses[c].lat,campuses[c].lon);
+
+
+
+if(d>300){
+
+msg.innerText="❌ Outside Campus";
+
+return;
+
+}
+
+
+
+db.collection("attendance").add({
+
+type:"IN",
+
+campus:c,
+
+time:new Date().toString(),
+
+lat,lon
+
+});
+
+
+
+msg.innerText="✅ Checked IN";
+
+});
+
+}
+
+
+
+function checkOut(){
+
+getLocation((lat,lon)=>{
+
+let c = campus.value;
+
+let d = distance(lat,lon,campuses[c].lat,campuses[c].lon);
+
+
+
+if(d>300){
+
+msg.innerText="❌ Outside Campus";
+
+return;
+
+}
+
+
+
+db.collection("attendance").add({
+
+type:"OUT",
+
+campus:c,
+
+time:new Date().toString(),
+
+lat,lon
+
+});
+
+
+
+msg.innerText="✅ Checked OUT";
+
+});
+
+}
+
+
+
 </script>
+
 </body>
+
 </html>
+
