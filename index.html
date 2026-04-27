@@ -11,24 +11,22 @@
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .main-container { background: #ffffff; width: 100%; max-width: 450px; border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
         .header-section { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-        .academy-logo { width: 100px; height: auto; margin-bottom: 12px; }
-        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .panel-title { font-size: 16px; color: #3d3f3f; margin-top: 5px; font-weight: 600; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; }
+        .academy-logo { width: 80px; height: auto; margin-bottom: 12px; }
+        .academy-name { font-size: 18px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
         .btn { width: 100%; padding: 14px; border-radius: 10px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; margin-bottom: 10px; }
         .btn-login { background-color: #007bff; }
         .btn-in { background-color: #28a745; }
         .btn-out { background-color: #1a237e; }
-        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; }
+        #msg { margin-top: 15px; font-weight: bold; font-size: 14px; min-height: 20px; }
     </style>
 </head>
 <body>
 
 <div class="main-container">
     <div class="header-section">
-        <img src="logo.png" alt="VGA Logo" class="academy-logo">
         <h1 class="academy-name">Veeramallu Global Academy</h1>
-        <h2 class="panel-title" id="panel-label">Teacher ERP Login</h2>
+        <h2 style="font-size: 16px; color: #666;">Attendance Panel</h2>
     </div>
 
     <div id="login-div">
@@ -43,14 +41,14 @@
             <option value="Relangi">Relangi Campus</option>
             <option value="Undrajavaram">Undrajavaram Campus</option>
         </select>
-        <button class="btn btn-in" onclick="checkIn()">Check IN</button>
-        <button class="btn btn-out" onclick="checkOut()">Check OUT</button>
+        <button class="btn btn-in" onclick="processAttendance('IN')">Check IN</button>
+        <button class="btn btn-out" onclick="processAttendance('OUT')">Check OUT</button>
         <p id="msg"></p>
     </div>
 </div>
 
 <script>
-    // 1. Your Actual Firebase Config (Restored from your screenshot)
+    // 1. Restored your exact Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFPu2mTmQvPtXZx6h-2Mz4D1piE",
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -63,7 +61,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 2. Campus Coordinates (Corrected for Velpur Gate)
+    // 2. Verified Coordinates for your Campuses
     const campuses = {
         "Velpur": { lat: 16.711812, lon: 81.662585 },
         "Relangi": { lat: 16.6920, lon: 81.6450 },
@@ -79,12 +77,11 @@
         .then(() => {
             document.getElementById("login-div").style.display = "none";
             document.getElementById("app").style.display = "block";
-            document.getElementById("panel-label").innerText = "Teacher Attendance Panel";
         })
         .catch(err => alert("Login Failed: " + err.message));
     }
 
-    // 4. Distance Calculation (ONE version only)
+    // 4. Single Haversine Formula (Clean version)
     function calculateDistance(lat1, lon1, lat2, lon2) {
         const R = 6371000; // Meters
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -96,10 +93,11 @@
         return R * c;
     }
 
-    // 5. Check-In Logic
-    function checkIn() {
+    // 5. Combined Attendance Logic
+    function processAttendance(type) {
         const msg = document.getElementById("msg");
-        msg.innerHTML = "⏳ Checking Location...";
+        msg.innerHTML = "⏳ Validating Location...";
+        msg.style.color = "black";
 
         navigator.geolocation.getCurrentPosition((position) => {
             const uLat = position.coords.latitude;
@@ -109,61 +107,30 @@
 
             const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
 
-            if (dist > 200) { // 200 Meters limit
-                msg.innerHTML = `<span style="color:red;">❌ Error: You are ${Math.round(dist)}m away from ${selectedCampus} campus.</span>`;
+            // Allow up to 250 meters to account for mobile GPS drift
+            if (dist > 250) { 
+                msg.innerHTML = "❌ Error: You are " + Math.round(dist) + "m away from " + selectedCampus + " campus.";
+                msg.style.color = "red";
                 return;
             }
 
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-GB');
-            const isLate = (timeStr > "08:30:00");
-
             db.collection("attendance").add({
                 teacher: firebase.auth().currentUser.email,
-                type: "IN",
+                type: type,
                 campus: selectedCampus,
-                isLate: isLate,
                 time: now.toLocaleString('en-IN'),
-                lat: uLat,
-                lon: uLon
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
-                msg.innerHTML = `<span style="color:green;">✅ Checked IN at ${selectedCampus} ${isLate ? '(Late)' : ''}</span>`;
+                msg.innerHTML = "✅ Successfully Checked " + type;
+                msg.style.color = "green";
+            }).catch(err => {
+                msg.innerHTML = "❌ Database Error: " + err.message;
             });
 
         }, (err) => {
-            alert("Please enable GPS/Location permissions");
-        }, { enableHighAccuracy: true });
-    }
-
-    // 6. Check-Out Logic
-    function checkOut() {
-        const msg = document.getElementById("msg");
-        msg.innerHTML = "⏳ Checking Location...";
-
-        navigator.geolocation.getCurrentPosition((position) => {
-            const uLat = position.coords.latitude;
-            const uLon = position.coords.longitude;
-            const selectedCampus = document.getElementById("campus").value;
-            const target = campuses[selectedCampus];
-
-            const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
-
-            if (dist > 200) {
-                msg.innerHTML = `<span style="color:red;">❌ Outside Campus (${Math.round(dist)}m)</span>`;
-                return;
-            }
-
-            db.collection("attendance").add({
-                teacher: firebase.auth().currentUser.email,
-                type: "OUT",
-                campus: selectedCampus,
-                time: new Date().toLocaleString('en-IN'),
-                lat: uLat,
-                lon: uLon
-            }).then(() => {
-                msg.innerHTML = `<span style="color:navy;">✅ Checked OUT Success</span>`;
-            });
-        }, null, { enableHighAccuracy: true });
+            alert("Location access denied. Please enable GPS.");
+        }, { enableHighAccuracy: true, maximumAge: 0 });
     }
 </script>
 </body>
