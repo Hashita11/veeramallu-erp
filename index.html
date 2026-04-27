@@ -43,7 +43,7 @@
 </div>
 
 <script>
-    // Verified Config from Photo 208393
+    // Verified Config from your Photo 208393
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFPu2mTmQvPtXZx6h-2Mz4D1piE",
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -95,7 +95,7 @@
             const target = campuses[selCampus];
             const dist = calculateDistance(uLat, uLon, target.lat, target.lon);
 
-            // 300m radius covers the gate area perfectly
+            // Using 300m to account for GPS drift at the gate
             if (dist > 300) {
                 msg.innerHTML = "❌ Error: Too far (" + Math.round(dist) + "m away)";
                 msg.style.color = "red";
