@@ -240,16 +240,15 @@
         a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
         a.click();
     }
-    function generateSalaryReport() {
+    // --- 1. THE REPORT GENERATOR ---
+function generateSalaryReport() {
     const fStart = document.getElementById('f-start').value;
     const fEnd = document.getElementById('f-end').value;
     const joiningVal = document.getElementById('joiningDateFilter').value;
 
     if (!fStart || !fEnd) return alert("Select Date Range First");
 
-    // Helper to strip time so we only compare YYYY-MM-DD
     const normalize = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-
     const start = new Date(fStart);
     const end = new Date(fEnd);
     const joinDateLimit = joiningVal ? normalize(new Date(joiningVal)) : normalize(start);
@@ -276,15 +275,12 @@
 
         for (let t in dataMap) {
             let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0;
-            
             sorted.forEach((dt) => {
                 const currentDt = normalize(new Date(dt));
-                
-                // --- THE SAFETY GATE ---
                 if (currentDt < joinDateLimit) return; 
 
                 if (holidays.includes(dt)) {
-                    // Holiday logic
+                    if ((sorted[rangeDates.has(dt)-1] && !dataMap[t].present.has(sorted[rangeDates.has(dt)-1]))) { abs++; }
                 } else if (!dataMap[t].present.has(dt)) {
                     abs++;
                 }
@@ -293,36 +289,39 @@
             let lateCuts = Math.floor(l / 3);
             out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
         }
+
+        document.getElementById('report-container').style.display = "block";
+        document.getElementById('report-content').innerText = out;
+    }).catch(err => alert("Error: " + err.message));
+}
+
+// --- 2. THE IMAGE EXPORTER ---
 function saveReportAsImage() {
-    // 1. Target the report area
     const reportBox = document.getElementById('report-container');
 
-    // 2. Safety Check
     if (!reportBox || reportBox.style.display === "none") {
-        alert("Please generate the report first!");
+        alert("Generate the report first!");
         return;
     }
 
-    // 3. Start Capture
+    // This uses the html2canvas library to take a screenshot
     html2canvas(reportBox, {
         backgroundColor: "#ffffff",
-        scale: 2, // High quality
-        logging: true
-    }).then(function(canvas) {
-        // 4. Convert to data and download
-        var image = canvas.toDataURL("image/png");
-        var link = document.createElement('a');
+        scale: 2
+    }).then(canvas => {
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
         link.href = image;
         link.download = 'VGA_Report_' + new Date().getTime() + '.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
-        alert("✅ Download Started! Check your phone's Gallery or Downloads folder to share on WhatsApp.");
-    }).catch(function(error) {
-        alert("Error creating image: " + error);
+        alert("✅ Image Saved! Go to WhatsApp and attach it from your Gallery.");
+    }).catch(err => {
+        alert("Image Capture Error: Make sure the library script is at the top of your file.");
     });
-}    
+}
+
         document.getElementById('report-container').style.display = "block";
         document.getElementById('report-content').innerText = out;
     }).catch(err => alert("Error: " + err.message));
