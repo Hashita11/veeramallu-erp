@@ -17,6 +17,25 @@
         .btn-login { background: var(--primary); width: 100%; }
         .btn-in { background: var(--success); }
         .btn-out { background: var(--primary); }
+        
+        /* New Admission Button Style */
+        .btn-secondary {
+            display: block;
+            width: 100%;
+            background-color: transparent;
+            color: var(--primary);
+            padding: 12px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 20px;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+        .btn-secondary:hover { background-color: var(--primary); color: white; }
+
         button:disabled { background: #cbd5e0 !important; cursor: not-allowed; }
         #attendanceSection { display: none; }
         .status-box { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; background: #fffde7; border: 1px solid #fbc02d; }
@@ -48,34 +67,9 @@
         </div>
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
+        
+        <a href="admissions.html" class="btn-secondary">Go to New Admission Portal</a>
     </div>
-<style>
-    .btn-secondary {
-        display: block;
-        width: 100%;
-        background-color: transparent;
-        color: var(--primary-color);
-        padding: 12px;
-        border: 2px solid var(--primary-color);
-        border-radius: 8px;
-        font-weight: bold;
-        text-align: center;
-        text-decoration: none;
-        margin-top: 15px;
-        box-sizing: border-box;
-        transition: 0.3s;
-    }
-    .btn-secondary:hover {
-        background-color: var(--primary-color);
-        color: white;
-    }
-</style>
-
-<div style="margin-top: 10px;">
-    <a href="admissions.html" class="btn-secondary">
-        Go to New Admission Portal
-    </a>
-</div>
 
     <div id="attendanceSection">
         <div class="teacher-info">
@@ -117,7 +111,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore(); // USES FIRESTORE TO MATCH ADMIN
+const db = firebase.firestore();
 
 function handleLogin() {
     const email = document.getElementById('email').value.trim();
@@ -168,24 +162,54 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function markAttendance(type) {
+async function markAttendance(type) {
     const campus = sessionStorage.getItem('activeCampus');
+    const teacherEmail = auth.currentUser.email;
     const now = new Date();
-    const timeStr = now.toLocaleTimeString('en-GB'); // HH:MM:SS
+    const timeStr = now.toLocaleTimeString('en-GB'); 
     
-    // Check if Teacher is late based on Admin's 08:30:00 rule
-    const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
+    // --- DUPLICATE PREVENTION LOGIC ---
+    // Generate today's date string (e.g., "29/04/2026")
+    const todayStr = now.toLocaleDateString('en-IN'); 
 
-    db.collection("attendance").add({
-        teacher: auth.currentUser.email,
-        campus: campus,
-        type: type, // Admin expects 'type' (IN/OUT)
-        time: now.toLocaleString('en-IN'), // Admin expects this for parseVgaDate
-        autoLate: isLate, // Admin uses this for LATE label
-        method: "Mobile-App"
-    }).then(() => {
-        alert(type + " recorded for Admin Console!");
-    }).catch(err => alert("Error: " + err.message));
+    try {
+        // Only check for duplicates on "Check IN"
+        if (type === 'IN') {
+            const snapshot = await db.collection("attendance")
+                .where("teacher", "==", teacherEmail)
+                .where("type", "==", "IN")
+                .get();
+
+            let alreadyDone = false;
+            snapshot.forEach(doc => {
+                // Check if any existing 'IN' record matches today's date
+                if (doc.data().time.startsWith(todayStr)) {
+                    alreadyDone = true;
+                }
+            });
+
+            if (alreadyDone) {
+                alert("Attendance already submitted for today! Multiple entries are not allowed.");
+                return;
+            }
+        }
+
+        const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
+
+        await db.collection("attendance").add({
+            teacher: teacherEmail,
+            campus: campus,
+            type: type,
+            time: now.toLocaleString('en-IN'), 
+            autoLate: isLate,
+            method: "Mobile-App"
+        });
+
+        alert(type + " recorded successfully for " + campus + " campus!");
+        
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
 }
 </script>
 </body>
