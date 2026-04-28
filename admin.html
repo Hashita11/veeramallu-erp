@@ -7,8 +7,8 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .main-container { background: #ffffff; width: 100%; max-width: 650px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -117,12 +117,10 @@
         *Leave blank for full-month teachers. Select a date to ignore "Absents" before they joined.
     </p>
     </div>
-    <button onclick="saveReportAsImage()" style="background: #e67e22; width: 100%; margin-top: 10px; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
+    <button type="button" onclick="saveReportAsImage()" style="background: #e67e22; width: 100%; margin-top: 10px; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
     📸 Save Report as WhatsApp Image
-    </button>
-    
-    <button class="btn btn-report" onclick="generateSalaryReport()">📊 Generate Salary Deduction Report</button>
-    
+</button>
+    <button class="btn btn-report" onclick="generateSalaryReport()">📊 Generate Salary Deduction Report</button>  
     <div id="report-container" class="report-box">
         <pre id="report-content"></pre>
     </div>
@@ -295,43 +293,36 @@
             let lateCuts = Math.floor(l / 3);
             out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
         }
-async function saveReportAsImage() {
+function saveReportAsImage() {
+    // 1. Target the report area
     const reportBox = document.getElementById('report-container');
-    
+
+    // 2. Safety Check
     if (!reportBox || reportBox.style.display === "none") {
-        alert("Error: Generate the report first!");
+        alert("Please generate the report first!");
         return;
     }
 
-    try {
-        // 1. Create the image
-        const canvas = await html2canvas(reportBox, { 
-            backgroundColor: "#ffffff", 
-            scale: 2,
-            useCORS: true 
-        });
-
-        // 2. Convert to Image Data
-        const imageData = canvas.toDataURL("image/png");
-
-        // 3. Force Download (Most reliable for WhatsApp sharing)
-        const link = document.createElement('a');
-        link.href = imageData;
-        link.download = 'VGA_Salary_Report_' + new Date().getDate() + '.png';
+    // 3. Start Capture
+    html2canvas(reportBox, {
+        backgroundColor: "#ffffff",
+        scale: 2, // High quality
+        logging: true
+    }).then(function(canvas) {
+        // 4. Convert to data and download
+        var image = canvas.toDataURL("image/png");
+        var link = document.createElement('a');
+        link.href = image;
+        link.download = 'VGA_Report_' + new Date().getTime() + '.png';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        alert("✅ Image Saved to your Gallery! \n\nNow open WhatsApp and attach it from your Photos/Downloads.");
-
-    } catch (error) {
-        console.error("Capture Error:", error);
-        alert("Failed to create image: " + error.message);
-    }
-}
-
-
         
+        alert("✅ Download Started! Check your phone's Gallery or Downloads folder to share on WhatsApp.");
+    }).catch(function(error) {
+        alert("Error creating image: " + error);
+    });
+}    
         document.getElementById('report-container').style.display = "block";
         document.getElementById('report-content').innerText = out;
     }).catch(err => alert("Error: " + err.message));
