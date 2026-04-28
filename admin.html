@@ -248,10 +248,9 @@ function generateSalaryReport() {
 
     if (!fStart || !fEnd) return alert("Select Date Range First");
 
-    const normalize = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const start = new Date(fStart);
     const end = new Date(fEnd);
-    const joinDateLimit = joiningVal ? normalize(new Date(joiningVal)) : normalize(start);
+    const joinDateLimit = joiningVal ? new Date(joiningVal) : start;
 
     let dataMap = {};
     let rangeDates = new Set();
@@ -265,6 +264,7 @@ function generateSalaryReport() {
             const key = logD.toISOString().split('T')[0];
             rangeDates.add(key);
 
+            // Using d.teacher to get the Name/Email
             if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
             dataMap[d.teacher].present.add(key);
             if (d.autoLate) dataMap[d.teacher].late++;
@@ -274,53 +274,33 @@ function generateSalaryReport() {
         let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
 
         for (let t in dataMap) {
-            let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0;
+            let p = dataMap[t].present.size;
+            let l = dataMap[t].late;
+            let abs = 0;
+
             sorted.forEach((dt) => {
-                const currentDt = normalize(new Date(dt));
+                const currentDt = new Date(dt);
                 if (currentDt < joinDateLimit) return; 
 
-                if (holidays.includes(dt)) {
-                    if ((sorted[rangeDates.has(dt)-1] && !dataMap[t].present.has(sorted[rangeDates.has(dt)-1]))) { abs++; }
-                } else if (!dataMap[t].present.has(dt)) {
+                if (!dataMap[t].present.has(dt) && !holidays.includes(dt)) {
                     abs++;
                 }
             });
 
             let lateCuts = Math.floor(l / 3);
-            out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
+            // This line puts the Names back on the screen
+            out += "TEACHER: " + t + "\n";
+            out += "Present: " + p + " | Late: " + l + "\n";
+            out += "Absent Cut (x2): " + (abs * 2) + " Days\n";
+            out += "Late Cuts: " + lateCuts + " Days\n";
+            out += "--------------------------\n";
         }
 
         document.getElementById('report-container').style.display = "block";
         document.getElementById('report-content').innerText = out;
-    }).catch(err => alert("Error: " + err.message));
+    }).catch(err => alert("Firestore Error: " + err.message));
 }
 
-// --- 2. THE IMAGE EXPORTER ---
-function saveReportAsImage() {
-    const reportBox = document.getElementById('report-container');
-
-    if (!reportBox || reportBox.style.display === "none") {
-        alert("Generate the report first!");
-        return;
-    }
-
-    // This uses the html2canvas library to take a screenshot
-    html2canvas(reportBox, {
-        backgroundColor: "#ffffff",
-        scale: 2
-    }).then(canvas => {
-        const image = canvas.toDataURL("image/png");
-        const link = document.createElement('a');
-        link.href = image;
-        link.download = 'VGA_Report_' + new Date().getTime() + '.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        alert("✅ Image Saved! Go to WhatsApp and attach it from your Gallery.");
-    }).catch(err => {
-        alert("Image Capture Error: Make sure the library script is at the top of your file.");
-    });
-}
 
         document.getElementById('report-container').style.display = "block";
         document.getElementById('report-content').innerText = out;
