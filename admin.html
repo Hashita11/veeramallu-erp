@@ -295,26 +295,39 @@
             let lateCuts = Math.floor(l / 3);
             out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
         }
-function saveReportAsImage() {
+async function saveReportAsImage() {
     const reportBox = document.getElementById('report-container');
     
-    // Check if report is visible
-    if (reportBox.style.display === "none" || reportBox.innerText === "") {
+    if (reportBox.style.display === "none") {
         alert("Please generate a report first!");
         return;
     }
 
-    // Capture the white report box as an image
-    html2canvas(reportBox, {
-        backgroundColor: "#ffffff",
-        scale: 2 // Makes it high quality for WhatsApp
-    }).then(canvas => {
+    const canvas = await html2canvas(reportBox, { backgroundColor: "#ffffff", scale: 2 });
+    const dataUrl = canvas.toDataURL("image/png");
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], 'VGA_Report.png', { type: 'image/png' });
+
+    // This opens the WhatsApp/Share menu directly on your phone!
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: 'VGA Salary Report',
+                text: 'Attendance report for staff.'
+            });
+        } catch (err) {
+            console.error("Share failed:", err);
+        }
+    } else {
+        // Fallback: If share doesn't work, it just downloads
         const link = document.createElement('a');
-        link.download = 'VGA_Salary_Report_' + new Date().toLocaleDateString() + '.png';
-        link.href = canvas.toDataURL("image/png");
+        link.download = 'VGA_Report.png';
+        link.href = dataUrl;
         link.click();
-    });
+    }
 }
+
         
         document.getElementById('report-container').style.display = "block";
         document.getElementById('report-content').innerText = out;
