@@ -180,10 +180,11 @@ async function markAttendance(type) {
                 .where("type", "==", "IN")
                 .get();
 
-            let alreadyDone = false;
+                 let alreadyDone = false;
             snapshot.forEach(doc => {
-                // Check if any existing 'IN' record matches today's date
-                if (doc.data().time.startsWith(todayStr)) {
+                const recordData = doc.data();
+                // FIX: Added safety check to ensure 'time' exists and is a string
+                if (recordData.time && typeof recordData.time === 'string' && recordData.time.startsWith(todayStr)) {
                     alreadyDone = true;
                 }
             });
@@ -207,8 +208,10 @@ async function markAttendance(type) {
 
         alert(type + " recorded successfully for " + campus + " campus!");
         
-    } catch (err) {
-        alert("Error: " + err.message);
+    }  catch (err) {
+        // Detailed error for troubleshooting
+        console.error("Attendance Error:", err);
+        alert("System Error: " + err.message);
     }
 }
 </script>
