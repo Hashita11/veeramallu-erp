@@ -182,16 +182,17 @@ async function markAttendance(type) {
                  let alreadyDone = false;
             snapshot.forEach(doc => {
                 const recordData = doc.data();
-                // Verify the record matches today's date
+               // Verify if a record for this type (IN or OUT) exists for today
                 if (recordData.time && typeof recordData.time === 'string' && recordData.time.startsWith(todayStr)) {
                     alreadyDone = true;
                 }
             });
 
-            if (alreadyDone) {
-                alert(type+"Attendance already submitted for today! Multiple entries are not allowed.");
-                return;//stop the function here
-            }
+             if (alreadyDone) {
+            // Displays specific message: "IN already recorded..." or "OUT already recorded..."
+            alert(type + " already recorded for today! Multiple entries are not allowed.");
+            return; 
+        }
            // --- RECORD ATTENDANCE IF NOT A DUPLICATE ---
 
         const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
