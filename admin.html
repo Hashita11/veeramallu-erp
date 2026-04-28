@@ -107,6 +107,16 @@
     </div>
 
     <button class="btn btn-csv" onclick="exportToCSV()">📥 Download CSV for Excel</button>
+    <div style="background: #fff5f5; padding: 15px; border: 1px solid #feb2b2; border-radius: 8px; margin-bottom: 15px; text-align: left;">
+    <label style="font-weight: bold; color: #c53030; font-size: 0.9rem;">
+        📅 TEACHER JOINING DATE (For Mid-Month):
+    </label>
+    <input type="date" id="joiningDateFilter" style="padding: 8px; border-radius: 5px; border: 1px solid #cbd5e0; margin-left: 10px;">
+    <p style="font-size: 0.7rem; color: #718096; margin: 5px 0 0 0;">
+        *Leave blank for full-month teachers. Select a date to ignore "Absents" before they joined.
+    </p>
+    </div>
+    
     <button class="btn btn-report" onclick="generateSalaryReport()">📊 Generate Salary Deduction Report</button>
     
     <div id="report-container" class="report-box">
@@ -228,11 +238,18 @@
         a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
         a.click();
     }
+    
+        function generateSalaryReport() {
+        const fStart = document.getElementById('f-start').value;
+        const fEnd = document.getElementById('f-end').value;
+        const joiningVal = document.getElementById('joiningDateFilter').value;
 
-    function generateSalaryReport() {
-        const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
-        const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
-        if(!start || !end) return alert("Select Date Range First");
+        if (!fStart || !fEnd) return alert("Select Date Range First");
+
+        const start = new Date(fStart);
+        const end = new Date(fEnd);
+        // If joining date is picked, use it for absence calculation. Otherwise, use fStart.
+        const joinDate = joiningVal ? new Date(joiningVal) : start;
 
         let dataMap = {};
         let rangeDates = new Set();
@@ -242,9 +259,10 @@
                 const d = doc.data();
                 const logD = parseVgaDate(d.time);
                 if (!logD || logD < start || logD > end) return;
-                
+
                 const key = logD.toISOString().split('T')[0];
                 rangeDates.add(key);
+
                 if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
                 dataMap[d.teacher].present.add(key);
                 if (d.autoLate) dataMap[d.teacher].late++;
@@ -252,16 +270,38 @@
 
             let sorted = Array.from(rangeDates).sort();
             let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
+
             for (let t in dataMap) {
-                let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0, sand = 0;
+                let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0;
+                
                 sorted.forEach((dt, i) => {
+                    const currentDt = new Date(dt);
+                    
+                    // SKIP absence check if the date is BEFORE the teacher joined the school
+                    if (currentDt < joinDate) return; 
+
                     if (holidays.includes(dt)) {
-                        if ((sorted[i-1] && !dataMap[t].present.has(sorted[i-1])) || (sorted[i+1] && !dataMap[t].present.has(sorted[i+1]))) sand++;
-                    } else if (!dataMap[t].present.has(dt)) abs++;
+                        // Sandwich Rule: Count as absent if absent day before AND day after
+                        if ((sorted[i-1] && !dataMap[t].present.has(sorted[i-1])) || (sorted[i+1] && !dataMap[t].present.has(sorted[i+1]))) {
+                            abs++; 
+                        }
+                    } else if (!dataMap[t].present.has(dt)) {
+                        abs++; // Regular Absent: This counts the actual "Cuts"
+                    }
                 });
-                let lateCuts = Math.floor(l/3);
-                out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs*2} | Sandwich: ${sand}\nLate Cuts: ${lateCuts}\nTOTAL CUTS: ${lateCuts + abs*2 + sand} DAYS\n------------------------------\n`;
+
+                let lateCuts = Math.floor(l / 3); // Corrected '1' to 'l'
+                out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
             }
+
+            document.getElementById('report-container').style.display = "block";
+            document.getElementById('report-content').innerText = out;
+        }).catch(err => {
+            console.error("Error generating report:", err);
+            alert("Report Error: " + err.message);
+        });
+    }
+
             document.getElementById('report-container').style.display = "block";
             document.getElementById('report-content').innerText = out;
         });
