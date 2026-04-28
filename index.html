@@ -173,27 +173,26 @@ async function markAttendance(type) {
     const todayStr = now.toLocaleDateString('en-IN'); 
 
     try {
-        // Only check for duplicates on "Check IN"
-        if (type === 'IN') {
+        // Only check for duplicates on "Check IN or OUT"
             const snapshot = await db.collection("attendance")
                 .where("teacher", "==", teacherEmail)
-                .where("type", "==", "IN")
+                .where("type", "==", type) // Checks against the type being clicked (IN or OUT)
                 .get();
 
                  let alreadyDone = false;
             snapshot.forEach(doc => {
                 const recordData = doc.data();
-                // FIX: Added safety check to ensure 'time' exists and is a string
+                // Verify the record matches today's date
                 if (recordData.time && typeof recordData.time === 'string' && recordData.time.startsWith(todayStr)) {
                     alreadyDone = true;
                 }
             });
 
             if (alreadyDone) {
-                alert("Attendance already submitted for today! Multiple entries are not allowed.");
-                return;
+                alert(type+"Attendance already submitted for today! Multiple entries are not allowed.");
+                return;//stop the function here
             }
-        }
+           // --- RECORD ATTENDANCE IF NOT A DUPLICATE ---
 
         const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
 
