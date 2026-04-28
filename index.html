@@ -64,6 +64,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
+// 1. Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
   authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -73,6 +74,7 @@ const firebaseConfig = {
   appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
 
+// 2. Campus GPS Coordinates
 const campusCoords = {
     "Velpur": { lat: 16.719772, lng: 81.662377 },
     "Relangi": { lat: 16.7082, lng: 81.7251 },
@@ -83,6 +85,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
+// 3. Login Function
 function handleLogin() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -91,14 +94,15 @@ function handleLogin() {
     auth.signInWithEmailAndPassword(email, password).then((userCredential) => {
         const user = userCredential.user;
         sessionStorage.setItem('activeCampus', campus);
+
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('attendanceSection').style.display = 'block';
         
-        // Extracting name from email prefix
         const namePart = user.email.split('@')[0].toUpperCase();
         document.getElementById('welcomeMsg').innerText = "Hello, " + namePart;
         document.getElementById('teacherEmailDisplay').innerText = user.email;
         document.getElementById('campusDisplay').innerText = "Campus: " + campus;
+
         startGPSCheck(campus);
     }).catch(err => {
         document.getElementById('loginError').innerText = "Error: " + err.message;
@@ -106,6 +110,7 @@ function handleLogin() {
     });
 }
 
+// 4. GPS Geofencing Function
 function startGPSCheck(cName) {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((pos) => {
@@ -114,7 +119,7 @@ function startGPSCheck(cName) {
             const bIn = document.getElementById('btnIn');
             const bOut = document.getElementById('btnOut');
 
-            if (dist <= 200) { 
+            if (dist <= 200) {
                 statusBox.innerHTML = "<span style='color:green;'>✔ verified: Inside Campus</span>";
                 bIn.disabled = false; bOut.disabled = false;
             } else {
@@ -125,6 +130,7 @@ function startGPSCheck(cName) {
     }
 }
 
+// 5. Distance Logic
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
     const dLat = (lat2-lat1) * Math.PI/180;
@@ -133,22 +139,35 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// 6. Attendance Submission (CONNECTED TO ADMIN PORTAL)
 function markAttendance(type) {
     const user = auth.currentUser;
     const campus = sessionStorage.getItem('activeCampus');
-    const time = new Date().toLocaleString('en-IN', { 
-        timeZone: 'Asia/Kolkata',
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
-    });
+    const now = new Date();
     
+    // Time for Table Display
+    const timeDisplay = now.toLocaleString('en-IN', { 
+        day: 'numeric', month: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true 
+    });
+
+    // Date for Admin Filtering (CRITICAL)
+    const dateKey = now.toISOString().split('T')[0];
+
     db.ref('attendance_logs').push({
         teacher: user.email,
         campus: campus,
         action: type,
-        time: time
-    }).then(() => alert(type + " recorded for Admin Board!"));
+        time: timeDisplay,
+        date: dateKey, // Matches Admin Dashboard logic
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    }).then(() => {
+        alert(type + " recorded successfully!");
+    }).catch(err => {
+        alert("Sync Error: " + err.message);
+    });
 }
+
 </script>
 </body>
 </html>
