@@ -11,15 +11,16 @@
         .logo { max-width: 120px; margin-bottom: 1rem; }
         .form-group { margin-bottom: 1.2rem; text-align: left; }
         label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #4a5568; font-size: 0.9rem; }
-        select, input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
+        select, input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .btn-container { display: flex; gap: 10px; margin-top: 15px; }
-        button { flex: 1; padding: 14px; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button { flex: 1; padding: 14px; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 1rem; }
         .btn-login { background: var(--primary); width: 100%; }
         .btn-in { background: var(--success); }
         .btn-out { background: var(--error); }
         button:disabled { background: #cbd5e0 !important; cursor: not-allowed; }
         #attendanceSection { display: none; }
         .status-box { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; }
+        .teacher-info { margin-bottom: 10px; padding: 15px; background: #ebf4ff; border-radius: 10px; border: 1px solid #bee3f8; }
     </style>
 </head>
 <body>
@@ -28,29 +29,33 @@
     <img src="logo.png" alt="Academy Logo" class="logo" onerror="this.src='https://via.placeholder.com/120?text=VGA+LOGO'">
     
     <div id="loginSection">
-        <h2>Teacher Login</h2>
-        <div class="form-group"><label>Campus</label>
+        <h2 style="margin-top:0;">Teacher Login</h2>
+        <div class="form-group">
+            <label>Select Campus</label>
             <select id="campus">
                 <option value="Velpur">Velpur</option>
                 <option value="Relangi">Relangi</option>
                 <option value="Undrajavaram">Undrajavaram</option>
             </select>
         </div>
-        <div class="form-group"><label>Email</label><input type="email" id="email" placeholder="email@vga.com"></div>
+        <div class="form-group"><label>Email ID</label><input type="email" id="email" placeholder="email@vga.com"></div>
         <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="••••••••"></div>
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
     </div>
 
     <div id="attendanceSection">
-        <h2 id="welcomeMsg">Hello</h2>
-        <p id="campusDisplay" style="color: #718096; font-weight: bold;"></p>
-        <div class="status-box" id="gpsStatus">Locating...</div>
+        <div class="teacher-info">
+            <h2 id="welcomeMsg" style="margin:0; color: #2b6cb0;">Hello!</h2>
+            <p id="teacherEmailDisplay" style="margin:5px 0 0 0; font-size: 0.9rem; color: #4a5568;"></p>
+        </div>
+        <p id="campusDisplay" style="color: #718096; font-weight: bold; margin-bottom: 5px;"></p>
+        <div class="status-box" id="gpsStatus">Checking GPS...</div>
         <div class="btn-container">
             <button id="btnIn" class="btn-in" onclick="markAttendance('IN')" disabled>Check IN</button>
             <button id="btnOut" class="btn-out" onclick="markAttendance('OUT')" disabled>Check OUT</button>
         </div>
-        <button onclick="location.reload()" style="background:#718096; width:100%; margin-top:10px;">Logout</button>
+        <button onclick="location.reload()" style="background:#718096; width:100%; margin-top:20px; padding: 10px;">Logout</button>
     </div>
 </div>
 
@@ -83,14 +88,20 @@ function handleLogin() {
     const password = document.getElementById('password').value;
     const campus = document.getElementById('campus').value;
 
-    auth.signInWithEmailAndPassword(email, password).then((u) => {
+    auth.signInWithEmailAndPassword(email, password).then((userCredential) => {
+        const user = userCredential.user;
         sessionStorage.setItem('activeCampus', campus);
         document.getElementById('loginSection').style.display = 'none';
         document.getElementById('attendanceSection').style.display = 'block';
+        
+        // Extracting name from email prefix
+        const namePart = user.email.split('@')[0].toUpperCase();
+        document.getElementById('welcomeMsg').innerText = "Hello, " + namePart;
+        document.getElementById('teacherEmailDisplay').innerText = user.email;
         document.getElementById('campusDisplay').innerText = "Campus: " + campus;
         startGPSCheck(campus);
     }).catch(err => {
-        document.getElementById('loginError').innerText = err.message;
+        document.getElementById('loginError').innerText = "Error: " + err.message;
         document.getElementById('loginError').style.display = 'block';
     });
 }
@@ -99,15 +110,15 @@ function startGPSCheck(cName) {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((pos) => {
             const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, campusCoords[cName].lat, campusCoords[cName].lng);
-            const status = document.getElementById('gpsStatus');
+            const statusBox = document.getElementById('gpsStatus');
             const bIn = document.getElementById('btnIn');
             const bOut = document.getElementById('btnOut');
 
-            if (dist <= 200) {
-                status.innerHTML = "<span style='color:green;'>✔ verified: Inside Campus</span>";
+            if (dist <= 200) { 
+                statusBox.innerHTML = "<span style='color:green;'>✔ verified: Inside Campus</span>";
                 bIn.disabled = false; bOut.disabled = false;
             } else {
-                status.innerHTML = `<span style='color:red;'>✖ Outside (${Math.round(dist)}m)</span>`;
+                statusBox.innerHTML = `<span style='color:red;'>✖ Outside Campus (${Math.round(dist)}m)</span>`;
                 bIn.disabled = true; bOut.disabled = true;
             }
         }, null, { enableHighAccuracy: true });
@@ -123,15 +134,20 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 function markAttendance(type) {
+    const user = auth.currentUser;
     const campus = sessionStorage.getItem('activeCampus');
-    const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const time = new Date().toLocaleString('en-IN', { 
+        timeZone: 'Asia/Kolkata',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
+    });
     
     db.ref('attendance_logs').push({
-        teacher: auth.currentUser.email,
+        teacher: user.email,
         campus: campus,
         action: type,
         time: time
-    }).then(() => alert(type + " Recorded!"));
+    }).then(() => alert(type + " recorded for Admin Board!"));
 }
 </script>
 </body>
