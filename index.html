@@ -8,12 +8,16 @@
         :root { --primary: #2b6cb0; --success: #38a169; --error: #e53e3e; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
-        .logo { max-width: 100px; margin-bottom: 1rem; }
+        .logo { max-width: 120px; margin-bottom: 1rem; }
         .form-group { margin-bottom: 1.2rem; text-align: left; }
         label { display: block; margin-bottom: 0.4rem; font-weight: 600; color: #4a5568; font-size: 0.9rem; }
         select, input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        button:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .btn-container { display: flex; gap: 10px; margin-top: 15px; }
+        button { flex: 1; padding: 14px; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-login { background: var(--primary); width: 100%; }
+        .btn-in { background: var(--success); }
+        .btn-out { background: var(--error); }
+        button:disabled { background: #cbd5e0 !important; cursor: not-allowed; }
         #attendanceSection { display: none; }
         .status-box { padding: 15px; border-radius: 8px; margin: 20px 0; font-weight: bold; background: #f8fafc; border: 1px solid #e2e8f0; }
     </style>
@@ -21,40 +25,32 @@
 <body>
 
 <div class="card">
-    <img src="logo.png" alt="Logo" class="logo" onerror="this.src='https://via.placeholder.com/100?text=VGA'">
+    <img src="logo.png" alt="Academy Logo" class="logo" onerror="this.src='https://via.placeholder.com/120?text=VGA+LOGO'">
     
     <div id="loginSection">
         <h2>Teacher Login</h2>
-        <div class="form-group">
-            <label>Select Campus</label>
+        <div class="form-group"><label>Campus</label>
             <select id="campus">
-                <option value="Velpur">Velpur Campus</option>
-                <option value="Relangi">Relangi Campus</option>
-                <option value="Undrajavaram">Undrajavaram Campus</option>
+                <option value="Velpur">Velpur</option>
+                <option value="Relangi">Relangi</option>
+                <option value="Undrajavaram">Undrajavaram</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="email" placeholder="teacher@veermallu.edu">
-        </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-        <button onclick="handleLogin()">Sign In</button>
+        <div class="form-group"><label>Email</label><input type="email" id="email" placeholder="email@vga.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="password" placeholder="••••••••"></div>
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
     </div>
 
     <div id="attendanceSection">
-        <h2 id="welcomeMsg">Welcome</h2>
-        <p id="campusDisplay" style="color: #718096;"></p>
-        
-        <div class="status-box" id="gpsStatus">
-            Checking GPS Location...
+        <h2 id="welcomeMsg">Hello</h2>
+        <p id="campusDisplay" style="color: #718096; font-weight: bold;"></p>
+        <div class="status-box" id="gpsStatus">Locating...</div>
+        <div class="btn-container">
+            <button id="btnIn" class="btn-in" onclick="markAttendance('IN')" disabled>Check IN</button>
+            <button id="btnOut" class="btn-out" onclick="markAttendance('OUT')" disabled>Check OUT</button>
         </div>
-
-        <button id="checkInBtn" onclick="markAttendance()" disabled>Mark Attendance</button>
-        <button onclick="location.reload()" style="background:#718096; margin-top:10px;">Logout</button>
+        <button onclick="location.reload()" style="background:#718096; width:100%; margin-top:10px;">Logout</button>
     </div>
 </div>
 
@@ -63,9 +59,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
 <script>
-// 1. CONFIGURATION
 const firebaseConfig = {
-  apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",  // PASTE YOUR FULL KEY FROM SCREENSHOT
+  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
   authDomain: "veeramalluerp-6cac5.firebaseapp.com",
   projectId: "veeramalluerp-6cac5",
   storageBucket: "veeramalluerp-6cac5.appspot.com",
@@ -74,62 +69,51 @@ const firebaseConfig = {
 };
 
 const campusCoords = {
-      "Velpur": { lat: 16.719772, lng: 81.662377 },
-    "Relangi": { lat: 16.7111, lng: 81.7222 }, 
-    "Undrajavaram": { lat: 16.7455, lng: 81.6788 }
+    "Velpur": { lat: 16.719772, lng: 81.662377 },
+    "Relangi": { lat: 16.7082, lng: 81.7251 },
+    "Undrajavaram": { lat: 16.7423, lng: 81.6754 }
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-// 2. LOGIN LOGIC
 function handleLogin() {
-    const email = document.getElementById('email').value;
+    const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const campus = document.getElementById('campus').value;
 
-    auth.signInWithEmailAndPassword(email, password)
-        .then((user) => {
-            sessionStorage.setItem('activeCampus', campus);
-            showAttendanceUI(user.user.email, campus);
-        })
-        .catch(err => {
-            document.getElementById('loginError').innerText = err.message;
-            document.getElementById('loginError').style.display = 'block';
-        });
+    auth.signInWithEmailAndPassword(email, password).then((u) => {
+        sessionStorage.setItem('activeCampus', campus);
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('attendanceSection').style.display = 'block';
+        document.getElementById('campusDisplay').innerText = "Campus: " + campus;
+        startGPSCheck(campus);
+    }).catch(err => {
+        document.getElementById('loginError').innerText = err.message;
+        document.getElementById('loginError').style.display = 'block';
+    });
 }
 
-// 3. UI SWITCH & GPS AUTO-START
-function showAttendanceUI(email, campus) {
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('attendanceSection').style.display = 'block';
-    document.getElementById('welcomeMsg').innerText = "Hello, Teacher";
-    document.getElementById('campusDisplay').innerText = "Assigned to: " + campus;
-    
-    // Auto-trigger GPS
-    startGPSCheck(campus);
-}
-
-function startGPSCheck(campusName) {
+function startGPSCheck(cName) {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((pos) => {
-            const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, campusCoords[campusName].lat, campusCoords[campusName].lng);
-            const statusBox = document.getElementById('gpsStatus');
-            const btn = document.getElementById('checkInBtn');
+            const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, campusCoords[cName].lat, campusCoords[cName].lng);
+            const status = document.getElementById('gpsStatus');
+            const bIn = document.getElementById('btnIn');
+            const bOut = document.getElementById('btnOut');
 
-            if (dist <= 100) { // 100 meters
-                statusBox.innerHTML = "<span style='color:green;'>✔ verified: Inside Campus</span>";
-                btn.disabled = false;
+            if (dist <= 200) {
+                status.innerHTML = "<span style='color:green;'>✔ verified: Inside Campus</span>";
+                bIn.disabled = false; bOut.disabled = false;
             } else {
-                statusBox.innerHTML = `<span style='color:red;'>✖ Outside Campus<br>(${Math.round(dist)}m away)</span>`;
-                btn.disabled = true;
+                status.innerHTML = `<span style='color:red;'>✖ Outside (${Math.round(dist)}m)</span>`;
+                bIn.disabled = true; bOut.disabled = true;
             }
-        }, err => alert("Please enable Location Services"), { enableHighAccuracy: true });
+        }, null, { enableHighAccuracy: true });
     }
 }
 
-// 4. DISTANCE CALCULATION (Haversine)
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
     const dLat = (lat2-lat1) * Math.PI/180;
@@ -138,17 +122,16 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// 5. DATA SUBMISSION
-function markAttendance() {
-    const user = auth.currentUser;
+function markAttendance(type) {
     const campus = sessionStorage.getItem('activeCampus');
-    const timestamp = new Date().toLocaleString();
-
-    db.ref('attendance/' + campus + '/' + user.uid).push({
-        email: user.email,
-        time: timestamp,
-        status: "Present"
-    }).then(() => alert("Attendance Marked Successfully!"));
+    const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    
+    db.ref('attendance_logs').push({
+        teacher: auth.currentUser.email,
+        campus: campus,
+        action: type,
+        time: time
+    }).then(() => alert(type + " Recorded!"));
 }
 </script>
 </body>
