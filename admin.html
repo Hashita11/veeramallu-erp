@@ -298,35 +298,38 @@
 async function saveReportAsImage() {
     const reportBox = document.getElementById('report-container');
     
-    if (reportBox.style.display === "none") {
-        alert("Please generate a report first!");
+    if (!reportBox || reportBox.style.display === "none") {
+        alert("Error: Generate the report first!");
         return;
     }
 
-    const canvas = await html2canvas(reportBox, { backgroundColor: "#ffffff", scale: 2 });
-    const dataUrl = canvas.toDataURL("image/png");
-    const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], 'VGA_Report.png', { type: 'image/png' });
+    try {
+        // 1. Create the image
+        const canvas = await html2canvas(reportBox, { 
+            backgroundColor: "#ffffff", 
+            scale: 2,
+            useCORS: true 
+        });
 
-    // This opens the WhatsApp/Share menu directly on your phone!
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                files: [file],
-                title: 'VGA Salary Report',
-                text: 'Attendance report for staff.'
-            });
-        } catch (err) {
-            console.error("Share failed:", err);
-        }
-    } else {
-        // Fallback: If share doesn't work, it just downloads
+        // 2. Convert to Image Data
+        const imageData = canvas.toDataURL("image/png");
+
+        // 3. Force Download (Most reliable for WhatsApp sharing)
         const link = document.createElement('a');
-        link.download = 'VGA_Report.png';
-        link.href = dataUrl;
+        link.href = imageData;
+        link.download = 'VGA_Salary_Report_' + new Date().getDate() + '.png';
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+
+        alert("✅ Image Saved to your Gallery! \n\nNow open WhatsApp and attach it from your Photos/Downloads.");
+
+    } catch (error) {
+        console.error("Capture Error:", error);
+        alert("Failed to create image: " + error.message);
     }
 }
+
 
         
         document.getElementById('report-container').style.display = "block";
