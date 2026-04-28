@@ -49,6 +49,33 @@
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
     </div>
+<style>
+    .btn-secondary {
+        display: block;
+        width: 100%;
+        background-color: transparent;
+        color: var(--primary-color);
+        padding: 12px;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        text-decoration: none;
+        margin-top: 15px;
+        box-sizing: border-box;
+        transition: 0.3s;
+    }
+    .btn-secondary:hover {
+        background-color: var(--primary-color);
+        color: white;
+    }
+</style>
+
+<div style="margin-top: 10px;">
+    <a href="admissions.html" class="btn-secondary">
+        Go to New Admission Portal
+    </a>
+</div>
 
     <div id="attendanceSection">
         <div class="teacher-info">
@@ -161,6 +188,5 @@ function markAttendance(type) {
     }).catch(err => alert("Error: " + err.message));
 }
 </script>
-    <a href="admissions.html" class="nav-link">New Admission</a>
 </body>
 </html>
