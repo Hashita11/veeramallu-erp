@@ -238,74 +238,64 @@
         a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
         a.click();
     }
-    
-        function generateSalaryReport() {
-        const fStart = document.getElementById('f-start').value;
-        const fEnd = document.getElementById('f-end').value;
-        const joiningVal = document.getElementById('joiningDateFilter').value;
+    function generateSalaryReport() {
+    const fStart = document.getElementById('f-start').value;
+    const fEnd = document.getElementById('f-end').value;
+    const joiningVal = document.getElementById('joiningDateFilter').value;
 
-        if (!fStart || !fEnd) return alert("Select Date Range First");
+    if (!fStart || !fEnd) return alert("Select Date Range First");
 
-        const start = new Date(fStart);
-        const end = new Date(fEnd);
-        // If joining date is picked, use it for absence calculation. Otherwise, use fStart.
-        const joinDate = joiningVal ? new Date(joiningVal) : start;
+    // Helper to strip time so we only compare YYYY-MM-DD
+    const normalize = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
-        let dataMap = {};
-        let rangeDates = new Set();
+    const start = new Date(fStart);
+    const end = new Date(fEnd);
+    const joinDateLimit = joiningVal ? normalize(new Date(joiningVal)) : normalize(start);
 
-        db.collection("attendance").get().then(snap => {
-            snap.forEach(doc => {
-                const d = doc.data();
-                const logD = parseVgaDate(d.time);
-                if (!logD || logD < start || logD > end) return;
+    let dataMap = {};
+    let rangeDates = new Set();
 
-                const key = logD.toISOString().split('T')[0];
-                rangeDates.add(key);
+    db.collection("attendance").get().then(snap => {
+        snap.forEach(doc => {
+            const d = doc.data();
+            const logD = parseVgaDate(d.time);
+            if (!logD || logD < start || logD > end) return;
 
-                if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
-                dataMap[d.teacher].present.add(key);
-                if (d.autoLate) dataMap[d.teacher].late++;
+            const key = logD.toISOString().split('T')[0];
+            rangeDates.add(key);
+
+            if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
+            dataMap[d.teacher].present.add(key);
+            if (d.autoLate) dataMap[d.teacher].late++;
+        });
+
+        let sorted = Array.from(rangeDates).sort();
+        let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
+
+        for (let t in dataMap) {
+            let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0;
+            
+            sorted.forEach((dt) => {
+                const currentDt = normalize(new Date(dt));
+                
+                // --- THE SAFETY GATE ---
+                if (currentDt < joinDateLimit) return; 
+
+                if (holidays.includes(dt)) {
+                    // Holiday logic
+                } else if (!dataMap[t].present.has(dt)) {
+                    abs++;
+                }
             });
 
-            let sorted = Array.from(rangeDates).sort();
-            let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
+            let lateCuts = Math.floor(l / 3);
+            out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
+        }
 
-            for (let t in dataMap) {
-                let p = dataMap[t].present.size, l = dataMap[t].late, abs = 0;
-                
-                sorted.forEach((dt, i) => {
-                    const currentDt = new Date(dt);
-                    
-                    // SKIP absence check if the date is BEFORE the teacher joined the school
-                    if (currentDt < joinDate) return; 
-
-                    if (holidays.includes(dt)) {
-                        // Sandwich Rule: Count as absent if absent day before AND day after
-                        if ((sorted[i-1] && !dataMap[t].present.has(sorted[i-1])) || (sorted[i+1] && !dataMap[t].present.has(sorted[i+1]))) {
-                            abs++; 
-                        }
-                    } else if (!dataMap[t].present.has(dt)) {
-                        abs++; // Regular Absent: This counts the actual "Cuts"
-                    }
-                });
-
-                let lateCuts = Math.floor(l / 3); // Corrected '1' to 'l'
-                out += `TEACHER: ${t}\nPresent: ${p} | Late: ${l}\nAbsent Cut (x2): ${abs * 2} Days\nLate Cuts: ${lateCuts} Days\nTOTAL CUTS: ${(abs * 2) + lateCuts} DAYS\n--------------------------\n`;
-            }
-
-            document.getElementById('report-container').style.display = "block";
-            document.getElementById('report-content').innerText = out;
-        }).catch(err => {
-            console.error("Error generating report:", err);
-            alert("Report Error: " + err.message);
-        });
-    }
-
-            document.getElementById('report-container').style.display = "block";
-            document.getElementById('report-content').innerText = out;
-        });
-    }
+        document.getElementById('report-container').style.display = "block";
+        document.getElementById('report-content').innerText = out;
+    }).catch(err => alert("Error: " + err.message));
+}
 </script>
 </body>
 </html>
