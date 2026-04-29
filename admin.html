@@ -18,7 +18,7 @@
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
     select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
-    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
     .btn-adm { background: #2b4a91; }
@@ -28,7 +28,7 @@
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
 </style>
@@ -43,7 +43,7 @@
     </div>
 
     <div class="grid">
-        <div><label>Teacher</label><select id="teacher"></select></div>
+        <div><label>Manual Teacher Entry</label><select id="teacher"></select></div>
         <div><label>Campus</label>
             <select id="campus">
                 <option>Velpur</option>
@@ -65,7 +65,7 @@
     <hr style="border: 0; border-top: 2px solid #eee; margin: 20px 0;">
 
     <div class="grid">
-        <div><label>Search Name</label><input id="search" placeholder="Search..." oninput="load()"></div>
+        <div><label>Search Staff</label><input id="search" placeholder="Name or Email..." oninput="load()"></div>
         <div><label>Filter Campus</label>
             <select id="filterCampus" onchange="load()">
                 <option value="All">All</option>
@@ -84,7 +84,7 @@
     <div class="table-container">
         <table>
             <thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"><tr><td colspan="4">Loading...</td></tr></tbody>
+            <tbody id="list"><tr><td colspan="4">Syncing with Firebase...</td></tr></tbody>
         </table>
     </div>
 
@@ -100,12 +100,11 @@
 </div>
 
 <script>
-const LATE_TIME = "08:30:00";
+// --- MASTER STAFF LIST ---
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
     {name:"Anitha Rao", email:"anitha@vga.com"},
-    {name:"V. Rajesh", email:"rajesh@vga.com"},
-    {name:"Ravi", email:"ravi@vga.com"}
+    {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
 firebase.initializeApp({
@@ -122,12 +121,13 @@ window.onload = () => {
     load();
 };
 
-// HELPER: Get teacher name regardless of field name
-function getDisplayName(data) {
+// --- DATA RESOLVER ---
+// This identifies the teacher even if the login page only sends an email
+function resolveTeacherName(data) {
     if (data.name) return data.name;
     if (data.teacherName) return data.teacherName;
-    const found = teachers.find(t => t.email === data.teacher);
-    return found ? found.name : (data.teacher || "Unknown");
+    const match = teachers.find(t => t.email === data.teacher);
+    return match ? match.name : (data.teacher || "Unknown Staff");
 }
 
 function parseDate(timeField) {
@@ -137,6 +137,8 @@ function parseDate(timeField) {
         return isNaN(d.getTime()) ? null : d;
     } catch (e) { return null; }
 }
+
+// --- CORE FUNCTIONS ---
 
 function save(type) {
     const email = document.getElementById("teacher").value;
@@ -151,8 +153,8 @@ function save(type) {
         campus: campus,
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
-        late: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
-    }).then(() => { alert("Saved!"); load(); });
+        late: (type === "IN" && now.toTimeString().slice(0, 8) > "08:30:00")
+    }).then(() => { alert("Manual Entry Saved!"); load(); });
 }
 
 let unsubscribe;
@@ -175,20 +177,20 @@ function load() {
             let dt = parseDate(d.time);
             if (!dt) return;
 
-            let displayName = getDisplayName(d);
-            if (search && !displayName.toLowerCase().includes(search)) return;
+            let staffName = resolveTeacherName(d);
+            if (search && !staffName.toLowerCase().includes(search) && !d.teacher?.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
             list.innerHTML += `<tr>
-                <td>${displayName}</td>
+                <td>${staffName}</td>
                 <td>${d.campus || '-'}</td>
                 <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
-        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No data available</td></tr>";
     });
 }
 
@@ -205,20 +207,17 @@ function generateSalary() {
     db.collection("attendance").get().then(snap => {
         let map = {};
         let daysInRange = new Set();
-        
         snap.forEach(doc => {
             const d = doc.data();
             const dt = parseDate(d.time);
             if (!dt) return;
-
-            const name = getDisplayName(d);
+            const staffName = resolveTeacherName(d);
             const key = dt.toISOString().split('T')[0];
-            
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
-                if(!map[name]) map[name] = { present: new Set(), late: 0 };
-                if(d.type === "IN") map[name].present.add(key);
-                if(d.late) map[name].late++;
+                if(!map[staffName]) map[staffName] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[staffName].present.add(key);
+                if(d.late) map[staffName].late++;
             }
         });
 
@@ -242,7 +241,7 @@ function exportCSV() {
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "VGA_Attendance.csv";
+    a.download = "Attendance_Report.csv";
     a.click();
 }
 
