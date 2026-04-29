@@ -112,6 +112,108 @@
 
     <div class="table-container">
         <table>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VGA Admin ERP</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
+    .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 20px; }
+    .logo { width: 80px; margin-bottom: 5px; }
+    h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; }
+
+    /* Grids & Labels */
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
+
+    /* Inputs */
+    select, input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
+
+    /* Buttons */
+    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+    .btn:active { transform: scale(0.98); }
+    
+    .btn-logs { background: #e0e0e0; color: #777; cursor: default; }
+    .btn-adm { background: #2b4a91; }
+    .btn-in { background: #28a745; }
+    .btn-out { background: #1a237e; }
+    .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
+    .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
+    .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
+
+    /* Table */
+    .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; }
+
+    /* Salary Report Box */
+    .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
+    #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; }
+</style>
+</head>
+
+<body>
+
+<div class="container" id="capture">
+    <div class="header">
+        <img src="logo.png" alt="VGA Logo" class="logo">
+        <br>
+        <h2>VGA ADMIN ERP</h2>
+    </div>
+
+    <div class="grid">
+        <div><label>Teacher</label><select id="teacher"></select></div>
+        <div><label>Campus</label>
+            <select id="campus">
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="btn btn-logs">Attendance<br>Logs</div>
+        <a href="admissions.html" class="btn btn-adm">Admissions<br>26-27</a>
+    </div>
+
+    <div class="grid">
+        <button class="btn btn-in" onclick="save('IN')">OFFICE IN</button>
+        <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <div class="grid">
+        <div><label>Search Name/Email</label><input id="search" placeholder="Search..." oninput="load()"></div>
+        <div><label>Filter Campus</label>
+            <select id="filterCampus" onchange="load()">
+                <option value="All">All</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
+        <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
+    </div>
+
+    <div class="table-container">
+        <table>
             <thead>
                 <tr>
                     <th>Teacher</th>
@@ -124,11 +226,21 @@
         </table>
     </div>
 
-    <button class="btn btn-adm" style="width: 100%; margin-top: 20px;" onclick="exportCSV()">Download Monthly Report (CSV)</button>
+    <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
+
+    <div class="salary-box">
+        <label>📅 CALCULATION START DATE (JOINING DATE):</label>
+        <input type="date" id="joining">
+        
+        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
+        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
+        
+        <div id="output">No report generated yet...</div>
+    </div>
 </div>
 
 <script>
-// CONFIGURATION
+// CONFIG
 const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
@@ -136,7 +248,7 @@ const teachers = [
     {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-// INITIALIZE FIREBASE
+// FIREBASE
 firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -144,22 +256,21 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// INITIALIZE UI
+// INITIALIZE
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
     tSelect.innerHTML = "<option value=''>-- Select --</option>";
-    teachers.forEach(item => {
-        tSelect.innerHTML += `<option value="${item.email}">${item.name}</option>`;
+    teachers.forEach(t => {
+        tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
     });
     load();
 };
 
-// SAVE DATA
+// SAVE
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
-
-    if (!email) return alert("Select teacher first");
+    if (!email) return alert("Select Teacher");
 
     const now = new Date();
     const timeStr = now.toTimeString().slice(0, 8);
@@ -171,67 +282,109 @@ function save(type) {
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
         late: (type === "IN" && timeStr > LATE_TIME)
-    }).then(() => {
-        alert(type + " Status Recorded Successfully");
-    }).catch(err => alert("Error: " + err));
+    }).then(() => alert(type + " Saved Successfully"));
 }
 
-// LOAD & FILTER DATA
+// LOAD REALTIME
 let unsubscribe;
 function load() {
     if (unsubscribe) unsubscribe();
+    const search = document.getElementById("search").value.toLowerCase();
+    const campus = document.getElementById("filterCampus").value;
+    const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
+    const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+    if(eDate) eDate.setHours(23,59,59);
 
-    const searchStr = document.getElementById("search").value.toLowerCase();
-    const campusStr = document.getElementById("filterCampus").value;
-    const fromDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    const toDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
-    if(toDate) toDate.setHours(23,59,59);
+    unsubscribe = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const dt = d.time.toDate();
+            if (search && !d.name.toLowerCase().includes(search)) return;
+            if (campus !== "All" && d.campus !== campus) return;
+            if (sDate && dt < sDate) return;
+            if (eDate && dt > eDate) return;
 
-    unsubscribe = db.collection("attendance").orderBy("time", "desc")
-        .onSnapshot(snap => {
-            const list = document.getElementById("list");
-            list.innerHTML = "";
-
-            snap.forEach(doc => {
-                const data = doc.data();
-                const timestamp = data.time.toDate();
-
-                // Logical Filters
-                if (searchStr && !data.name.toLowerCase().includes(searchStr)) return;
-                if (campusStr !== "All" && data.campus !== campusStr) return;
-                if (fromDate && timestamp < fromDate) return;
-                if (toDate && timestamp > toDate) return;
-
-                list.innerHTML += `
-                <tr>
-                    <td>${data.name}</td>
-                    <td>${data.campus}</td>
-                    <td class="${data.type === 'OUT' ? 'status-out' : 'status-in'}">${data.type}</td>
-                    <td>${timestamp.toLocaleDateString()}, ${timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</td>
-                </tr>`;
-            });
+            list.innerHTML += `<tr>
+                <td>${d.name}</td>
+                <td>${d.campus}</td>
+                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
+                <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+            </tr>`;
         });
+    });
 }
 
-// EXPORT TO CSV
+// CSV
 function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
-    const rows = document.querySelectorAll("#list tr");
-    if(rows.length === 0) return alert("No data to export for current filter.");
-
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\n`;
+    document.querySelectorAll("#list tr").forEach(tr => {
+        const c = tr.querySelectorAll("td");
+        csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText}"\n`;
     });
-
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = "VGA_Staff_Attendance.csv";
+    a.href = URL.createObjectURL(blob);
+    a.download = "Attendance_Report.csv";
     a.click();
+}
+
+// SALARY REPORT
+function generateSalary() {
+    const sStr = document.getElementById("start").value;
+    const eStr = document.getElementById("end").value;
+    if(!sStr || !eStr) return alert("Select From/To Dates first");
+
+    const start = new Date(sStr);
+    const end = new Date(eStr);
+    end.setHours(23,59,59);
+    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
+
+    db.collection("attendance").get().then(snap => {
+        let map = {};
+        let totalDays = new Set();
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            const dt = d.time.toDate();
+            const dateKey = dt.toISOString().split('T')[0];
+
+            if(dt >= start && dt <= end) {
+                totalDays.add(dateKey);
+                if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[d.name].present.add(dateKey);
+                if(d.late) map[d.name].late++;
+            }
+        });
+
+        let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
+        for(let name in map) {
+            let p = map[name].present.size;
+            let l = map[name].late;
+            let a = 0;
+            totalDays.forEach(day => {
+                if(new Date(day) >= joinDate && !map[name].present.has(day)) a++;
+            });
+
+            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n`;
+            out += `Late Penalty: ${Math.floor(l/3)} Days\n------------------------\n`;
+        }
+        document.getElementById("output").innerText = out;
+    });
+}
+
+// SAVE IMAGE
+function saveWhatsAppImage() {
+    html2canvas(document.getElementById("capture")).then(canvas => {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "VGA_Report.png";
+        a.click();
+    });
 }
 </script>
 
 </body>
 </html>
+
