@@ -121,11 +121,13 @@ window.onload = () => {
     load();
 };
 
-// Helper function to safely get Date from Firebase data
+// Safe date parser to handle corrupted data
 function parseDate(timeField) {
-    if (!timeField) return new Date();
-    if (typeof timeField.toDate === 'function') return timeField.toDate();
-    return new Date(timeField);
+    if (!timeField) return null;
+    try {
+        let d = (typeof timeField.toDate === 'function') ? timeField.toDate() : new Date(timeField);
+        return isNaN(d.getTime()) ? null : d;
+    } catch (e) { return null; }
 }
 
 function save(type) {
@@ -133,10 +135,13 @@ function save(type) {
     const campus = document.getElementById("campus").value;
     if (!email) return alert("Select Teacher");
 
+    const teacherObj = teachers.find(t => t.email === email);
+    if (!teacherObj) return alert("Error finding teacher name");
+
     const now = new Date();
     db.collection("attendance").add({
         teacher: email,
-        name: teachers.find(t => t.email === email).name,
+        name: teacherObj.name,
         campus: campus,
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
@@ -158,25 +163,31 @@ function load() {
     unsubscribe = db.collection("attendance").onSnapshot(snap => {
         list.innerHTML = "";
         let docs = [];
-        snap.forEach(doc => docs.push(doc.data()));
-        docs.sort((a, b) => parseDate(b.time) - parseDate(a.time));
+        snap.forEach(doc => {
+            let data = doc.data();
+            if (data.time) docs.push(data);
+        });
+        
+        docs.sort((a, b) => (parseDate(b.time) || 0) - (parseDate(a.time) || 0));
 
         docs.forEach(d => {
             let dt = parseDate(d.time);
-            if (search && !d.name.toLowerCase().includes(search)) return;
+            if (!dt) return; // Skip broken rows in the display
+
+            if (search && !d.name?.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
             list.innerHTML += `<tr>
-                <td>${d.name}</td>
-                <td>${d.campus}</td>
+                <td>${d.name || 'Unknown'}</td>
+                <td>${d.campus || '-'}</td>
                 <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
         if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
-    }, err => { list.innerHTML = `<tr><td colspan='4' style="color:red">Error: ${err.message}</td></tr>`; });
+    });
 }
 
 function generateSalary() {
@@ -192,9 +203,12 @@ function generateSalary() {
     db.collection("attendance").get().then(snap => {
         let map = {};
         let daysInRange = new Set();
+        
         snap.forEach(doc => {
             const d = doc.data();
             const dt = parseDate(d.time);
+            if (!dt || !d.name) return; // SKIP CORRUPTED RECORDS
+
             const key = dt.toISOString().split('T')[0];
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
@@ -205,14 +219,16 @@ function generateSalary() {
         });
 
         let out = `VGA SALARY SUMMARY\n----------------\n`;
+        let resultsFound = false;
         for(let name in map) {
+            resultsFound = true;
             let p = map[name].present.size;
             let l = map[name].late;
             let a = 0;
             daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].present.has(d)) a++; });
             out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
-        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
+        document.getElementById("output").innerText = resultsFound ? out : "No valid records found.";
     }).catch(err => alert("Salary Error: " + err.message));
 }
 
