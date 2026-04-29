@@ -28,6 +28,26 @@
         #output { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; margin-top: 15px; border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #333; line-height: 1.5; }
         label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px; }
     </style>
+    <style>
+    /* ... existing styles ... */
+
+    .btn-primary-admission {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        flex: 1; /* This helps it share space with the Attendance button */
+        margin-left: 5px;
+    }
+    </style>
+    
 </head>
 
 <body>
@@ -49,6 +69,14 @@
             </select>
         </div>
     </div>
+    <div style="display: flex; gap: 10px; padding: 10px;">
+    <button class="btn btn-secondary" style="flex: 1;">Attendance Logs</button>
+    
+    <a href="admission.html" class="btn btn-primary-admission">
+        Admissions 26-27
+    </a>
+    </div>
+    
     <div class="grid">
         <button class="btn in" onclick="saveRecord('IN')">OFFICE IN</button>
         <button class="btn out" onclick="saveRecord('OUT')">OFFICE OUT</button>
