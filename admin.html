@@ -1,241 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA ADMIN ERP</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VGA Admin ERP</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:15px; margin:0; }
+    .container { max-width:500px; margin:auto; background:#fff; padding:20px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+    /* Header Section */
+    .header { text-align: center; margin-bottom: 25px; }
+    .logo { width: 85px; margin-bottom: 10px; }
+    h2 { color: #1a237e; margin: 0; font-size: 26px; font-weight: 800; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
+
+    /* Form Grids */
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    label { font-size: 11px; font-weight: 700; color: #444; display: block; margin-bottom: 5px; text-transform: uppercase; }
+
+    /* Inputs */
+    select, input { padding: 12px; border: 1px solid #ced4da; border-radius: 8px; width: 100%; box-sizing: border-box; background: #fff; font-size: 14px; color: #333; }
+    select:focus, input:focus { outline: none; border-color: #1a237e; background: #fff; }
+
+    /* Buttons */
+    .btn { padding: 16px; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
+    .btn:active { transform: scale(0.97); }
     
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f9; margin: 0; padding: 15px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .logo { text-align: center; margin-bottom: 10px; }
-        .logo img { width: 80px; }
-        h2 { text-align: center; color: #1d2d6b; margin-bottom: 20px; border-bottom: 2px solid #1d2d6b; padding-bottom: 10px; }
-        
-        label { font-size: 12px; font-weight: bold; color: #555; display: block; margin-top: 10px; text-transform: uppercase; }
-        select, input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .btn { border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s; }
-        
-        .btn-admin { background: #2b4c8c; color: white; height: 60px; }
-        .btn-logs { background: #eeeeee; color: #999; cursor: not-allowed; }
-        .btn-in { background: #28a745; color: white; }
-        .btn-out { background: #1d2d6b; color: white; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-        th { background: #007bff; color: white; padding: 10px; text-align: left; }
-        td { border: 1px solid #eee; padding: 10px; }
-        .late-tag { background: #ff4444; color: white; padding: 2px 5px; border-radius: 4px; font-size: 10px; margin-left: 5px; }
-        
-        #output-container { margin-top: 20px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 15px; }
-        pre { white-space: pre-wrap; font-family: monospace; font-size: 12px; color: #333; }
-        
-        .report-section { background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc; margin-top: 20px; }
-    </style>
+    .btn-logs { background: #eeeeee; color: #888; border: 1px solid #ddd; } /* Matches greyed out style */
+    .btn-adm { background: #2b4a91; color: white; }
+    .btn-in { background: #28a745; text-transform: uppercase; }
+    .btn-out { background: #1a237e; text-transform: uppercase; }
+    
+    /* Table Styling */
+    .table-container { margin-top: 25px; border-radius: 10px; overflow: hidden; border: 1px solid #eee; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #007bff; color: white; padding: 12px; font-size: 13px; text-transform: uppercase; }
+    td { padding: 12px; border-bottom: 1px solid #f1f1f1; font-size: 13px; text-align: center; }
+    .status-out { color: #dc3545; font-weight: bold; }
+    .status-in { color: #28a745; font-weight: bold; }
+
+    hr { border: 0; border-top: 2px solid #f1f1f1; margin: 25px 0; }
+</style>
 </head>
+
 <body>
 
-<div class="container" id="capture-area">
-    <div class="logo">
-        <img src="https://via.placeholder.com/80?text=VGA" alt="Logo"> </div>
-    <h2>VGA ADMIN ERP</h2>
+<div class="container">
+    <div class="header">
+        <img src="logo.png" alt="VGA Logo" class="logo">
+        <br>
+        <h2>VGA ADMIN ERP</h2>
+    </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="grid">
         <div>
-            <label>TEACHER</label>
+            <label>Teacher</label>
             <select id="teacher"></select>
         </div>
         <div>
-            <label>CAMPUS</label>
+            <label>Campus</label>
             <select id="campus">
-                <option value="Velpur">Velpur</option>
-                <option value="Tadepalligudem">Tadepalligudem</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
             </select>
         </div>
     </div>
 
-    <div class="btn-grid">
-        <button class="btn btn-logs">Attendance Logs</button>
-        <a href="#" style="text-decoration: none;"><button class="btn btn-admin" style="width: 100%;">Admissions<br>26-27</button></a>
+    <div class="grid">
+        <div class="btn btn-logs">Attendance<br>Logs</div>
+        <a href="admissions.html" class="btn btn-adm">Admissions<br>26-27</a>
     </div>
 
-    <div class="btn-grid">
-        <button class="btn btn-in" onclick="saveRecord('IN')">OFFICE IN</button>
-        <button class="btn btn-out" onclick="saveRecord('OUT')">OFFICE OUT</button>
+    <div class="grid">
+        <button class="btn btn-in" onclick="save('IN')">OFFICE IN</button>
+        <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
     </div>
 
-    <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+    <hr>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    <div class="grid">
         <div>
-            <label>SEARCH NAME/EMAIL</label>
-            <input type="text" id="search" placeholder="Search..." oninput="loadData()">
+            <label>Search Name/Email</label>
+            <input id="search" placeholder="Search..." oninput="load()">
         </div>
         <div>
-            <label>FILTER CAMPUS</label>
-            <select id="filterCampus" onchange="loadData()">
+            <label>Filter Campus</label>
+            <select id="filterCampus" onchange="load()">
                 <option value="All">All</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Tadepalligudem">Tadepalligudem</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
             </select>
         </div>
+    </div>
+
+    <div class="grid">
         <div>
-            <label>FROM DATE</label>
-            <input type="date" id="start" onchange="loadData()">
+            <label>From Date</label>
+            <input type="date" id="start" onchange="load()">
         </div>
         <div>
-            <label>TO DATE</label>
-            <input type="date" id="end" onchange="loadData()">
+            <label>To Date</label>
+            <input type="date" id="end" onchange="load()">
         </div>
     </div>
 
-    <table>
-        <thead>
-            <tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr>
-        </thead>
-        <tbody id="list"></tbody>
-    </table>
-
-    <button class="btn" style="background:#6c757d; color:white; width:100%; margin-top:10px;" onclick="exportCSV()">📊 Download Attendance CSV</button>
-
-    <div class="report-section">
-        <label>📅 JOINING DATE (FOR MID-MONTH JOINERS):</label>
-        <input type="date" id="joining">
-        <div style="display: flex; gap: 5px; margin-top: 10px;">
-            <button class="btn" style="background:#007bff; color:white; flex:1;" onclick="generateReport()">📑 Report</button>
-            <button class="btn" style="background:#25d366; color:white; flex:1;" onclick="saveImage()">📸 WhatsApp</button>
-        </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Campus</th>
+                    <th>Type</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="list"></tbody>
+        </table>
     </div>
 
-    <div id="output-container">
-        <pre id="output">Report will appear here...</pre>
-    </div>
+    <button class="btn btn-adm" style="width: 100%; margin-top: 20px;" onclick="exportCSV()">Download Monthly Report (CSV)</button>
 </div>
 
 <script>
-// --- CONFIGURATION ---
-const LATE_LIMIT = "08:30:00";
-
+// CONFIGURATION
+const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
     {name:"Anitha Rao", email:"anitha@vga.com"},
-    {name:"V. Rajesh", email:"rajesh@vga.com"},
-    {name:"Veeramallu", email:"veeramallussv@gmail.com"},
-    {name:"Teacher 1", email:"teacher1@gmail.com"}
+    {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-const holidays = [
-    "2026-04-05", "2026-04-10", "2026-04-14", "2026-05-01"
-];
-
-// Initialize Firebase
-const firebaseConfig = {
+// INITIALIZE FIREBASE
+firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
     projectId: "veeramalluerp-6cac5"
-};
-firebase.initializeApp(firebaseConfig);
+});
 const db = firebase.firestore();
 
+// INITIALIZE UI
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
     tSelect.innerHTML = "<option value=''>-- Select --</option>";
-    teachers.forEach(t => tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`);
-    loadData();
+    teachers.forEach(item => {
+        tSelect.innerHTML += `<option value="${item.email}">${item.name}</option>`;
+    });
+    load();
 };
 
-function saveRecord(type) {
+// SAVE DATA
+function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
-    if(!email) return alert("Select teacher!");
+
+    if (!email) return alert("Select teacher first");
 
     const now = new Date();
-    const timeStr = now.toTimeString().split(' ')[0];
-    const isLate = (type === "IN" && timeStr > LATE_LIMIT);
-    const teacherObj = teachers.find(t => t.email === email);
+    const timeStr = now.toTimeString().slice(0, 8);
 
     db.collection("attendance").add({
         teacher: email,
-        name: teacherObj.name,
+        name: teachers.find(t => t.email === email).name,
         campus: campus,
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
-        late: isLate
+        late: (type === "IN" && timeStr > LATE_TIME)
     }).then(() => {
-        alert("Attendance Saved!");
-        loadData();
+        alert(type + " Status Recorded Successfully");
     }).catch(err => alert("Error: " + err));
 }
 
-let unsub;
-function loadData() {
-    if(unsub) unsub();
-    const search = document.getElementById("search").value.toLowerCase();
-    const campFilter = document.getElementById("filterCampus").value;
-    const sFilter = document.getElementById("start").value;
-    const eFilter = document.getElementById("end").value;
+// LOAD & FILTER DATA
+let unsubscribe;
+function load() {
+    if (unsubscribe) unsubscribe();
 
-    unsub = db.collection("attendance").orderBy("time", "desc").limit(50).onSnapshot(snap => {
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            let dt = (d.time && d.time.toDate) ? d.time.toDate() : new Date(d.time);
-            if(isNaN(dt)) return;
+    const searchStr = document.getElementById("search").value.toLowerCase();
+    const campusStr = document.getElementById("filterCampus").value;
+    const fromDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
+    const toDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+    if(toDate) toDate.setHours(23,59,59);
 
-            const dateKey = dt.toISOString().split('T')[0];
-            const nameToDisplay = d.name || d.teacher;
+    unsubscribe = db.collection("attendance").orderBy("time", "desc")
+        .onSnapshot(snap => {
+            const list = document.getElementById("list");
+            list.innerHTML = "";
 
-            if (search && !nameToDisplay.toLowerCase().includes(search)) return;
-            if (campFilter !== "All" && d.campus !== campFilter) return;
-            if (sFilter && dateKey < sFilter) return;
-            if (eFilter && dateKey > eFilter) return;
+            snap.forEach(doc => {
+                const data = doc.data();
+                const timestamp = data.time.toDate();
 
-            list.innerHTML += `<tr>
-                <td>${nameToDisplay}</td>
-                <td>${d.campus}</td>
-                <td><b style="color:${d.type==='IN'?'green':'red'}">${d.type}</b> ${d.late?'<span class="late-tag">LATE</span>':''}</td>
-                <td>${dt.toLocaleString('en-GB')}</td>
-            </tr>`;
+                // Logical Filters
+                if (searchStr && !data.name.toLowerCase().includes(searchStr)) return;
+                if (campusStr !== "All" && data.campus !== campusStr) return;
+                if (fromDate && timestamp < fromDate) return;
+                if (toDate && timestamp > toDate) return;
+
+                list.innerHTML += `
+                <tr>
+                    <td>${data.name}</td>
+                    <td>${data.campus}</td>
+                    <td class="${data.type === 'OUT' ? 'status-out' : 'status-in'}">${data.type}</td>
+                    <td>${timestamp.toLocaleDateString()}, ${timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}</td>
+                </tr>`;
+            });
         });
-    });
 }
 
-function generateReport() {
-    const sStr = document.getElementById("start").value;
-    const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select Date Range!");
-    
-    // Logic for report generation...
-    document.getElementById("output").innerText = "Generating report for " + sStr + " to " + eStr + "...";
-    // (Existing generateReport logic remains same)
-}
-
-function saveImage() {
-    html2canvas(document.querySelector("#capture-area")).then(canvas => {
-        let link = document.createElement("a");
-        link.download = "VGA-Report.png";
-        link.href = canvas.toDataURL();
-        link.click();
-    });
-}
-
+// EXPORT TO CSV
 function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
-    document.querySelectorAll("#list tr").forEach(tr => {
-        const c = tr.querySelectorAll("td");
-        if(c.length >= 4) csv += `${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText}\n`;
+    const rows = document.querySelectorAll("#list tr");
+    if(rows.length === 0) return alert("No data to export for current filter.");
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        csv += `"${cells[0].innerText}","${cells[1].innerText}","${cells[2].innerText}","${cells[3].innerText}"\n`;
     });
+
     const blob = new Blob([csv], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'Attendance.csv';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "VGA_Staff_Attendance.csv";
     a.click();
 }
 </script>
+
 </body>
 </html>
