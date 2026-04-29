@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admin ERP - Final 2026-27</title>
+    <title>VGA ADMIN ERP - FINAL VERSION</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -12,9 +12,9 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background:#f0f2f5; padding:10px; margin:0; }
         .container { max-width:650px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align:center; color: #1a237e; margin-bottom: 20px; border-bottom: 2px solid #1a237e; padding-bottom: 10px; }
+        h2 { text-align:center; color: #1a237e; margin-bottom: 20px; border-bottom: 2px solid #1a237e; padding-bottom: 10px; margin-top: 5px; }
         .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 10px; }
-        input, select { padding:10px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing: border-box; }
+        input, select { padding:10px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing: border-box; font-size: 14px; }
         .btn { padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; width: 100%; }
         .in { background:#28a745; }
         .out { background:#1a237e; }
@@ -26,13 +26,17 @@
         td { padding:8px; border:1px solid #eee; font-size:12px; text-align:center; }
         .late-tag { color:red; font-weight: bold; font-size:10px; }
         #output { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; margin-top: 15px; border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #333; line-height: 1.5; }
-        label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; }
-        .holiday-info { font-size: 10px; color: #d32f2f; margin-top: 5px; font-style: italic; }
+        label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px; }
     </style>
 </head>
 
 <body>
 <div class="container" id="capture-area">
+    
+    <div style="text-align: center; margin-bottom: 10px;">
+        <img src="logo.png" alt="VGA Logo" style="max-height: 70px; width: auto;">
+    </div>
+    
     <h2>VGA ADMIN ERP</h2>
 
     <div class="grid">
@@ -53,7 +57,7 @@
     <hr>
 
     <div class="grid">
-        <div><label>Search</label><input id="search" placeholder="Name/Email..." oninput="loadData()"></div>
+        <div><label>Search Name/Email</label><input id="search" placeholder="Search..." oninput="loadData()"></div>
         <div><label>Filter Campus</label>
             <select id="filterCampus" onchange="loadData()">
                 <option value="All">All</option>
@@ -64,8 +68,8 @@
         </div>
     </div>
     <div class="grid">
-        <div><label>From</label><input type="date" id="start" onchange="loadData()"></div>
-        <div><label>To</label><input type="date" id="end" onchange="loadData()"></div>
+        <div><label>From Date</label><input type="date" id="start" onchange="loadData()"></div>
+        <div><label>To Date</label><input type="date" id="end" onchange="loadData()"></div>
     </div>
 
     <table>
@@ -79,9 +83,8 @@
 
     <br><br>
     <div style="background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc;">
-        <label>📅 Calculation Start Date (Joining Date):</label>
+        <label>📅 CALCULATION START DATE (JOINING DATE):</label>
         <input type="date" id="joining">
-        <p class="holiday-info">* Sundays and Festivals are automatically excluded from deductions.</p>
         <button class="btn report" onclick="generateReport()">Generate Salary Report</button>
         <button class="btn whatsapp" onclick="saveImage()">Save WhatsApp Image</button>
     </div>
@@ -102,12 +105,9 @@ const teachers = [
     {name:"Teacher 1", email:"teacher1@gmail.com"}
 ];
 
-// FULL HOLIDAY LIST 2026-2027
 const holidays = [
-    // 2026
     "2026-04-05", "2026-04-10", "2026-04-14", "2026-05-01", "2026-08-15", 
     "2026-08-25", "2026-09-15", "2026-10-02", "2026-11-08", "2026-12-25",
-    // 2027
     "2027-01-01", "2027-01-14", "2027-01-15", "2027-01-26", "2027-02-15",
     "2027-03-07", "2027-03-25", "2027-04-02", "2027-04-14", "2027-05-01"
 ];
@@ -151,8 +151,8 @@ function loadData() {
     if(unsub) unsub();
     const search = document.getElementById("search").value.toLowerCase();
     const campFilter = document.getElementById("filterCampus").value;
-    const sDate = document.getElementById("start").value;
-    const eDate = document.getElementById("end").value;
+    const sFilter = document.getElementById("start").value;
+    const eFilter = document.getElementById("end").value;
 
     unsub = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
         const list = document.getElementById("list");
@@ -160,16 +160,16 @@ function loadData() {
         snap.forEach(doc => {
             const d = doc.data();
             const dt = d.time.toDate();
-            const dateStr = dt.toISOString().split('T')[0];
-            const displayName = d.name || d.teacher; 
+            const dateKey = dt.toISOString().split('T')[0];
+            const nameToDisplay = d.name || d.teacher;
 
-            if(search && !displayName.toLowerCase().includes(search)) return;
-            if(campFilter !== "All" && d.campus !== campFilter) return;
-            if(sDate && dateStr < sDate) return;
-            if(eDate && dateStr > eDate) return;
+            if (search && !nameToDisplay.toLowerCase().includes(search)) return;
+            if (campFilter !== "All" && d.campus !== campFilter) return;
+            if (sFilter && dateKey < sFilter) return;
+            if (eFilter && dateKey > eFilter) return;
 
             list.innerHTML += `<tr>
-                <td>${displayName}</td>
+                <td>${nameToDisplay}</td>
                 <td>${d.campus}</td>
                 <td><b style="color:${d.type==='IN'?'green':'red'}">${d.type}</b> ${d.late?'<span class="late-tag">LATE</span>':''}</td>
                 <td>${dt.toLocaleString('en-GB')}</td>
@@ -181,52 +181,52 @@ function loadData() {
 function generateReport() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    const joinInput = document.getElementById("joining").value;
+    const joinStr = document.getElementById("joining").value;
 
-    if(!sStr || !eStr) return alert("Select Date Range!");
+    if(!sStr || !eStr) return alert("Select FROM and TO dates first!");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
-    const joinLimit = joinInput ? new Date(joinInput) : start;
+    const joinLimit = joinStr ? new Date(joinStr) : start;
 
     db.collection("attendance").get().then(snap => {
         let map = {};
-        let allDates = [];
+        let dayList = [];
         for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-            allDates.push(d.toISOString().split('T')[0]);
+            dayList.push(d.toISOString().split('T')[0]);
         }
 
         snap.forEach(doc => {
             const d = doc.data();
             const dt = d.time.toDate();
-            const dayKey = dt.toISOString().split('T')[0];
-            const tId = d.name || d.teacher;
+            const day = dt.toISOString().split('T')[0];
+            const id = d.name || d.teacher;
 
             if(dt >= start && dt <= new Date(end.getTime() + 86400000)) {
-                if(!map[tId]) map[tId] = { presentDays: new Set(), lateCount: 0 };
-                if(d.type === "IN") map[tId].presentDays.add(dayKey);
-                if(d.late) map[tId].lateCount++;
+                if(!map[id]) map[id] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[id].present.add(day);
+                if(d.late) map[id].late++;
             }
         });
 
-        let out = "VGA SALARY REPORT (2026-27)\n==============================\n\n";
+        let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
         for(let t in map) {
             let absents = 0;
-            allDates.forEach(date => {
-                const dObj = new Date(date);
-                if(dObj < joinLimit) return; // Skip before join
-                if(dObj.getDay() === 0 || holidays.includes(date)) return; // Skip Sunday/Holiday
-                if(!map[t].presentDays.has(date)) absents++;
+            dayList.forEach(day => {
+                const dObj = new Date(day);
+                if(dObj < joinLimit) return; 
+                if(dObj.getDay() === 0 || holidays.includes(day)) return; 
+                if(!map[t].present.has(day)) absents++;
             });
 
-            const lCuts = Math.floor(map[t].lateCount / 3);
+            const lCuts = Math.floor(map[t].late / 3);
             const total = (absents * 2) + lCuts;
 
             out += `TEACHER: ${t}\n`;
-            out += `Present: ${map[t].presentDays.size} | Late Marks: ${map[t].lateCount}\n`;
+            out += `Present: ${map[t].present.size} | Late: ${map[t].late}\n`;
             out += `Absent Cut (x2): ${absents * 2} Days\n`;
-            out += `Late Cuts (3=1): ${lCuts} Days\n`;
-            out += `TOTAL DEDUCTION: ${total} DAYS\n`;
+            out += `Late Cuts: ${lCuts} Days\n`;
+            out += `TOTAL CUTS: ${total} DAYS\n`;
             out += `------------------------------\n`;
         }
         document.getElementById("output").innerText = out;
@@ -236,17 +236,17 @@ function generateReport() {
 function saveImage() {
     html2canvas(document.getElementById("capture-area")).then(canvas => {
         const link = document.createElement('a');
-        link.download = 'VGA_Report.png';
+        link.download = 'VGA_Admin_Report.png';
         link.href = canvas.toDataURL();
         link.click();
     });
 }
 
 function exportCSV() {
-    let csv = "Teacher,Campus,Action,Time\n";
+    let csv = "Teacher,Campus,Type,Time\n";
     document.querySelectorAll("#list tr").forEach(tr => {
-        const cols = tr.querySelectorAll("td");
-        csv += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText},${cols[3].innerText}\n`;
+        const c = tr.querySelectorAll("td");
+        csv += `${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
