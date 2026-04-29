@@ -104,7 +104,8 @@ const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
     {name:"Anitha Rao", email:"anitha@vga.com"},
-    {name:"V. Rajesh", email:"rajesh@vga.com"}
+    {name:"V. Rajesh", email:"rajesh@vga.com"},
+    {name:"Ravi", email:"ravi@vga.com"}
 ];
 
 firebase.initializeApp({
@@ -121,7 +122,14 @@ window.onload = () => {
     load();
 };
 
-// Safe date parser to handle corrupted data
+// HELPER: Get teacher name regardless of field name
+function getDisplayName(data) {
+    if (data.name) return data.name;
+    if (data.teacherName) return data.teacherName;
+    const found = teachers.find(t => t.email === data.teacher);
+    return found ? found.name : (data.teacher || "Unknown");
+}
+
 function parseDate(timeField) {
     if (!timeField) return null;
     try {
@@ -136,8 +144,6 @@ function save(type) {
     if (!email) return alert("Select Teacher");
 
     const teacherObj = teachers.find(t => t.email === email);
-    if (!teacherObj) return alert("Error finding teacher name");
-
     const now = new Date();
     db.collection("attendance").add({
         teacher: email,
@@ -146,7 +152,7 @@ function save(type) {
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
         late: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
-    }).then(() => { alert("Saved!"); load(); }).catch(err => alert("Error: " + err.message));
+    }).then(() => { alert("Saved!"); load(); });
 }
 
 let unsubscribe;
@@ -158,29 +164,25 @@ function load() {
     const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
     if(eDate) eDate.setHours(23,59,59);
 
-    const list = document.getElementById("list");
-
     unsubscribe = db.collection("attendance").onSnapshot(snap => {
+        const list = document.getElementById("list");
         list.innerHTML = "";
         let docs = [];
-        snap.forEach(doc => {
-            let data = doc.data();
-            if (data.time) docs.push(data);
-        });
-        
+        snap.forEach(doc => docs.push(doc.data()));
         docs.sort((a, b) => (parseDate(b.time) || 0) - (parseDate(a.time) || 0));
 
         docs.forEach(d => {
             let dt = parseDate(d.time);
-            if (!dt) return; // Skip broken rows in the display
+            if (!dt) return;
 
-            if (search && !d.name?.toLowerCase().includes(search)) return;
+            let displayName = getDisplayName(d);
+            if (search && !displayName.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
             list.innerHTML += `<tr>
-                <td>${d.name || 'Unknown'}</td>
+                <td>${displayName}</td>
                 <td>${d.campus || '-'}</td>
                 <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
@@ -207,29 +209,29 @@ function generateSalary() {
         snap.forEach(doc => {
             const d = doc.data();
             const dt = parseDate(d.time);
-            if (!dt || !d.name) return; // SKIP CORRUPTED RECORDS
+            if (!dt) return;
 
+            const name = getDisplayName(d);
             const key = dt.toISOString().split('T')[0];
+            
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
-                if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
-                if(d.type === "IN") map[d.name].present.add(key);
-                if(d.late) map[d.name].late++;
+                if(!map[name]) map[name] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[name].present.add(key);
+                if(d.late) map[name].late++;
             }
         });
 
         let out = `VGA SALARY SUMMARY\n----------------\n`;
-        let resultsFound = false;
         for(let name in map) {
-            resultsFound = true;
             let p = map[name].present.size;
             let l = map[name].late;
             let a = 0;
             daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].present.has(d)) a++; });
             out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
-        document.getElementById("output").innerText = resultsFound ? out : "No valid records found.";
-    }).catch(err => alert("Salary Error: " + err.message));
+        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
+    });
 }
 
 function exportCSV() {
