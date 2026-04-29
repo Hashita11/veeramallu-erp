@@ -3,264 +3,276 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VGA ERP FINAL</title>
+<title>VGA Admin ERP</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
-body{font-family:Arial;background:#f4f7f9;padding:10px}
-.container{max-width:500px;margin:auto;background:#fff;padding:15px;border-radius:12px}
-input,select{padding:10px;width:100%;margin-bottom:8px}
-button{padding:10px;width:100%;margin-bottom:8px;color:#fff;border:none;border-radius:6px}
-.in{background:#28a745} .out{background:#1a237e}
-.login{background:#ff9800} .manual{background:#607d8b}
-.salary{background:#d32f2f} .csv{background:#444}
+    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
+    .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    
+    /* Header */
+    .header { text-align: center; margin-bottom: 20px; }
+    .logo { width: 80px; }
+    h2 { color: #1a237e; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
 
-table{width:100%;border-collapse:collapse}
-th{background:#007bff;color:#fff;padding:6px}
-td{padding:6px;border-bottom:1px solid #eee;text-align:center}
+    /* Layout Grids */
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
+    
+    /* Inputs */
+    select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
+
+    /* Buttons */
+    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .btn-in { background: #28a745; }
+    .btn-out { background: #1a237e; }
+    .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
+    .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
+    .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
+
+    /* Table */
+    .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
+
+    /* Salary Report Section */
+    .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
+    #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
+    
+    hr { border: 0; border-top: 2px solid #eee; margin: 20px 0; }
 </style>
 </head>
 
 <body>
+
 <div class="container" id="capture">
+    <div class="header">
+        <img src="logo.png" alt="VGA Logo" class="logo">
+        <br>
+        <h2>VGA ADMIN ERP</h2>
+    </div>
 
-<h2 style="text-align:center">VGA ERP FINAL</h2>
+    <div class="grid">
+        <div><label>Teacher</label><select id="teacher"></select></div>
+        <div><label>Campus</label>
+            <select id="campus">
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
+        </div>
+    </div>
 
-<!-- LOGIN -->
-<input id="email" placeholder="Teacher Email">
-<input id="password" type="password" placeholder="Password">
-<button class="login" onclick="login()">Login</button>
+    <div class="grid">
+        <button class="btn btn-in" onclick="save('IN')">OFFICE IN</button>
+        <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
+    </div>
 
-<hr>
+    <hr>
 
-<!-- MANUAL ENTRY -->
-<input id="manualName" placeholder="Manual Name">
-<input id="manualPhone" placeholder="Phone Number">
-<button class="manual" onclick="manualEntry()">Manual Attendance</button>
+    <div class="grid">
+        <div><label>Search Name</label><input id="search" placeholder="Search..." oninput="load()"></div>
+        <div><label>Filter Campus</label>
+            <select id="filterCampus" onchange="load()">
+                <option value="All">All</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
+        </div>
+    </div>
 
-<hr>
+    <div class="grid">
+        <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
+        <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
+    </div>
 
-<select id="campus">
-<option>Velpur</option>
-<option>Relangi</option>
-<option>Undrajavaram</option>
-</select>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Campus</th>
+                    <th>Type</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="list">
+                <tr><td colspan="4">Connecting to Firebase...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-<button class="in" onclick="mark('IN')">IN</button>
-<button class="out" onclick="mark('OUT')">OUT</button>
+    <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
 
-<hr>
-
-<input id="search" placeholder="Search" oninput="load()">
-<input type="date" id="start" onchange="load()">
-<input type="date" id="end" onchange="load()">
-
-<table>
-<thead>
-<tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr>
-</thead>
-<tbody id="list"><tr><td colspan="4">Loading...</td></tr></tbody>
-</table>
-
-<button class="csv" onclick="exportCSV()">Download CSV</button>
-
-<hr>
-
-<input type="date" id="joining">
-<input id="salaryPerDay" placeholder="Salary per day (₹)">
-<button class="salary" onclick="generateSalary()">Generate Salary</button>
-
-<pre id="output"></pre>
-
-<button onclick="sendWhatsApp()">Send WhatsApp</button>
-
+    <div class="salary-box">
+        <label>📅 JOINING DATE (FOR CALCULATION):</label>
+        <input type="date" id="joining">
+        
+        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
+        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
+        
+        <div id="output">No report generated yet...</div>
+    </div>
 </div>
 
 <script>
-
-// CONFIG
-const LATE_TIME="08:30:00";
-
-// HOLIDAYS
-const holidays=[
-"2026-01-26",
-"2026-08-15",
-"2026-10-02"
+// --- CONFIGURATION ---
+const LATE_TIME = "08:30:00";
+const teachers = [
+    {name:"Suresh Kumar", email:"suresh@vga.com"},
+    {name:"Anitha Rao", email:"anitha@vga.com"},
+    {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-// FIREBASE
+// --- FIREBASE INITIALIZATION ---
 firebase.initializeApp({
-apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-authDomain:"veeramalluerp-6cac5.firebaseapp.com",
-projectId:"veeramalluerp-6cac5"
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5"
 });
+const db = firebase.firestore();
 
-const db=firebase.firestore();
-const auth=firebase.auth();
+window.onload = () => {
+    const tSelect = document.getElementById("teacher");
+    tSelect.innerHTML = "<option value=''>-- Select --</option>";
+    teachers.forEach(t => {
+        tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
+    });
+    load();
+};
 
-let currentUser=null;
+// --- CORE FUNCTIONS ---
 
-// LOGIN
-function login(){
-auth.signInWithEmailAndPassword(
-document.getElementById("email").value,
-document.getElementById("password").value
-).then(res=>{
-currentUser=res.user;
-alert("Login Success");
-}).catch(e=>alert(e.message));
+function save(type) {
+    const email = document.getElementById("teacher").value;
+    const campus = document.getElementById("campus").value;
+    if (!email) return alert("Select Teacher first");
+
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 8);
+
+    db.collection("attendance").add({
+        teacher: email,
+        name: teachers.find(t => t.email === email).name,
+        campus: campus,
+        type: type,
+        time: firebase.firestore.Timestamp.fromDate(now),
+        late: (type === "IN" && timeStr > LATE_TIME)
+    }).then(() => {
+        alert("Attendance Saved!");
+        load();
+    }).catch(err => alert("Save Error: " + err.message));
 }
 
-// MARK ATTENDANCE
-function mark(type){
-if(!currentUser) return alert("Login first");
+let unsubscribe;
+function load() {
+    if (unsubscribe) unsubscribe();
+    
+    const search = document.getElementById("search").value.toLowerCase();
+    const campusFilt = document.getElementById("filterCampus").value;
+    const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
+    const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+    if(eDate) eDate.setHours(23,59,59);
 
-const now=new Date();
-const timeStr=now.toTimeString().slice(0,8);
+    const list = document.getElementById("list");
 
-db.collection("attendance").add({
-name:currentUser.email,
-campus:document.getElementById("campus").value,
-type:type,
-time:firebase.firestore.Timestamp.fromDate(now),
-late:(type==="IN" && timeStr>LATE_TIME),
-mode:"online"
-});
+    unsubscribe = db.collection("attendance").onSnapshot(snap => {
+        list.innerHTML = "";
+        let docs = [];
+        snap.forEach(doc => docs.push(doc.data()));
+
+        // Manual Sort: Newest entries at the top
+        docs.sort((a, b) => (b.time.toDate() - a.time.toDate()));
+
+        docs.forEach(d => {
+            let dt = d.time.toDate();
+            
+            if (search && !d.name.toLowerCase().includes(search)) return;
+            if (campusFilt !== "All" && d.campus !== campusFilt) return;
+            if (sDate && dt < sDate) return;
+            if (eDate && dt > eDate) return;
+
+            list.innerHTML += `<tr>
+                <td>${d.name}</td>
+                <td>${d.campus}</td>
+                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
+                <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+            </tr>`;
+        });
+
+        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+    }, err => {
+        list.innerHTML = `<tr><td colspan='4' style="color:red">Firebase Error: ${err.message}</td></tr>`;
+    });
 }
 
-// MANUAL ENTRY
-function manualEntry(){
-let name=document.getElementById("manualName").value;
-let phone=document.getElementById("manualPhone").value;
+function generateSalary() {
+    const sStr = document.getElementById("start").value;
+    const eStr = document.getElementById("end").value;
+    if(!sStr || !eStr) return alert("Please select Date Filters above first");
 
-if(!name||!phone) return alert("Fill details");
+    const start = new Date(sStr);
+    const end = new Date(eStr);
+    end.setHours(23,59,59);
+    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
 
-db.collection("attendance").add({
-name:name,
-phone:phone,
-campus:"Office",
-type:"IN",
-time:firebase.firestore.Timestamp.fromDate(new Date()),
-late:false,
-mode:"manual"
-});
+    db.collection("attendance").get().then(snap => {
+        let map = {};
+        let daysInRange = new Set();
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            const dt = d.time.toDate();
+            const key = dt.toISOString().split('T')[0];
+
+            if(dt >= start && dt <= end) {
+                daysInRange.add(key);
+                if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[d.name].present.add(key);
+                if(d.late) map[d.name].late++;
+            }
+        });
+
+        let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
+        for(let name in map) {
+            let p = map[name].present.size;
+            let l = map[name].late;
+            let a = 0;
+            daysInRange.forEach(d => {
+                if(new Date(d) >= joinDate && !map[name].present.has(d)) a++;
+            });
+            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n------------------------\n`;
+        }
+        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
+    });
 }
 
-// LOAD
-function load(){
-db.collection("attendance").onSnapshot(snap=>{
-let list=document.getElementById("list");
-list.innerHTML="";
-
-let data=[];
-snap.forEach(doc=>data.push(doc.data()));
-
-data.sort((a,b)=>b.time.toDate()-a.time.toDate());
-
-data.forEach(d=>{
-let dt=d.time.toDate();
-list.innerHTML+=`
-<tr>
-<td>${d.name}</td>
-<td>${d.campus}</td>
-<td>${d.type}</td>
-<td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString()}</td>
-</tr>`;
-});
-});
+function exportCSV() {
+    let csv = "Teacher,Campus,Type,Time\n";
+    document.querySelectorAll("#list tr").forEach(tr => {
+        const c = tr.querySelectorAll("td");
+        if(c.length >= 4) csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Attendance_Report.csv";
+    a.click();
 }
 
-// SALARY
-function generateSalary(){
-
-let start=new Date(document.getElementById("start").value);
-let end=new Date(document.getElementById("end").value);
-end.setHours(23,59,59);
-
-let join=document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
-let perDay=parseFloat(document.getElementById("salaryPerDay").value || 0);
-
-db.collection("attendance").get().then(snap=>{
-
-let map={};
-let workingDays=[];
-
-// calculate working days
-for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
-let key=d.toISOString().split('T')[0];
-if(d>=join && !holidays.includes(key)){
-workingDays.push(key);
+function saveWhatsAppImage() {
+    html2canvas(document.getElementById("capture")).then(canvas => {
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL("image/png");
+        a.download = "VGA_Salary_Report.png";
+        a.click();
+    });
 }
-}
-
-snap.forEach(doc=>{
-let d=doc.data();
-let dt=d.time.toDate();
-let key=dt.toISOString().split('T')[0];
-
-if(dt>=start && dt<=end){
-if(!map[d.name]) map[d.name]={present:new Set(),late:0};
-
-if(d.type==="IN") map[d.name].present.add(key);
-if(d.late) map[d.name].late++;
-}
-});
-
-let out="";
-for(let name in map){
-let present=map[name].present.size;
-let late=map[name].late;
-let working=workingDays.length;
-let absent=working-present;
-
-let latePenalty=Math.floor(late/3);
-let payableDays=present-latePenalty;
-
-let salary=payableDays*perDay;
-
-out+=`${name}
-Working Days: ${working}
-Present: ${present}
-Absent: ${absent}
-Late: ${late}
-Penalty Days: ${latePenalty}
-Final Paid Days: ${payableDays}
-Salary: ₹${salary}
-
-----------------------
-`;
-}
-
-document.getElementById("output").innerText=out;
-
-});
-}
-
-// WHATSAPP
-function sendWhatsApp(){
-let text=document.getElementById("output").innerText;
-let url="https://wa.me/?text="+encodeURIComponent(text);
-window.open(url);
-}
-
-// CSV
-function exportCSV(){
-let csv="Name,Campus,Type,Time\n";
-document.querySelectorAll("#list tr").forEach(tr=>{
-let c=tr.querySelectorAll("td");
-if(c.length>=4)
-csv+=`${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText}\n`;
-});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(new Blob([csv]));
-a.download="attendance.csv";
-a.click();
-}
-
 </script>
 </body>
 </html>
