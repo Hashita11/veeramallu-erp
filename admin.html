@@ -3,308 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Ultimate Admin Console</title>
-    
+    <title>VGA Admin ERP - Final 2026-27</title>
+
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .main-container { background: #ffffff; width: 100%; max-width: 650px; border-radius: 15px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); box-sizing: border-box; }
-        
-        /* Header & Tabs */
-        .header { text-align: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-        .academy-logo { width: 80px; height: auto; margin-bottom: 5px; }
-        .academy-name { font-size: 20px; color: #1a237e; margin: 0; font-weight: 800; text-transform: uppercase; }
-        .tab-bar { display: flex; gap: 8px; margin-top: 15px; }
-        .tab { flex: 1; padding: 10px; background: #e3f2fd; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; color: #1a237e; transition: 0.3s; }
-        .tab.active { background: #1a237e; color: white; }
-
-        /* Manual Entry Box */
-        .manual-console { background: #fffde7; border: 2px dashed #fbc02d; border-radius: 12px; padding: 15px; margin-bottom: 20px; }
-        .console-title { font-size: 12px; font-weight: bold; color: #f57f17; display: block; margin-bottom: 10px; text-transform: uppercase; }
-        
-        /* Filter Grid */
-        .filter-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        
-        label { font-size: 11px; font-weight: bold; color: #555; display: block; margin-bottom: 4px; }
-        select, input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; box-sizing: border-box; }
-
-        /* Buttons */
-        .btn { padding: 12px; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-in { background: #28a745; }
-        .btn-out { background: #1a237e; }
-        .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
-        .btn-report { background: #d32f2f; width: 100%; margin-top: 15px; font-size: 16px; }
-
-        /* Table */
-        .table-container { border: 1.5px solid #007bff; border-radius: 10px; overflow: hidden; background: white; width: 100%; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        thead th { background-color: #007bff; color: white; padding: 12px 2px; font-size: 11px; }
-        td { padding: 10px 4px; border: 1px solid #eee; font-size: 10px; text-align: center; word-wrap: break-word; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .manual-row { background-color: #fffde7 !important; }
-        .late-text { color: #d32f2f; font-weight: bold; font-size: 9px; display: block; }
-
-        /* Report Box */
-        .report-box { background: #fafafa; border: 1.5px solid #007bff; border-radius: 12px; padding: 15px; margin-top: 15px; display: none; text-align: left; }
-        #report-content { font-family: monospace; white-space: pre-wrap; font-size: 12px; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background:#f0f2f5; padding:10px; margin:0; }
+        .container { max-width:650px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align:center; color: #1a237e; margin-bottom: 20px; border-bottom: 2px solid #1a237e; padding-bottom: 10px; }
+        .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 10px; }
+        input, select { padding:10px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing: border-box; }
+        .btn { padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; width: 100%; }
+        .in { background:#28a745; }
+        .out { background:#1a237e; }
+        .csv { background:#6c757d; margin-top:10px; }
+        .report { background:#d32f2f; margin-top:10px; }
+        .whatsapp { background:#e67e22; margin-top:10px; }
+        table { width:100%; margin-top:15px; border-collapse:collapse; background: white; }
+        th { background:#007bff; color:white; padding:10px; font-size: 13px; }
+        td { padding:8px; border:1px solid #eee; font-size:12px; text-align:center; }
+        .late-tag { color:red; font-weight: bold; font-size:10px; }
+        #output { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; margin-top: 15px; border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #333; line-height: 1.5; }
+        label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; }
+        .holiday-info { font-size: 10px; color: #d32f2f; margin-top: 5px; font-style: italic; }
     </style>
 </head>
+
 <body>
+<div class="container" id="capture-area">
+    <h2>VGA ADMIN ERP</h2>
 
-<div class="main-container">
-    <div class="header">
-        <img src="logo.png" alt="VGA Logo" class="academy-logo">
-        <h1 class="academy-name">Veeramallu Global Academy</h1>
-        <div class="tab-bar">
-            <button class="tab active">Attendance Logs</button>
-            <button class="tab" onclick="window.location.href='admissions.html'">Admissions 26-27</button>
+    <div class="grid">
+        <div><label>Teacher</label><select id="teacher"></select></div>
+        <div><label>Campus</label>
+            <select id="campus">
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
         </div>
     </div>
+    <div class="grid">
+        <button class="btn in" onclick="saveRecord('IN')">OFFICE IN</button>
+        <button class="btn out" onclick="saveRecord('OUT')">OFFICE OUT</button>
+    </div>
 
-    <div class="manual-console">
-        <span class="console-title">📌 Office Manual Entry (For Basic Phones)</span>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-            <div>
-                <label>Teacher Name</label>
-                <select id="m-teacher"></select>
-            </div>
-            <div>
-                <label>Campus</label>
-                <select id="m-campus">
-                    <option value="Velpur">Velpur</option>
-                    <option value="Relangi">Relangi</option>
-                    <option value="Undrajavaram">Undrajavaram</option>
-                </select>
-            </div>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="btn btn-in" style="flex:1;" onclick="saveManual('IN')">OFFICE IN</button>
-            <button class="btn btn-out" style="flex:1;" onclick="saveManual('OUT')">OFFICE OUT</button>
+    <hr>
+
+    <div class="grid">
+        <div><label>Search</label><input id="search" placeholder="Name/Email..." oninput="loadData()"></div>
+        <div><label>Filter Campus</label>
+            <select id="filterCampus" onchange="loadData()">
+                <option value="All">All</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
         </div>
     </div>
-
-    <div class="filter-section">
-        <div><label>Teacher</label><input type="text" id="f-teacher" placeholder="Search..." oninput="refreshUI()"></div>
-        <div><label>Campus</label><select id="f-campus" onchange="refreshUI()"><option value="All">All</option><option>Velpur</option><option>Relangi</option><option>Undrajavaram</option></select></div>
-        <div><label>From Date</label><input type="date" id="f-start" onchange="refreshUI()"></div>
-        <div><label>To Date</label><input type="date" id="f-end" onchange="refreshUI()"></div>
-    </div>
-    
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 35%;">Teacher</th>
-                    <th style="width: 25%;">Campus</th>
-                    <th style="width: 15%;">Action</th>
-                    <th style="width: 25%;">Time</th>
-                </tr>
-            </thead>
-            <tbody id="attendance-list"></tbody>
-        </table>
+    <div class="grid">
+        <div><label>From</label><input type="date" id="start" onchange="loadData()"></div>
+        <div><label>To</label><input type="date" id="end" onchange="loadData()"></div>
     </div>
 
-    <button class="btn btn-csv" onclick="exportToCSV()">📥 Download CSV for Excel</button>
-    <div style="background: #fff5f5; padding: 15px; border: 1px solid #feb2b2; border-radius: 8px; margin-bottom: 15px; text-align: left;">
-    <label style="font-weight: bold; color: #c53030; font-size: 0.9rem;">
-        📅 TEACHER JOINING DATE (For Mid-Month):
-    </label>
-    <input type="date" id="joiningDateFilter" style="padding: 8px; border-radius: 5px; border: 1px solid #cbd5e0; margin-left: 10px;">
-    <p style="font-size: 0.7rem; color: #718096; margin: 5px 0 0 0;">
-        *Leave blank for full-month teachers. Select a date to ignore "Absents" before they joined.
-    </p>
+    <table>
+        <thead>
+            <tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr>
+        </thead>
+        <tbody id="list"></tbody>
+    </table>
+
+    <button class="btn csv" onclick="exportCSV()">Download Attendance CSV</button>
+
+    <br><br>
+    <div style="background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc;">
+        <label>📅 Calculation Start Date (Joining Date):</label>
+        <input type="date" id="joining">
+        <p class="holiday-info">* Sundays and Festivals are automatically excluded from deductions.</p>
+        <button class="btn report" onclick="generateReport()">Generate Salary Report</button>
+        <button class="btn whatsapp" onclick="saveImage()">Save WhatsApp Image</button>
     </div>
-    <button type="button" onclick="saveReportAsImage()" style="background: #e67e22; width: 100%; margin-top: 10px; padding: 12px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">
-    📸 Save Report as WhatsApp Image
-</button>
-    <button class="btn btn-report" onclick="generateSalaryReport()">📊 Generate Salary Deduction Report</button>  
-    <div id="report-container" class="report-box">
-        <pre id="report-content"></pre>
+
+    <div id="output-container">
+        <pre id="output">No report generated yet...</pre>
     </div>
 </div>
 
 <script>
-    // --- MASTER CONFIGURATION ---
-    const LATE_THRESHOLD = "08:30:00"; 
-    const teacherList = [
-        { name: "Suresh Kumar", email: "suresh@vga.com" },
-        { name: "Anitha Rao", email: "anitha@vga.com" },
-        { name: "V. Rajesh", email: "rajesh@vga.com" }
-    ];
+const LATE_LIMIT = "08:30:00";
 
-    const holidays = [
-        // 2026 Sundays
-        "2026-01-04", "2026-01-11", "2026-01-18", "2026-01-25", "2026-02-01", "2026-02-08", "2026-02-15", "2026-02-22",
-        "2026-03-01", "2026-03-08", "2026-03-15", "2026-03-22", "2026-03-29", "2026-04-05", "2026-04-12", "2026-04-19",
-        "2026-04-26", "2026-05-03", "2026-05-10", "2026-05-17", "2026-05-24", "2026-05-31", "2026-06-07", "2026-06-14",
-        "2026-06-21", "2026-06-28", "2026-07-05", "2026-07-12", "2026-07-19", "2026-07-26", "2026-08-02", "2026-08-09",
-        "2026-08-16", "2026-08-23", "2026-08-30", "2026-09-06", "2026-09-13", "2026-09-20", "2026-09-27", "2026-10-04",
-        "2026-10-11", "2026-10-18", "2026-10-25", "2026-11-01", "2026-11-08", "2026-11-15", "2026-11-22", "2026-11-29",
-        "2026-12-06", "2026-12-13", "2026-12-20", "2026-12-27",
-        // 2027 Sundays & Festivals
-        "2027-01-03", "2027-01-10", "2027-01-17", "2027-01-24", "2027-01-31", "2027-02-07", "2027-02-14", "2027-02-21",
-        "2027-02-28", "2027-03-07", "2027-03-14", "2027-03-21", "2027-03-28", "2027-04-04", "2027-04-11", "2027-04-18",
-        "2027-01-14", "2027-01-15", "2027-03-08", "2027-04-16", "2026-10-02", "2026-12-25"
-    ];
+const teachers = [
+    {name:"Suresh Kumar", email:"suresh@vga.com"},
+    {name:"Anitha Rao", email:"anitha@vga.com"},
+    {name:"V. Rajesh", email:"rajesh@vga.com"},
+    {name:"Veeramallu", email:"veeramallussv@gmail.com"},
+    {name:"Teacher 1", email:"teacher1@gmail.com"}
+];
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE", 
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-        projectId: "veeramalluerp-6cac5",
-        storageBucket: "veeramalluerp-6cac5.appspot.com",
-        messagingSenderId: "379339569496",
-        appId: "1:379339569496:web:5c2becb87e35b7190d6350d"
-    };
+// FULL HOLIDAY LIST 2026-2027
+const holidays = [
+    // 2026
+    "2026-04-05", "2026-04-10", "2026-04-14", "2026-05-01", "2026-08-15", 
+    "2026-08-25", "2026-09-15", "2026-10-02", "2026-11-08", "2026-12-25",
+    // 2027
+    "2027-01-01", "2027-01-14", "2027-01-15", "2027-01-26", "2027-02-15",
+    "2027-03-07", "2027-03-25", "2027-04-02", "2027-04-14", "2027-05-01"
+];
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+firebase.initializeApp({
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5"
+});
+const db = firebase.firestore();
 
-    function parseVgaDate(str) {
-        if (!str || typeof str !== 'string') return null;
-        const [d, m, y] = str.split(',')[0].trim().split('/');
-        return new Date(y, m - 1, d);
-    }
+window.onload = () => {
+    const tSelect = document.getElementById("teacher");
+    tSelect.innerHTML = "<option value=''>-- Select --</option>";
+    teachers.forEach(t => tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`);
+    loadData();
+};
 
-    window.onload = () => {
-        const sel = document.getElementById('m-teacher');
-        sel.innerHTML = '<option value="">-- Choose Teacher --</option>';
-        teacherList.forEach(t => sel.innerHTML += `<option value="${t.email}">${t.name}</option>`);
-        refreshUI();
-    };
+function saveRecord(type) {
+    const email = document.getElementById("teacher").value;
+    const campus = document.getElementById("campus").value;
+    if(!email) return alert("Select teacher!");
 
-    function saveManual(type) {
-        const email = document.getElementById('m-teacher').value;
-        const campus = document.getElementById('m-campus').value;
-        if(!email) return alert("Select Teacher First");
-        
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('en-GB'); // HH:MM:SS
-        const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+    const isLate = (type === "IN" && timeStr > LATE_LIMIT);
+    const teacherObj = teachers.find(t => t.email === email);
 
-        db.collection("attendance").add({
-            teacher: email,
-            campus: campus,
-            type: type,
-            time: now.toLocaleString('en-IN'),
-            autoLate: isLate,
-            method: "Office-Manual"
-        }).then(() => {
-            alert("Attendance Saved");
-            document.getElementById('m-teacher').value = "";
-        });
-    }
-
-    function refreshUI() {
-        const tS = document.getElementById('f-teacher').value.toLowerCase();
-        const cS = document.getElementById('f-campus').value;
-        const start = document.getElementById('f-start').value ? new Date(document.getElementById('f-start').value) : null;
-        const end = document.getElementById('f-end').value ? new Date(document.getElementById('f-end').value) : null;
-
-        db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
-            const list = document.getElementById('attendance-list');
-            list.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                const logD = parseVgaDate(d.time);
-                if (tS && !(d.teacher||"").toLowerCase().includes(tS)) return;
-                if (cS !== "All" && d.campus !== cS) return;
-                if (start && logD < start) return;
-                if (end && logD > end) return;
-
-                const rowClass = d.method === "Office-Manual" ? "manual-row" : "";
-                list.innerHTML += `<tr class="${rowClass}">
-                    <td style="text-align:left; padding-left:5px;">${d.teacher}</td>
-                    <td>${d.campus}</td>
-                    <td><span style="color:${d.type==='IN'?'green':'red'}; font-weight:bold;">${d.type}</span>
-                        ${d.autoLate ? '<span class="late-text">LATE</span>' : ''}
-                    </td>
-                    <td style="font-size:9px;">${d.time}</td>
-                </tr>`;
-            });
-        });
-    }
-
-    function exportToCSV() {
-        let csv = "Teacher,Campus,Type,Time,IsLate\n";
-        document.querySelectorAll("#attendance-list tr").forEach(row => {
-            const cols = row.querySelectorAll("td");
-            csv += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText.replace('LATE','').trim()},${cols[3].innerText},${cols[2].innerText.includes('LATE')}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
-        a.click();
-    }
-    // --- 1. THE REPORT GENERATOR ---
-function generateSalaryReport() {
-    const fStart = document.getElementById('f-start').value;
-    const fEnd = document.getElementById('f-end').value;
-    const joiningVal = document.getElementById('joiningDateFilter').value;
-
-    if (!fStart || !fEnd) return alert("Select Date Range First");
-
-    const start = new Date(fStart);
-    const end = new Date(fEnd);
-    const joinDateLimit = joiningVal ? new Date(joiningVal) : start;
-
-    let dataMap = {};
-    let rangeDates = new Set();
-
-    db.collection("attendance").get().then(snap => {
-        snap.forEach(doc => {
-            const d = doc.data();
-            const logD = parseVgaDate(d.time);
-            if (!logD || logD < start || logD > end) return;
-
-            const key = logD.toISOString().split('T')[0];
-            rangeDates.add(key);
-
-            // Using d.teacher to get the Name/Email
-            if (!dataMap[d.teacher]) dataMap[d.teacher] = { present: new Set(), late: 0 };
-            dataMap[d.teacher].present.add(key);
-            if (d.autoLate) dataMap[d.teacher].late++;
-        });
-
-        let sorted = Array.from(rangeDates).sort();
-        let out = "VGA SALARY DEDUCTION REPORT\n==============================\n\n";
-
-        for (let t in dataMap) {
-            let p = dataMap[t].present.size;
-            let l = dataMap[t].late;
-            let abs = 0;
-
-            sorted.forEach((dt) => {
-                const currentDt = new Date(dt);
-                if (currentDt < joinDateLimit) return; 
-
-                if (!dataMap[t].present.has(dt) && !holidays.includes(dt)) {
-                    abs++;
-                }
-            });
-
-            let lateCuts = Math.floor(l / 3);
-            // This line puts the Names back on the screen
-            out += "TEACHER: " + t + "\n";
-            out += "Present: " + p + " | Late: " + l + "\n";
-            out += "Absent Cut (x2): " + (abs * 2) + " Days\n";
-            out += "Late Cuts: " + lateCuts + " Days\n";
-            out += "--------------------------\n";
-        }
-
-        document.getElementById('report-container').style.display = "block";
-        document.getElementById('report-content').innerText = out;
-    }).catch(err => alert("Firestore Error: " + err.message));
+    db.collection("attendance").add({
+        teacher: email,
+        name: teacherObj.name,
+        campus: campus,
+        type: type,
+        time: firebase.firestore.Timestamp.fromDate(now),
+        late: isLate
+    }).then(() => alert("Entry Saved!"));
 }
 
+let unsub;
+function loadData() {
+    if(unsub) unsub();
+    const search = document.getElementById("search").value.toLowerCase();
+    const campFilter = document.getElementById("filterCampus").value;
+    const sDate = document.getElementById("start").value;
+    const eDate = document.getElementById("end").value;
 
-        document.getElementById('report-container').style.display = "block";
-        document.getElementById('report-content').innerText = out;
-    }).catch(err => alert("Error: " + err.message));
+    unsub = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
+        const list = document.getElementById("list");
+        list.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            const dt = d.time.toDate();
+            const dateStr = dt.toISOString().split('T')[0];
+            const displayName = d.name || d.teacher; 
+
+            if(search && !displayName.toLowerCase().includes(search)) return;
+            if(campFilter !== "All" && d.campus !== campFilter) return;
+            if(sDate && dateStr < sDate) return;
+            if(eDate && dateStr > eDate) return;
+
+            list.innerHTML += `<tr>
+                <td>${displayName}</td>
+                <td>${d.campus}</td>
+                <td><b style="color:${d.type==='IN'?'green':'red'}">${d.type}</b> ${d.late?'<span class="late-tag">LATE</span>':''}</td>
+                <td>${dt.toLocaleString('en-GB')}</td>
+            </tr>`;
+        });
+    });
+}
+
+function generateReport() {
+    const sStr = document.getElementById("start").value;
+    const eStr = document.getElementById("end").value;
+    const joinInput = document.getElementById("joining").value;
+
+    if(!sStr || !eStr) return alert("Select Date Range!");
+
+    const start = new Date(sStr);
+    const end = new Date(eStr);
+    const joinLimit = joinInput ? new Date(joinInput) : start;
+
+    db.collection("attendance").get().then(snap => {
+        let map = {};
+        let allDates = [];
+        for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+            allDates.push(d.toISOString().split('T')[0]);
+        }
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            const dt = d.time.toDate();
+            const dayKey = dt.toISOString().split('T')[0];
+            const tId = d.name || d.teacher;
+
+            if(dt >= start && dt <= new Date(end.getTime() + 86400000)) {
+                if(!map[tId]) map[tId] = { presentDays: new Set(), lateCount: 0 };
+                if(d.type === "IN") map[tId].presentDays.add(dayKey);
+                if(d.late) map[tId].lateCount++;
+            }
+        });
+
+        let out = "VGA SALARY REPORT (2026-27)\n==============================\n\n";
+        for(let t in map) {
+            let absents = 0;
+            allDates.forEach(date => {
+                const dObj = new Date(date);
+                if(dObj < joinLimit) return; // Skip before join
+                if(dObj.getDay() === 0 || holidays.includes(date)) return; // Skip Sunday/Holiday
+                if(!map[t].presentDays.has(date)) absents++;
+            });
+
+            const lCuts = Math.floor(map[t].lateCount / 3);
+            const total = (absents * 2) + lCuts;
+
+            out += `TEACHER: ${t}\n`;
+            out += `Present: ${map[t].presentDays.size} | Late Marks: ${map[t].lateCount}\n`;
+            out += `Absent Cut (x2): ${absents * 2} Days\n`;
+            out += `Late Cuts (3=1): ${lCuts} Days\n`;
+            out += `TOTAL DEDUCTION: ${total} DAYS\n`;
+            out += `------------------------------\n`;
+        }
+        document.getElementById("output").innerText = out;
+    });
+}
+
+function saveImage() {
+    html2canvas(document.getElementById("capture-area")).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'VGA_Report.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+}
+
+function exportCSV() {
+    let csv = "Teacher,Campus,Action,Time\n";
+    document.querySelectorAll("#list tr").forEach(tr => {
+        const cols = tr.querySelectorAll("td");
+        csv += `${cols[0].innerText},${cols[1].innerText},${cols[2].innerText},${cols[3].innerText}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'VGA_Attendance.csv';
+    a.click();
 }
 </script>
 </body>
