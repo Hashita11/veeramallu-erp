@@ -12,29 +12,41 @@
 <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
     .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    
     .header { text-align: center; margin-bottom: 20px; }
-    .logo { width: 80px; }
-    h2 { color: #1a237e; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
+    .logo { width: 80px; margin-bottom: 5px; }
+    h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
+
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
-    select, input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
+    
+    select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
+
     .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+    
+    .btn-logs { background: #6c757d; }
+    .btn-adm { background: #2b4a91; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
-    .btn-adm { background: #2b4a91; }
-    .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
+    .btn-csv { background: #5a6268; width: 100%; margin-top: 10px; }
     .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
     .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
+
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
     td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
+
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
+    
+    .late-tag { color: red; font-size: 10px; font-weight: bold; display: block; margin-top: 2px; }
+    hr { border: 0; border-top: 2px solid #f1f1f1; margin: 20px 0; }
 </style>
 </head>
 
 <body>
+
 <div class="container" id="capture">
     <div class="header">
         <img src="logo.png" alt="VGA Logo" class="logo">
@@ -43,7 +55,7 @@
     </div>
 
     <div class="grid">
-        <div><label>Manual Entry</label><select id="teacher"></select></div>
+        <div><label>Teacher</label><select id="teacher"></select></div>
         <div><label>Campus</label>
             <select id="campus">
                 <option>Velpur</option>
@@ -54,7 +66,8 @@
     </div>
 
     <div class="grid">
-        <a href="admissions.html" class="btn btn-adm" style="grid-column: span 2;">Student Admissions 2026-27</a>
+        <button class="btn btn-logs" onclick="scrollToLogs()">Attendance Logs</button>
+        <a href="admissions.html" class="btn btn-adm">Admissions 26-27</a>
     </div>
 
     <div class="grid">
@@ -62,29 +75,30 @@
         <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
     </div>
 
-    <hr style="border: 0; border-top: 2px solid #eee; margin: 20px 0;">
+    <hr>
 
-    <div class="grid">
-        <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
-        <div><label>Filter Campus</label>
-            <select id="filterCampus" onchange="load()">
-                <option value="All">All</option>
-                <option>Velpur</option>
-                <option>Relangi</option>
-                <option>Undrajavaram</option>
-            </select>
+    <div id="logs-section">
+        <div class="grid">
+            <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
+            <div><label>Filter Campus</label>
+                <select id="filterCampus" onchange="load()">
+                    <option value="All">All</option>
+                    <option>Velpur</option>
+                    <option>Relangi</option>
+                    <option>Undrajavaram</option>
+                </select>
+            </div>
         </div>
-    </div>
-
-    <div class="grid">
-        <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
-        <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
+        <div class="grid">
+            <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
+            <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
+        </div>
     </div>
 
     <div class="table-container">
         <table>
             <thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"><tr><td colspan="4">Syncing with Firestore...</td></tr></tbody>
+            <tbody id="list"><tr><td colspan="4">Syncing...</td></tr></tbody>
         </table>
     </div>
 
@@ -100,12 +114,13 @@
 </div>
 
 <script>
-// --- CONFIG & STAFF LIST ---
+const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
     {name:"Anitha Rao", email:"anitha@vga.com"},
     {name:"V. Rajesh", email:"rajesh@vga.com"},
-    {name:"Teacher 1", email:"teacher1@gmail.com"}
+    {name:"Teacher 1", email:"teacher1@gmail.com"},
+    {name:"Ravi", email:"ravi@vga.com"}
 ];
 
 firebase.initializeApp({
@@ -122,19 +137,14 @@ window.onload = () => {
     load();
 };
 
-// --- DATA FIXING FUNCTIONS ---
+function scrollToLogs() { document.getElementById("logs-section").scrollIntoView({behavior: 'smooth'}); }
 
-// Converts either Firebase Timestamps OR your String "29/4/2026..." into real Dates
 function parseDate(timeField) {
     if (!timeField) return null;
-    // 1. If it's a Firebase Timestamp
     if (typeof timeField.toDate === 'function') return timeField.toDate();
-    
-    // 2. If it's a String like "29/4/2026, 3:40:44 pm" (from your screenshot)
     if (typeof timeField === 'string') {
-        // Replace slash with dash and comma to make it standard
         let parts = timeField.split(','); 
-        let dateParts = parts[0].split('/'); // [29, 4, 2026]
+        let dateParts = parts[0].split('/'); 
         let isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}${parts[1] || ''}`;
         let d = new Date(isoDate);
         return isNaN(d.getTime()) ? null : d;
@@ -146,11 +156,17 @@ function resolveTeacherName(data) {
     if (data.name) return data.name;
     if (data.teacherName) return data.teacherName;
     const match = teachers.find(t => t.email === data.teacher);
-    return match ? match.name : (data.teacher || "Unknown Staff");
+    return match ? match.name : (data.teacher || "Unknown");
 }
 
-// --- CORE FUNCTIONS ---
+function checkIsLate(data, dt) {
+    if (data.late === true || data.late === "true") return true;
+    if (data.type !== "IN") return false;
+    const timeStr = dt.toTimeString().slice(0, 8);
+    return timeStr > LATE_TIME;
+}
 
+// --- UPDATED SAVE FUNCTION WITH DUPLICATE PREVENTION ---
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
@@ -158,14 +174,37 @@ function save(type) {
 
     const teacherObj = teachers.find(t => t.email === email);
     const now = new Date();
-    db.collection("attendance").add({
-        teacher: email,
-        name: teacherObj.name,
-        campus: campus,
-        type: type,
-        time: firebase.firestore.Timestamp.fromDate(now),
-        late: (type === "IN" && now.toTimeString().slice(0, 8) > "08:30:00")
-    }).then(() => { alert("Saved!"); load(); });
+    
+    // Create start and end of today for the check
+    const startOfDay = new Date(now.setHours(0,0,0,0));
+    const endOfDay = new Date(now.setHours(23,59,59,999));
+
+    // Check if entry already exists for today
+    db.collection("attendance")
+        .where("teacher", "==", email)
+        .where("type", "==", type)
+        .where("time", ">=", firebase.firestore.Timestamp.fromDate(startOfDay))
+        .where("time", "<=", firebase.firestore.Timestamp.fromDate(endOfDay))
+        .get()
+        .then(snapshot => {
+            if (!snapshot.empty) {
+                alert("Attendance (" + type + ") already recorded for " + teacherObj.name + " today!");
+            } else {
+                // No duplicate found, proceed to save
+                db.collection("attendance").add({
+                    teacher: email,
+                    name: teacherObj.name,
+                    campus: campus,
+                    type: type,
+                    time: firebase.firestore.Timestamp.fromDate(new Date()),
+                    late: (type === "IN" && new Date().toTimeString().slice(0, 8) > LATE_TIME)
+                }).then(() => { 
+                    alert("Attendance Recorded!"); 
+                    load(); 
+                });
+            }
+        })
+        .catch(err => alert("Error checking records: " + err.message));
 }
 
 let unsubscribe;
@@ -182,28 +221,30 @@ function load() {
         list.innerHTML = "";
         let docs = [];
         snap.forEach(doc => docs.push(doc.data()));
-
         docs.sort((a, b) => (parseDate(b.time) || 0) - (parseDate(a.time) || 0));
 
         docs.forEach(d => {
             let dt = parseDate(d.time);
             if (!dt) return;
-
             let staffName = resolveTeacherName(d);
             if (search && !staffName.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
+            let lateMark = checkIsLate(d, dt);
+
             list.innerHTML += `<tr>
                 <td>${staffName}</td>
                 <td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
+                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">
+                    ${d.type} ${lateMark ? '<span class="late-tag">LATE</span>' : ''}
+                </td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
         if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
-    }, err => { list.innerHTML = `<tr><td colspan='4' style="color:red">Error: ${err.message}</td></tr>`; });
+    });
 }
 
 function generateSalary() {
@@ -227,18 +268,20 @@ function generateSalary() {
             const key = dt.toISOString().split('T')[0];
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
-                if(!map[staffName]) map[staffName] = { present: new Set(), late: 0 };
-                if(d.type === "IN") map[staffName].present.add(key);
-                if(d.late) map[staffName].late++;
+                if(!map[staffName]) map[staffName] = { presentDays: new Set(), lateCount: 0 };
+                if(d.type === "IN") {
+                    map[staffName].presentDays.add(key);
+                    if (checkIsLate(d, dt)) map[staffName].lateCount++;
+                }
             }
         });
 
         let out = `VGA SALARY SUMMARY\n----------------\n`;
         for(let name in map) {
-            let p = map[name].present.size;
-            let l = map[name].late;
+            let p = map[name].presentDays.size;
+            let l = map[name].lateCount;
             let a = 0;
-            daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].present.has(d)) a++; });
+            daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].presentDays.has(d)) a++; });
             out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
         document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
@@ -253,7 +296,7 @@ function exportCSV() {
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "Attendance_Report.csv";
+    a.download = "VGA_Attendance.csv";
     a.click();
 }
 
