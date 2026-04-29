@@ -1,105 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VGA Admin ERP</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | VGA ERP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --primary: #1a237e; --success: #28a745; --error: #d32f2f; --warning: #fbc02d; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); text-align: center; }
+        
+        /* Filters Section */
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+        /* Responsive Table */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 20px; border: 1px solid #eee; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        
+        /* Status Tags */
+        .late-tag { background: var(--error); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        
+        /* Buttons */
+        .btn { padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; margin: 5px 0; width: 100%; }
+        .btn-csv { background: #388e3c; color: white; }
+        .btn-salary { background: var(--primary); color: white; }
+        .btn-wa { background: #25d366; color: white; }
 
-<style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
-    .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .header { text-align: center; margin-bottom: 20px; }
-    .logo { width: 80px; margin-bottom: 5px; }
-    h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-    label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
-    select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
-    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
-    .btn-in { background: #28a745; }
-    .btn-out { background: #1a237e; }
-    .btn-adm { background: #2b4a91; }
-    .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
-    .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
-    .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
-    .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; background: #fff; }
-    th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
-    .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
-    #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
-    .late-tag { color: red; font-size: 10px; font-weight: bold; display: block; margin-top: 2px; }
-    hr { border: 0; border-top: 2px solid #f1f1f1; margin: 20px 0; }
-</style>
+        .salary-box { background: #e3f2fd; padding: 20px; border-radius: 10px; margin-top: 30px; border: 1px solid #bbdefb; }
+        #output { white-space: pre-wrap; background: white; padding: 15px; border-radius: 6px; margin-top: 10px; font-family: monospace; border: 1px dashed var(--primary); }
+        
+        @media (max-width: 600px) { .controls { grid-template-columns: 1fr; } }
+    </style>
 </head>
-
 <body>
+
 <div class="container" id="capture">
-    <div class="header">
-        <img src="logo.png" alt="VGA Logo" class="logo">
-        <br>
-        <h2>VGA ADMIN ERP</h2>
+    <h2>VGA Admin Attendance Portal</h2>
+
+    <div class="controls">
+        <input type="text" id="search" placeholder="Search Teacher Name..." onkeyup="load()">
+        <select id="filterCampus" onchange="load()">
+            <option value="All">All Campuses</option>
+            <option value="Relangi">Relangi</option>
+            <option value="Velpur">Velpur</option>
+            <option value="Undrajavaram">Undrajavaram</option>
+        </select>
+        <input type="date" id="start" onchange="load()">
+        <input type="date" id="end" onchange="load()">
     </div>
 
-    <div class="grid">
-        <div><label>Teacher</label><select id="teacher"></select></div>
-        <div><label>Campus</label>
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <label><b>Quick Manual Entry:</b></label>
+        <div class="controls" style="margin-top:10px;">
+            <select id="teacher"></select>
             <select id="campus">
-                <option>Velpur</option>
-                <option>Relangi</option>
-                <option>Undrajavaram</option>
+                <option value="Relangi">Relangi</option>
+                <option value="Velpur">Velpur</option>
+                <option value="Undrajavaram">Undrajavaram</option>
             </select>
         </div>
-    </div>
-
-    <div class="grid">
-        <a href="admissions.html" class="btn btn-adm" style="grid-column: span 2;">Student Admissions 2026-27</a>
-    </div>
-
-    <div class="grid">
-        <button class="btn btn-in" onclick="save('IN')">OFFICE IN</button>
-        <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
-    </div>
-
-    <hr>
-
-    <div class="grid">
-        <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
-        <div><label>Filter Campus</label>
-            <select id="filterCampus" onchange="load()">
-                <option value="All">All</option>
-                <option>Velpur</option>
-                <option>Relangi</option>
-                <option>Undrajavaram</option>
-            </select>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" style="background:var(--success); color:white;" onclick="save('IN')">Manual IN</button>
+            <button class="btn" style="background:var(--error); color:white;" onclick="save('OUT')">Manual OUT</button>
         </div>
-    </div>
-
-    <div class="grid">
-        <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
-        <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
     </div>
 
     <div class="table-container">
         <table>
-            <thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"><tr><td colspan="4">Syncing...</td></tr></tbody>
+            <thead>
+                <tr>
+                    <th>Teacher</th>
+                    <th>Campus</th>
+                    <th>Type</th>
+                    <th>Time & Date</th>
+                </tr>
+            </thead>
+            <tbody id="list">
+                <tr><td colspan="4" style="text-align:center;">Syncing Database...</td></tr>
+            </tbody>
         </table>
     </div>
 
-    <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
+    <button class="btn btn-csv" onclick="exportCSV()">📥 Download Attendance CSV</button>
 
     <div class="salary-box">
+        <h3 style="margin-top:0;">💰 Salary & Performance Report</h3>
         <label>📅 JOINING DATE:</label>
         <input type="date" id="joining">
-        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
-        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
+        <button class="btn btn-salary" onclick="generateSalary()">Generate Summary Report</button>
+        <button class="btn btn-wa" onclick="saveWhatsAppImage()">📸 Save as WhatsApp Image</button>
         <div id="output">No report generated yet...</div>
     </div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 const LATE_TIME = "08:30:00";
@@ -120,19 +120,26 @@ const db = firebase.firestore();
 
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
-    tSelect.innerHTML = "<option value=''>-- Select --</option>";
+    tSelect.innerHTML = "<option value=''>-- Select Teacher --</option>";
     teachers.forEach(t => { tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`; });
     load();
 };
 
+// HELPER: Handles multiple date formats from both apps
 function parseDate(timeField) {
     if (!timeField) return null;
-    if (typeof timeField.toDate === 'function') return timeField.toDate();
+    if (timeField.toDate) return timeField.toDate(); // Handle Firestore Timestamp
+    if (timeField instanceof Date) return timeField;
+    
+    // Handle string format "29/4/2026, 08:35:00"
     if (typeof timeField === 'string') {
-        let parts = timeField.split(','); 
-        let dateParts = parts[0].split('/'); 
-        let isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}${parts[1] || ''}`;
-        let d = new Date(isoDate);
+        const parts = timeField.split(',');
+        const dateParts = parts[0].trim().split('/');
+        const day = dateParts[0].padStart(2, '0');
+        const month = dateParts[1].padStart(2, '0');
+        const year = dateParts[2];
+        const timePart = parts[1] ? parts[1].trim() : "00:00:00";
+        const d = new Date(`${year}-${month}-${day}T${timePart}`);
         return isNaN(d.getTime()) ? null : d;
     }
     return null;
@@ -140,46 +147,38 @@ function parseDate(timeField) {
 
 function resolveTeacherName(data) {
     if (data.name) return data.name;
-    const match = teachers.find(t => t.email === data.teacher);
+    const match = teachers.find(t => t.email === (data.teacher || data.email));
     return match ? match.name : (data.teacher || "Unknown");
 }
 
 function checkIsLate(data, dt) {
-    if (data.late === true || data.late === "true") return true;
+    if (data.autoLate === true || data.late === true) return true;
     if (data.type !== "IN") return false;
     const timeStr = dt.toTimeString().slice(0, 8);
     return timeStr > LATE_TIME;
 }
 
+// SAVE LOGIC
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
-    if (!email) return alert("Select Teacher");
+    if (!email) return alert("Please select a teacher first!");
 
     const teacherObj = teachers.find(t => t.email === email);
     const now = new Date();
-    const todayStr = now.toLocaleDateString();
+    const todayStr = now.toLocaleDateString('en-IN');
 
-    // Check for duplicates locally to avoid Index Errors
-    db.collection("attendance").where("teacher", "==", email).where("type", "==", type).get().then(snap => {
-        let exists = false;
-        snap.forEach(doc => {
-            let d = parseDate(doc.data().time);
-            if (d && d.toLocaleDateString() === todayStr) exists = true;
-        });
-
-        if (exists) {
-            alert("Attendance already recorded for " + teacherObj.name + " today!");
-        } else {
-            db.collection("attendance").add({
-                teacher: email,
-                name: teacherObj.name,
-                campus: campus,
-                type: type,
-                time: firebase.firestore.Timestamp.fromDate(new Date()),
-                late: (type === "IN" && new Date().toTimeString().slice(0, 8) > LATE_TIME)
-            }).then(() => { alert("Saved!"); load(); });
-        }
+    db.collection("attendance").add({
+        teacher: email,
+        name: teacherObj.name,
+        campus: campus,
+        type: type,
+        time: firebase.firestore.Timestamp.fromDate(now),
+        dateOnly: todayStr,
+        autoLate: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
+    }).then(() => { 
+        alert("Manual Attendance Saved!"); 
+        load(); 
     });
 }
 
@@ -202,6 +201,7 @@ function load() {
             let dt = parseDate(d.time);
             if (!dt) return;
             let name = resolveTeacherName(d);
+            
             if (search && !name.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
@@ -209,33 +209,48 @@ function load() {
 
             let late = checkIsLate(d, dt);
             list.innerHTML += `<tr>
-                <td>${name}</td><td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type} ${late ? '<span class="late-tag">LATE</span>' : ''}</td>
-                <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
+                <td><b>${name}</b></td>
+                <td>${d.campus || '-'}</td>
+                <td style="color:${d.type==='OUT'?'#d32f2f':'#28a745'}; font-weight:bold">
+                    ${d.type} ${late ? '<span class="late-tag">LATE</span>' : ''}
+                </td>
+                <td>${dt.toLocaleDateString('en-IN')}<br><small>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small></td>
             </tr>`;
         });
+        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No records found for selected filters.</td></tr>";
     });
 }
 
 function generateSalary() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select Dates first");
+    if(!sStr || !eStr) return alert("Select Start and End dates for the salary period.");
 
     const start = new Date(sStr);
-    const end = new Date(eStr).setHours(23,59,59);
-    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
+    const end = new Date(eStr);
+    end.setHours(23,59,59);
+    
+    const joinDateInput = document.getElementById("joining").value;
+    const globalJoinDate = joinDateInput ? new Date(joinDateInput) : start;
 
     db.collection("attendance").get().then(snap => {
         let map = {};
-        let daysInRange = new Set();
+        let allWorkingDays = new Set();
+        
+        // Loop through the date range to find unique days
+        let tempDate = new Date(start);
+        while(tempDate <= end && tempDate <= new Date()) {
+            allWorkingDays.add(tempDate.toISOString().split('T')[0]);
+            tempDate.setDate(tempDate.getDate() + 1);
+        }
+
         snap.forEach(doc => {
             const d = doc.data();
             const dt = parseDate(d.time);
             if (!dt || dt < start || dt > end) return;
+            
             const name = resolveTeacherName(d);
             const dayKey = dt.toISOString().split('T')[0];
-            daysInRange.add(dayKey);
 
             if(!map[name]) map[name] = { presentDays: new Set(), lateCount: 0 };
             if(d.type === "IN") {
@@ -244,35 +259,47 @@ function generateSalary() {
             }
         });
 
-        let out = `VGA SALARY SUMMARY\n----------------\n`;
+        let out = `VGA SALARY SUMMARY (${start.toLocaleDateString()} to ${new Date(end).toLocaleDateString()})\n`;
+        out += `------------------------------------------------\n`;
+        
         for(let name in map) {
             let p = map[name].presentDays.size;
             let l = map[name].lateCount;
             let a = 0;
-            daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].presentDays.has(d)) a++; });
-            out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
+            
+            allWorkingDays.forEach(day => {
+                let dObj = new Date(day);
+                // Only count absent if day is after their joining date and they weren't present
+                if(dObj >= globalJoinDate && !map[name].presentDays.has(day)) a++;
+            });
+
+            out += `${name.padEnd(15)}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
         document.getElementById("output").innerText = out;
     });
 }
 
 function exportCSV() {
-    let csv = "Teacher,Campus,Type,Time\n";
+    let csv = "Teacher,Campus,Type,Date,Time\n";
     document.querySelectorAll("#list tr").forEach(tr => {
         const c = tr.querySelectorAll("td");
-        if(c.length >= 4) csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
+        if(c.length >= 4) {
+            let timeDate = c[3].innerText.replace('\n',' ').split(' ');
+            csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${timeDate[0]}","${timeDate[1]}"\n`;
+        }
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "Attendance.csv";
+    a.download = `VGA_Attendance_${new Date().toLocaleDateString()}.csv`;
     a.click();
 }
 
 function saveWhatsAppImage() {
-    html2canvas(document.getElementById("capture")).then(canvas => {
+    const target = document.getElementById("capture");
+    html2canvas(target).then(canvas => {
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
-        a.download = "Report.png";
+        a.download = "VGA_Daily_Report.png";
         a.click();
     });
 }
