@@ -12,41 +12,31 @@
 <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
     .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    
     .header { text-align: center; margin-bottom: 20px; }
     .logo { width: 80px; margin-bottom: 5px; }
     h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
-
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
-    
     select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
-
     .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
-    
-    .btn-logs { background: #6c757d; }
-    .btn-adm { background: #2b4a91; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
-    .btn-csv { background: #5a6268; width: 100%; margin-top: 10px; }
+    .btn-adm { background: #2b4a91; }
+    .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
     .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
     .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
-
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
     td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
-
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
-    
     .late-tag { color: red; font-size: 10px; font-weight: bold; display: block; margin-top: 2px; }
     hr { border: 0; border-top: 2px solid #f1f1f1; margin: 20px 0; }
 </style>
 </head>
 
 <body>
-
 <div class="container" id="capture">
     <div class="header">
         <img src="logo.png" alt="VGA Logo" class="logo">
@@ -66,8 +56,7 @@
     </div>
 
     <div class="grid">
-        <button class="btn btn-logs" onclick="scrollToLogs()">Attendance Logs</button>
-        <a href="admissions.html" class="btn btn-adm">Admissions 26-27</a>
+        <a href="admissions.html" class="btn btn-adm" style="grid-column: span 2;">Student Admissions 2026-27</a>
     </div>
 
     <div class="grid">
@@ -77,22 +66,21 @@
 
     <hr>
 
-    <div id="logs-section">
-        <div class="grid">
-            <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
-            <div><label>Filter Campus</label>
-                <select id="filterCampus" onchange="load()">
-                    <option value="All">All</option>
-                    <option>Velpur</option>
-                    <option>Relangi</option>
-                    <option>Undrajavaram</option>
-                </select>
-            </div>
+    <div class="grid">
+        <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
+        <div><label>Filter Campus</label>
+            <select id="filterCampus" onchange="load()">
+                <option value="All">All</option>
+                <option>Velpur</option>
+                <option>Relangi</option>
+                <option>Undrajavaram</option>
+            </select>
         </div>
-        <div class="grid">
-            <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
-            <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
-        </div>
+    </div>
+
+    <div class="grid">
+        <div><label>From Date</label><input type="date" id="start" onchange="load()"></div>
+        <div><label>To Date</label><input type="date" id="end" onchange="load()"></div>
     </div>
 
     <div class="table-container">
@@ -137,8 +125,6 @@ window.onload = () => {
     load();
 };
 
-function scrollToLogs() { document.getElementById("logs-section").scrollIntoView({behavior: 'smooth'}); }
-
 function parseDate(timeField) {
     if (!timeField) return null;
     if (typeof timeField.toDate === 'function') return timeField.toDate();
@@ -154,7 +140,6 @@ function parseDate(timeField) {
 
 function resolveTeacherName(data) {
     if (data.name) return data.name;
-    if (data.teacherName) return data.teacherName;
     const match = teachers.find(t => t.email === data.teacher);
     return match ? match.name : (data.teacher || "Unknown");
 }
@@ -166,7 +151,6 @@ function checkIsLate(data, dt) {
     return timeStr > LATE_TIME;
 }
 
-// --- UPDATED SAVE FUNCTION WITH DUPLICATE PREVENTION ---
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
@@ -174,37 +158,29 @@ function save(type) {
 
     const teacherObj = teachers.find(t => t.email === email);
     const now = new Date();
-    
-    // Create start and end of today for the check
-    const startOfDay = new Date(now.setHours(0,0,0,0));
-    const endOfDay = new Date(now.setHours(23,59,59,999));
+    const todayStr = now.toLocaleDateString();
 
-    // Check if entry already exists for today
-    db.collection("attendance")
-        .where("teacher", "==", email)
-        .where("type", "==", type)
-        .where("time", ">=", firebase.firestore.Timestamp.fromDate(startOfDay))
-        .where("time", "<=", firebase.firestore.Timestamp.fromDate(endOfDay))
-        .get()
-        .then(snapshot => {
-            if (!snapshot.empty) {
-                alert("Attendance (" + type + ") already recorded for " + teacherObj.name + " today!");
-            } else {
-                // No duplicate found, proceed to save
-                db.collection("attendance").add({
-                    teacher: email,
-                    name: teacherObj.name,
-                    campus: campus,
-                    type: type,
-                    time: firebase.firestore.Timestamp.fromDate(new Date()),
-                    late: (type === "IN" && new Date().toTimeString().slice(0, 8) > LATE_TIME)
-                }).then(() => { 
-                    alert("Attendance Recorded!"); 
-                    load(); 
-                });
-            }
-        })
-        .catch(err => alert("Error checking records: " + err.message));
+    // Check for duplicates locally to avoid Index Errors
+    db.collection("attendance").where("teacher", "==", email).where("type", "==", type).get().then(snap => {
+        let exists = false;
+        snap.forEach(doc => {
+            let d = parseDate(doc.data().time);
+            if (d && d.toLocaleDateString() === todayStr) exists = true;
+        });
+
+        if (exists) {
+            alert("Attendance already recorded for " + teacherObj.name + " today!");
+        } else {
+            db.collection("attendance").add({
+                teacher: email,
+                name: teacherObj.name,
+                campus: campus,
+                type: type,
+                time: firebase.firestore.Timestamp.fromDate(new Date()),
+                late: (type === "IN" && new Date().toTimeString().slice(0, 8) > LATE_TIME)
+            }).then(() => { alert("Saved!"); load(); });
+        }
+    });
 }
 
 let unsubscribe;
@@ -214,7 +190,6 @@ function load() {
     const campusFilt = document.getElementById("filterCampus").value;
     const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
     const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
-    if(eDate) eDate.setHours(23,59,59);
 
     unsubscribe = db.collection("attendance").onSnapshot(snap => {
         const list = document.getElementById("list");
@@ -226,24 +201,19 @@ function load() {
         docs.forEach(d => {
             let dt = parseDate(d.time);
             if (!dt) return;
-            let staffName = resolveTeacherName(d);
-            if (search && !staffName.toLowerCase().includes(search)) return;
+            let name = resolveTeacherName(d);
+            if (search && !name.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
-            if (eDate && dt > eDate) return;
+            if (eDate && dt > (new Date(eDate).setHours(23,59,59))) return;
 
-            let lateMark = checkIsLate(d, dt);
-
+            let late = checkIsLate(d, dt);
             list.innerHTML += `<tr>
-                <td>${staffName}</td>
-                <td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">
-                    ${d.type} ${lateMark ? '<span class="late-tag">LATE</span>' : ''}
-                </td>
+                <td>${name}</td><td>${d.campus || '-'}</td>
+                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type} ${late ? '<span class="late-tag">LATE</span>' : ''}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
-        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
     });
 }
 
@@ -253,8 +223,7 @@ function generateSalary() {
     if(!sStr || !eStr) return alert("Select Dates first");
 
     const start = new Date(sStr);
-    const end = new Date(eStr);
-    end.setHours(23,59,59);
+    const end = new Date(eStr).setHours(23,59,59);
     const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
 
     db.collection("attendance").get().then(snap => {
@@ -263,16 +232,15 @@ function generateSalary() {
         snap.forEach(doc => {
             const d = doc.data();
             const dt = parseDate(d.time);
-            if (!dt) return;
-            const staffName = resolveTeacherName(d);
-            const key = dt.toISOString().split('T')[0];
-            if(dt >= start && dt <= end) {
-                daysInRange.add(key);
-                if(!map[staffName]) map[staffName] = { presentDays: new Set(), lateCount: 0 };
-                if(d.type === "IN") {
-                    map[staffName].presentDays.add(key);
-                    if (checkIsLate(d, dt)) map[staffName].lateCount++;
-                }
+            if (!dt || dt < start || dt > end) return;
+            const name = resolveTeacherName(d);
+            const dayKey = dt.toISOString().split('T')[0];
+            daysInRange.add(dayKey);
+
+            if(!map[name]) map[name] = { presentDays: new Set(), lateCount: 0 };
+            if(d.type === "IN") {
+                map[name].presentDays.add(dayKey);
+                if (checkIsLate(d, dt)) map[name].lateCount++;
             }
         });
 
@@ -284,7 +252,7 @@ function generateSalary() {
             daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].presentDays.has(d)) a++; });
             out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
-        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
+        document.getElementById("output").innerText = out;
     });
 }
 
@@ -296,7 +264,7 @@ function exportCSV() {
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "VGA_Attendance.csv";
+    a.download = "Attendance.csv";
     a.click();
 }
 
@@ -304,7 +272,7 @@ function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
-        a.download = "VGA_Report.png";
+        a.download = "Report.png";
         a.click();
     });
 }
