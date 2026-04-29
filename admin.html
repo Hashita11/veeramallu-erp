@@ -10,19 +10,24 @@
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
     .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
+    
+    /* Header & Branding */
     .header { text-align: center; margin-bottom: 20px; }
     .logo { width: 80px; margin-bottom: 5px; }
     h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
 
+    /* Layout Grids */
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
 
-    select, input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
+    /* Inputs */
+    select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
 
+    /* Buttons */
     .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+    .btn:active { transform: scale(0.98); }
     
     .btn-logs { background: #6c757d; }
     .btn-adm { background: #2b4a91; }
@@ -32,13 +37,17 @@
     .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
     .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
 
+    /* Table */
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
 
+    /* Salary Box */
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
-    #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
+    #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; }
+    
+    hr { border: 0; border-top: 2px solid #f1f1f1; margin: 20px 0; }
 </style>
 </head>
 
@@ -72,11 +81,11 @@
         <button class="btn btn-out" onclick="save('OUT')">OFFICE OUT</button>
     </div>
 
-    <hr style="border: 0; border-top: 2px solid #eee; margin: 20px 0;">
+    <hr>
 
     <div id="logs-section">
         <div class="grid">
-            <div><label>Search</label><input id="search" placeholder="Name..." oninput="load()"></div>
+            <div><label>Search Name</label><input id="search" placeholder="Search..." oninput="load()"></div>
             <div><label>Filter Campus</label>
                 <select id="filterCampus" onchange="load()">
                     <option value="All">All</option>
@@ -103,7 +112,9 @@
                     <th>Time</th>
                 </tr>
             </thead>
-            <tbody id="list"></tbody>
+            <tbody id="list">
+                <tr><td colspan="4">Connecting to Firebase...</td></tr>
+            </tbody>
         </table>
     </div>
 
@@ -121,7 +132,7 @@
 </div>
 
 <script>
-// CONFIG
+// 1. CONFIG
 const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
@@ -129,7 +140,7 @@ const teachers = [
     {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-// FIREBASE
+// 2. FIREBASE SETUP
 firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -137,10 +148,10 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// INITIALIZE
+// 3. INITIALIZATION
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
-    tSelect.innerHTML = "<option value=''>Select Teacher</option>";
+    tSelect.innerHTML = "<option value=''>-- Select Teacher --</option>";
     teachers.forEach(t => {
         tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
     });
@@ -151,7 +162,7 @@ function scrollToLogs() {
     document.getElementById("logs-section").scrollIntoView({behavior: 'smooth'});
 }
 
-// SAVE
+// 4. SAVE DATA
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
@@ -168,99 +179,123 @@ function save(type) {
         time: firebase.firestore.Timestamp.fromDate(now),
         late: (type === "IN" && timeStr > LATE_TIME)
     }).then(() => {
-        alert("Success: " + type + " saved.");
+        alert(type + " Saved!");
         load();
     });
 }
 
-// LOAD FIXED (Displays Real-time Data)
+// 5. LOAD & DISPLAY LOGS (Teacher, Campus, Type, Time)
 let unsubscribe;
 function load() {
     if (unsubscribe) unsubscribe();
     
-    const search = document.getElementById("search").value.toLowerCase();
-    const campus = document.getElementById("filterCampus").value;
+    const searchVal = document.getElementById("search").value.toLowerCase();
+    const campusFilter = document.getElementById("filterCampus").value;
     const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
     const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
     if(eDate) eDate.setHours(23,59,59);
 
-    unsubscribe = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-        
-        if (snap.empty) {
-            list.innerHTML = "<tr><td colspan='4'>No data available</td></tr>";
-            return;
-        }
+    const list = document.getElementById("list");
 
-        snap.forEach(doc => {
-            const d = doc.data();
-            const dt = d.time ? d.time.toDate() : new Date();
-            
-            // Apply Filters
-            if (search && !d.name.toLowerCase().includes(search)) return;
-            if (campus !== "All" && d.campus !== campus) return;
+    unsubscribe = db.collection("attendance").onSnapshot(snap => {
+        list.innerHTML = "";
+        let docs = [];
+        
+        snap.forEach(doc => docs.push(doc.data()));
+
+        // Sorting manually to ensure functionality without Firebase Indexing
+        docs.sort((a, b) => {
+            let t1 = a.time?.toDate ? a.time.toDate() : new Date(a.time);
+            let t2 = b.time?.toDate ? b.time.toDate() : new Date(b.time);
+            return t2 - t1;
+        });
+
+        docs.forEach(d => {
+            let dt = d.time?.toDate ? d.time.toDate() : new Date(d.time);
+            if (!dt || isNaN(dt)) return;
+
+            // Apply Search and Campus Filters
+            if (searchVal && !d.name?.toLowerCase().includes(searchVal)) return;
+            if (campusFilter !== "All" && d.campus !== campusFilter) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
-            list.innerHTML += `<tr>
-                <td>${d.name || '-'}</td>
-                <td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'#d32f2f':'#28a745'}; font-weight:bold">${d.type}</td>
-                <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-            </tr>`;
+            list.innerHTML += `
+                <tr>
+                    <td>${d.name || '-'}</td>
+                    <td>${d.campus || '-'}</td>
+                    <td style="color:${d.type==='OUT'?'#d32f2f':'#28a745'}; font-weight:bold">${d.type || '-'}</td>
+                    <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
+                </tr>`;
         });
+
+        if (list.innerHTML === "") {
+            list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+        }
     });
 }
 
-// CSV
+// 6. CSV EXPORT
 function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
     document.querySelectorAll("#list tr").forEach(tr => {
         const c = tr.querySelectorAll("td");
         if(c.length >= 4) {
-            csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText}"\n`;
+            csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n', ' ')}"\n`;
         }
     });
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "VGA_Attendance.csv";
+    a.download = "Attendance_Report.csv";
     a.click();
 }
 
-// SALARY REPORT FIXED
+// 7. SALARY REPORT
 function generateSalary() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select 'From' and 'To' dates in the logs section first.");
+    if(!sStr || !eStr) return alert("Please select 'From' and 'To' dates first.");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
     end.setHours(23,59,59);
+    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
 
     db.collection("attendance").get().then(snap => {
         let map = {};
+        let daysInRange = new Set();
+
         snap.forEach(doc => {
             const d = doc.data();
             const dt = d.time.toDate();
+            const dateKey = dt.toISOString().split('T')[0];
 
             if(dt >= start && dt <= end) {
-                if(!map[d.name]) map[d.name] = { present: 0, late: 0 };
-                if(d.type === "IN") map[d.name].present++;
+                daysInRange.add(dateKey);
+                if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
+                if(d.type === "IN") map[d.name].present.add(dateKey);
                 if(d.late) map[d.name].late++;
             }
         });
 
         let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
         for(let name in map) {
-            out += `${name}\nPresent: ${map[name].present} Days | Late: ${map[name].late}\n------------------------\n`;
+            let p = map[name].present.size;
+            let l = map[name].late;
+            let a = 0;
+            daysInRange.forEach(d => {
+                if(new Date(d) >= joinDate && !map[name].present.has(d)) a++;
+            });
+
+            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n`;
+            out += `Late Penalty: ${Math.floor(l/3)} Days Cut\n------------------------\n`;
         }
-        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found for these dates.";
+        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
     });
 }
 
-// IMAGE
+// 8. SAVE AS IMAGE
 function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
         const a = document.createElement("a");
