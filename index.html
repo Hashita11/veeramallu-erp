@@ -142,8 +142,8 @@ function startGPSCheck(cName) {
             const bIn = document.getElementById('btnIn');
             const bOut = document.getElementById('btnOut');
 
-            // 200 meter radius for school boundary
-            if (dist <= 200) { 
+            // 70 meter radius for school boundary
+            if (dist <= 70) { 
                 statusBox.innerHTML = "<span style='color:green;'>✔ Verified: Inside Campus</span>";
                 statusBox.style.borderColor = "green";
                 bIn.disabled = false; bOut.disabled = false;
