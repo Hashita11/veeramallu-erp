@@ -28,7 +28,7 @@
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
-    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; }
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
 </style>
@@ -83,24 +83,15 @@
 
     <div class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th>Teacher</th>
-                    <th>Campus</th>
-                    <th>Type</th>
-                    <th>Time</th>
-                </tr>
-            </thead>
-            <tbody id="list">
-                <tr><td colspan="4">Connecting to Firebase...</td></tr>
-            </tbody>
+            <thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
+            <tbody id="list"><tr><td colspan="4">Loading...</td></tr></tbody>
         </table>
     </div>
 
     <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
 
     <div class="salary-box">
-        <label>📅 JOINING DATE (FOR CALCULATION):</label>
+        <label>📅 JOINING DATE:</label>
         <input type="date" id="joining">
         <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
@@ -109,7 +100,6 @@
 </div>
 
 <script>
-// 1. CONFIGURATION
 const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
@@ -117,66 +107,51 @@ const teachers = [
     {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-// 2. FIREBASE INIT (Verified Config)
-const firebaseConfig = {
+firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
     projectId: "veeramalluerp-6cac5"
-};
-
-try {
-    firebase.initializeApp(firebaseConfig);
-    console.log("Firebase Initialized");
-} catch (e) {
-    alert("Firebase Error: " + e.message);
-}
-
+});
 const db = firebase.firestore();
 
-// 3. INITIALIZE TEACHER DROPDOWN
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
     tSelect.innerHTML = "<option value=''>-- Select --</option>";
-    teachers.forEach(t => {
-        tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
-    });
+    teachers.forEach(t => { tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`; });
     load();
 };
 
-// 4. SAVE ATTENDANCE
+// Helper function to safely get Date from Firebase data
+function parseDate(timeField) {
+    if (!timeField) return new Date();
+    if (typeof timeField.toDate === 'function') return timeField.toDate();
+    return new Date(timeField);
+}
+
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
-    if (!email) return alert("Please select a teacher!");
+    if (!email) return alert("Select Teacher");
 
     const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 8);
-
     db.collection("attendance").add({
         teacher: email,
         name: teachers.find(t => t.email === email).name,
         campus: campus,
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
-        late: (type === "IN" && timeStr > LATE_TIME)
-    }).then(() => {
-        alert(type + " Recorded!");
-        load(); // Refresh display
-    }).catch(err => {
-        alert("Database Save Failed: " + err.message);
-    });
+        late: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
+    }).then(() => { alert("Saved!"); load(); }).catch(err => alert("Error: " + err.message));
 }
 
-// 5. LOAD ATTENDANCE (Real-time)
 let unsubscribe;
 function load() {
     if (unsubscribe) unsubscribe();
-    
     const search = document.getElementById("search").value.toLowerCase();
     const campusFilt = document.getElementById("filterCampus").value;
-    const sDateInput = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    const eDateInput = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
-    if(eDateInput) eDateInput.setHours(23,59,59);
+    const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
+    const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+    if(eDate) eDate.setHours(23,59,59);
 
     const list = document.getElementById("list");
 
@@ -184,41 +159,30 @@ function load() {
         list.innerHTML = "";
         let docs = [];
         snap.forEach(doc => docs.push(doc.data()));
-
-        // Local sorting to avoid indexing issues
-        docs.sort((a, b) => {
-            const t1 = a.time?.toDate() || new Date(0);
-            const t2 = b.time?.toDate() || new Date(0);
-            return t2 - t1;
-        });
+        docs.sort((a, b) => parseDate(b.time) - parseDate(a.time));
 
         docs.forEach(d => {
-            const dt = d.time ? d.time.toDate() : new Date();
-            
+            let dt = parseDate(d.time);
             if (search && !d.name.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
-            if (sDateInput && dt < sDateInput) return;
-            if (eDateInput && dt > eDateInput) return;
+            if (sDate && dt < sDate) return;
+            if (eDate && dt > eDate) return;
 
             list.innerHTML += `<tr>
-                <td>${d.name || '-'}</td>
-                <td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'#d32f2f':'#28a745'}; font-weight:bold">${d.type}</td>
+                <td>${d.name}</td>
+                <td>${d.campus}</td>
+                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
-
         if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
-    }, err => {
-        list.innerHTML = `<tr><td colspan='4' style="color:red">Permission Error: ${err.message}</td></tr>`;
-    });
+    }, err => { list.innerHTML = `<tr><td colspan='4' style="color:red">Error: ${err.message}</td></tr>`; });
 }
 
-// 6. SALARY REPORT
 function generateSalary() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select From/To Dates above!");
+    if(!sStr || !eStr) return alert("Select Dates first");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
@@ -230,7 +194,7 @@ function generateSalary() {
         let daysInRange = new Set();
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = d.time.toDate();
+            const dt = parseDate(d.time);
             const key = dt.toISOString().split('T')[0];
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
@@ -240,28 +204,26 @@ function generateSalary() {
             }
         });
 
-        let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
+        let out = `VGA SALARY SUMMARY\n----------------\n`;
         for(let name in map) {
             let p = map[name].present.size;
             let l = map[name].late;
             let a = 0;
             daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].present.has(d)) a++; });
-            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n------------------------\n`;
+            out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
         document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
-    }).catch(err => alert("Salary Calc Error: " + err.message));
+    }).catch(err => alert("Salary Error: " + err.message));
 }
 
-// 7. EXPORTS
 function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
     document.querySelectorAll("#list tr").forEach(tr => {
         const c = tr.querySelectorAll("td");
         if(c.length >= 4) csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = "VGA_Attendance.csv";
     a.click();
 }
@@ -270,7 +232,7 @@ function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
-        a.download = "VGA_ERP_Report.png";
+        a.download = "VGA_Report.png";
         a.click();
     });
 }
