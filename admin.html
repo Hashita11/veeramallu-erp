@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA ADMIN ERP - FINAL VERSION</title>
+    <title>VGA ADMIN ERP - FINAL 2026-27</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background:#f0f2f5; padding:10px; margin:0; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background:#f0f2f5; padding:10px; margin:0; }
         .container { max-width:650px; margin:auto; background:#fff; padding:20px; border-radius:12px; box-shadow: 0px 4px 10px rgba(0,0,0,0.1); }
         h2 { text-align:center; color: #1a237e; margin-bottom: 20px; border-bottom: 2px solid #1a237e; padding-bottom: 10px; margin-top: 5px; }
         .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 10px; }
         input, select { padding:10px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing: border-box; font-size: 14px; }
-        .btn { padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; width: 100%; }
+        .btn { padding:12px; border:none; border-radius:6px; color:white; font-weight:bold; cursor:pointer; width: 100%; transition: 0.3s; }
         .in { background:#28a745; }
         .out { background:#1a237e; }
         .csv { background:#6c757d; margin-top:10px; }
@@ -24,7 +24,7 @@
         table { width:100%; margin-top:15px; border-collapse:collapse; background: white; }
         th { background:#007bff; color:white; padding:10px; font-size: 13px; }
         td { padding:8px; border:1px solid #eee; font-size:12px; text-align:center; }
-        .late-tag { color:red; font-weight: bold; font-size:10px; }
+        .late-tag { color:red; font-weight: bold; font-size:10px; display: block; }
         #output { background: #fdfdfd; padding: 15px; border: 1px solid #ddd; margin-top: 15px; border-radius: 8px; white-space: pre-wrap; font-family: monospace; font-size: 13px; color: #333; line-height: 1.5; }
         label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 4px; }
     </style>
@@ -79,22 +79,23 @@
         <tbody id="list"></tbody>
     </table>
 
-    <button class="btn csv" onclick="exportCSV()">Download Attendance CSV</button>
+    <button class="btn csv" onclick="exportCSV()">📊 Download Attendance CSV</button>
 
     <br><br>
     <div style="background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #ffcccc;">
-        <label>📅 CALCULATION START DATE (JOINING DATE):</label>
+        <label>📅 JOINING DATE (FOR MID-MONTH JOINERS):</label>
         <input type="date" id="joining">
-        <button class="btn report" onclick="generateReport()">Generate Salary Report</button>
-        <button class="btn whatsapp" onclick="saveImage()">Save WhatsApp Image</button>
+        <button class="btn report" onclick="generateReport()">📑 Generate Salary Report</button>
+        <button class="btn whatsapp" onclick="saveImage()">📸 Save WhatsApp Image</button>
     </div>
 
     <div id="output-container">
-        <pre id="output">No report generated yet...</pre>
+        <pre id="output">Report will appear here...</pre>
     </div>
 </div>
 
 <script>
+// --- CONFIGURATION ---
 const LATE_LIMIT = "08:30:00";
 
 const teachers = [
@@ -143,7 +144,10 @@ function saveRecord(type) {
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
         late: isLate
-    }).then(() => alert("Entry Saved!"));
+    }).then(() => {
+        alert("Attendance Saved!");
+        loadData();
+    });
 }
 
 let unsub;
@@ -159,7 +163,10 @@ function loadData() {
         list.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = d.time.toDate();
+            // Handle Timestamp objects safely
+            let dt = (d.time && d.time.toDate) ? d.time.toDate() : new Date(d.time);
+            if(isNaN(dt)) return;
+
             const dateKey = dt.toISOString().split('T')[0];
             const nameToDisplay = d.name || d.teacher;
 
@@ -175,6 +182,7 @@ function loadData() {
                 <td>${dt.toLocaleString('en-GB')}</td>
             </tr>`;
         });
+        if(list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
     });
 }
 
@@ -183,7 +191,7 @@ function generateReport() {
     const eStr = document.getElementById("end").value;
     const joinStr = document.getElementById("joining").value;
 
-    if(!sStr || !eStr) return alert("Select FROM and TO dates first!");
+    if(!sStr || !eStr) return alert("Please select Date Range first!");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
@@ -198,7 +206,9 @@ function generateReport() {
 
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = d.time.toDate();
+            let dt = (d.time && d.time.toDate) ? d.time.toDate() : new Date(d.time);
+            if(isNaN(dt)) return;
+
             const day = dt.toISOString().split('T')[0];
             const id = d.name || d.teacher;
 
@@ -223,10 +233,10 @@ function generateReport() {
             const total = (absents * 2) + lCuts;
 
             out += `TEACHER: ${t}\n`;
-            out += `Present: ${map[t].present.size} | Late: ${map[t].late}\n`;
+            out += `Present: ${map[t].present.size} | Late Marks: ${map[t].late}\n`;
             out += `Absent Cut (x2): ${absents * 2} Days\n`;
-            out += `Late Cuts: ${lCuts} Days\n`;
-            out += `TOTAL CUTS: ${total} DAYS\n`;
+            out += `Late Cuts (3=1): ${lCuts} Days\n`;
+            out += `TOTAL SALARY CUTS: ${total} DAYS\n`;
             out += `------------------------------\n`;
         }
         document.getElementById("output").innerText = out;
@@ -246,6 +256,7 @@ function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
     document.querySelectorAll("#list tr").forEach(tr => {
         const c = tr.querySelectorAll("td");
+        if(c.length < 4) return;
         csv += `${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv' });
