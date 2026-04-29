@@ -13,36 +13,30 @@
     body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
     .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     
-    /* Header */
     .header { text-align: center; margin-bottom: 20px; }
-    .logo { width: 80px; }
-    h2 { color: #1a237e; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
+    .logo { width: 80px; margin-bottom: 5px; }
+    h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
 
-    /* Layout Grids */
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
     
-    /* Inputs */
     select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
 
-    /* Buttons */
     .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
+    .btn-adm { background: #2b4a91; } /* Admissions Button Color */
     .btn-csv { background: #6c757d; width: 100%; margin-top: 10px; }
     .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
     .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
 
-    /* Table */
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
     td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; line-height: 1.4; }
 
-    /* Salary Report Section */
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
-    
     hr { border: 0; border-top: 2px solid #eee; margin: 20px 0; }
 </style>
 </head>
@@ -65,6 +59,10 @@
                 <option>Undrajavaram</option>
             </select>
         </div>
+    </div>
+
+    <div class="grid">
+        <a href="admissions.html" class="btn btn-adm" style="grid-column: span 2;">Student Admissions 2026-27</a>
     </div>
 
     <div class="grid">
@@ -110,18 +108,15 @@
     <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
 
     <div class="salary-box">
-        <label>📅 JOINING DATE (FOR CALCULATION):</label>
+        <label>📅 JOINING DATE:</label>
         <input type="date" id="joining">
-        
         <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
-        
         <div id="output">No report generated yet...</div>
     </div>
 </div>
 
 <script>
-// --- CONFIGURATION ---
 const LATE_TIME = "08:30:00";
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
@@ -129,7 +124,7 @@ const teachers = [
     {name:"V. Rajesh", email:"rajesh@vga.com"}
 ];
 
-// --- FIREBASE INITIALIZATION ---
+// Ensure your Firebase Config is 100% correct
 firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -139,14 +134,12 @@ const db = firebase.firestore();
 
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
-    tSelect.innerHTML = "<option value=''>-- Select --</option>";
+    tSelect.innerHTML = "<option value=''>-- Select Teacher --</option>";
     teachers.forEach(t => {
         tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
     });
     load();
 };
-
-// --- CORE FUNCTIONS ---
 
 function save(type) {
     const email = document.getElementById("teacher").value;
@@ -154,25 +147,22 @@ function save(type) {
     if (!email) return alert("Select Teacher first");
 
     const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 8);
-
     db.collection("attendance").add({
         teacher: email,
         name: teachers.find(t => t.email === email).name,
         campus: campus,
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
-        late: (type === "IN" && timeStr > LATE_TIME)
+        late: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
     }).then(() => {
         alert("Attendance Saved!");
         load();
-    }).catch(err => alert("Save Error: " + err.message));
+    }).catch(err => alert("Firebase Error: " + err.message));
 }
 
 let unsubscribe;
 function load() {
     if (unsubscribe) unsubscribe();
-    
     const search = document.getElementById("search").value.toLowerCase();
     const campusFilt = document.getElementById("filterCampus").value;
     const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
@@ -185,13 +175,10 @@ function load() {
         list.innerHTML = "";
         let docs = [];
         snap.forEach(doc => docs.push(doc.data()));
-
-        // Manual Sort: Newest entries at the top
-        docs.sort((a, b) => (b.time.toDate() - a.time.toDate()));
+        docs.sort((a, b) => b.time.toDate() - a.time.toDate());
 
         docs.forEach(d => {
             let dt = d.time.toDate();
-            
             if (search && !d.name.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
@@ -204,17 +191,16 @@ function load() {
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
-
         if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
     }, err => {
-        list.innerHTML = `<tr><td colspan='4' style="color:red">Firebase Error: ${err.message}</td></tr>`;
+        list.innerHTML = `<tr><td colspan='4' style="color:red">Error: ${err.message}</td></tr>`;
     });
 }
 
 function generateSalary() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Please select Date Filters above first");
+    if(!sStr || !eStr) return alert("Select From/To Dates first");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
@@ -224,12 +210,10 @@ function generateSalary() {
     db.collection("attendance").get().then(snap => {
         let map = {};
         let daysInRange = new Set();
-
         snap.forEach(doc => {
             const d = doc.data();
             const dt = d.time.toDate();
             const key = dt.toISOString().split('T')[0];
-
             if(dt >= start && dt <= end) {
                 daysInRange.add(key);
                 if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
@@ -238,15 +222,13 @@ function generateSalary() {
             }
         });
 
-        let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
+        let out = `VGA SALARY SUMMARY\n----------------\n`;
         for(let name in map) {
             let p = map[name].present.size;
             let l = map[name].late;
             let a = 0;
-            daysInRange.forEach(d => {
-                if(new Date(d) >= joinDate && !map[name].present.has(d)) a++;
-            });
-            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n------------------------\n`;
+            daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].present.has(d)) a++; });
+            out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
         }
         document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found.";
     });
@@ -258,9 +240,8 @@ function exportCSV() {
         const c = tr.querySelectorAll("td");
         if(c.length >= 4) csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
     });
-    const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
     a.download = "Attendance_Report.csv";
     a.click();
 }
@@ -269,7 +250,7 @@ function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
-        a.download = "VGA_Salary_Report.png";
+        a.download = "VGA_ERP_Report.png";
         a.click();
     });
 }
