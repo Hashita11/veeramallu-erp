@@ -17,8 +17,8 @@
     h2 { color: #1a237e; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
-    select, input { padding: 12px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
-    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    select, input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
+    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
     .btn-adm { background: #2b4a91; }
@@ -43,7 +43,7 @@
     </div>
 
     <div class="grid">
-        <div><label>Manual Teacher Entry</label><select id="teacher"></select></div>
+        <div><label>Manual Entry</label><select id="teacher"></select></div>
         <div><label>Campus</label>
             <select id="campus">
                 <option>Velpur</option>
@@ -65,7 +65,7 @@
     <hr style="border: 0; border-top: 2px solid #eee; margin: 20px 0;">
 
     <div class="grid">
-        <div><label>Search Staff</label><input id="search" placeholder="Name or Email..." oninput="load()"></div>
+        <div><label>Search Staff</label><input id="search" placeholder="Search..." oninput="load()"></div>
         <div><label>Filter Campus</label>
             <select id="filterCampus" onchange="load()">
                 <option value="All">All</option>
@@ -84,7 +84,7 @@
     <div class="table-container">
         <table>
             <thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"><tr><td colspan="4">Syncing with Firebase...</td></tr></tbody>
+            <tbody id="list"><tr><td colspan="4">Syncing with Firestore...</td></tr></tbody>
         </table>
     </div>
 
@@ -100,11 +100,12 @@
 </div>
 
 <script>
-// --- MASTER STAFF LIST ---
+// --- CONFIG & STAFF LIST ---
 const teachers = [
     {name:"Suresh Kumar", email:"suresh@vga.com"},
     {name:"Anitha Rao", email:"anitha@vga.com"},
-    {name:"V. Rajesh", email:"rajesh@vga.com"}
+    {name:"V. Rajesh", email:"rajesh@vga.com"},
+    {name:"Teacher 1", email:"teacher1@gmail.com"}
 ];
 
 firebase.initializeApp({
@@ -121,21 +122,31 @@ window.onload = () => {
     load();
 };
 
-// --- DATA RESOLVER ---
-// This identifies the teacher even if the login page only sends an email
+// --- DATA FIXING FUNCTIONS ---
+
+// Converts either Firebase Timestamps OR your String "29/4/2026..." into real Dates
+function parseDate(timeField) {
+    if (!timeField) return null;
+    // 1. If it's a Firebase Timestamp
+    if (typeof timeField.toDate === 'function') return timeField.toDate();
+    
+    // 2. If it's a String like "29/4/2026, 3:40:44 pm" (from your screenshot)
+    if (typeof timeField === 'string') {
+        // Replace slash with dash and comma to make it standard
+        let parts = timeField.split(','); 
+        let dateParts = parts[0].split('/'); // [29, 4, 2026]
+        let isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}${parts[1] || ''}`;
+        let d = new Date(isoDate);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+}
+
 function resolveTeacherName(data) {
     if (data.name) return data.name;
     if (data.teacherName) return data.teacherName;
     const match = teachers.find(t => t.email === data.teacher);
     return match ? match.name : (data.teacher || "Unknown Staff");
-}
-
-function parseDate(timeField) {
-    if (!timeField) return null;
-    try {
-        let d = (typeof timeField.toDate === 'function') ? timeField.toDate() : new Date(timeField);
-        return isNaN(d.getTime()) ? null : d;
-    } catch (e) { return null; }
 }
 
 // --- CORE FUNCTIONS ---
@@ -154,7 +165,7 @@ function save(type) {
         type: type,
         time: firebase.firestore.Timestamp.fromDate(now),
         late: (type === "IN" && now.toTimeString().slice(0, 8) > "08:30:00")
-    }).then(() => { alert("Manual Entry Saved!"); load(); });
+    }).then(() => { alert("Saved!"); load(); });
 }
 
 let unsubscribe;
@@ -171,6 +182,7 @@ function load() {
         list.innerHTML = "";
         let docs = [];
         snap.forEach(doc => docs.push(doc.data()));
+
         docs.sort((a, b) => (parseDate(b.time) || 0) - (parseDate(a.time) || 0));
 
         docs.forEach(d => {
@@ -178,7 +190,7 @@ function load() {
             if (!dt) return;
 
             let staffName = resolveTeacherName(d);
-            if (search && !staffName.toLowerCase().includes(search) && !d.teacher?.toLowerCase().includes(search)) return;
+            if (search && !staffName.toLowerCase().includes(search)) return;
             if (campusFilt !== "All" && d.campus !== campusFilt) return;
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
@@ -190,8 +202,8 @@ function load() {
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
         });
-        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No data available</td></tr>";
-    });
+        if (list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+    }, err => { list.innerHTML = `<tr><td colspan='4' style="color:red">Error: ${err.message}</td></tr>`; });
 }
 
 function generateSalary() {
