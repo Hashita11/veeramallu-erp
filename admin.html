@@ -13,23 +13,18 @@
     body { font-family: 'Segoe UI', Arial, sans-serif; background:#f4f7f9; padding:10px; margin:0; }
     .container { max-width:500px; margin:auto; background:#fff; padding:15px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-    /* Header */
     .header { text-align: center; margin-bottom: 20px; }
     .logo { width: 80px; margin-bottom: 5px; }
     h2 { color: #1a237e; margin: 0; font-size: 22px; border-bottom: 3px solid #1a237e; display: inline-block; padding-bottom: 5px; text-transform: uppercase; }
 
-    /* Grids */
     .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     label { font-size: 11px; font-weight: bold; color: #444; display: block; margin-bottom: 3px; text-transform: uppercase; }
 
-    /* Inputs */
     select, input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; background: #fff; }
 
-    /* Buttons */
-    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-    .btn:active { transform: scale(0.98); }
+    .btn { padding: 15px; border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; }
     
-    .btn-logs { background: #6c757d; } /* Re-enabled this button */
+    .btn-logs { background: #6c757d; }
     .btn-adm { background: #2b4a91; }
     .btn-in { background: #28a745; }
     .btn-out { background: #1a237e; }
@@ -37,13 +32,11 @@
     .btn-salary { background: #d32f2f; width: 100%; margin-top: 10px; }
     .btn-wa { background: #e67e22; width: 100%; margin-top: 10px; }
 
-    /* Table */
     .table-container { margin-top: 15px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; background: #fff; }
     th { background: #007bff; color: white; padding: 10px; font-size: 12px; }
     td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; text-align: center; color: #333; }
 
-    /* Salary Section */
     .salary-box { background: #fff5f5; border: 1px solid #ffdada; padding: 15px; border-radius: 10px; margin-top: 20px; }
     #output { background: #fff; padding: 10px; border: 1px solid #ddd; margin-top: 10px; white-space: pre-wrap; font-size: 13px; min-height: 50px; color: #333; }
 </style>
@@ -83,7 +76,7 @@
 
     <div id="logs-section">
         <div class="grid">
-            <div><label>Search Name/Email</label><input id="search" placeholder="Search..." oninput="load()"></div>
+            <div><label>Search</label><input id="search" placeholder="Name..." oninput="load()"></div>
             <div><label>Filter Campus</label>
                 <select id="filterCampus" onchange="load()">
                     <option value="All">All</option>
@@ -110,15 +103,14 @@
                     <th>Time</th>
                 </tr>
             </thead>
-            <tbody id="list">
-                </tbody>
+            <tbody id="list"></tbody>
         </table>
     </div>
 
     <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
 
     <div class="salary-box">
-        <label>📅 CALCULATION START DATE (JOINING DATE):</label>
+        <label>📅 JOINING DATE (FOR CALCULATION):</label>
         <input type="date" id="joining">
         
         <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
@@ -148,22 +140,22 @@ const db = firebase.firestore();
 // INITIALIZE
 window.onload = () => {
     const tSelect = document.getElementById("teacher");
-    tSelect.innerHTML = "<option value=''>-- Select --</option>";
+    tSelect.innerHTML = "<option value=''>Select Teacher</option>";
     teachers.forEach(t => {
         tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`;
     });
-    load(); // Ensure table loads on start
+    load();
 };
 
 function scrollToLogs() {
     document.getElementById("logs-section").scrollIntoView({behavior: 'smooth'});
 }
 
-// SAVE DATA
+// SAVE
 function save(type) {
     const email = document.getElementById("teacher").value;
     const campus = document.getElementById("campus").value;
-    if (!email) return alert("Please select a Teacher first");
+    if (!email) return alert("Please select a Teacher");
 
     const now = new Date();
     const timeStr = now.toTimeString().slice(0, 8);
@@ -176,12 +168,12 @@ function save(type) {
         time: firebase.firestore.Timestamp.fromDate(now),
         late: (type === "IN" && timeStr > LATE_TIME)
     }).then(() => {
-        alert(type + " Saved!");
-        load(); // Refresh table
+        alert("Success: " + type + " saved.");
+        load();
     });
 }
 
-// LOAD REALTIME DATA (Displays Teacher, Campus, Type, Time)
+// LOAD FIXED (Displays Real-time Data)
 let unsubscribe;
 function load() {
     if (unsubscribe) unsubscribe();
@@ -197,13 +189,13 @@ function load() {
         list.innerHTML = "";
         
         if (snap.empty) {
-            list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+            list.innerHTML = "<tr><td colspan='4'>No data available</td></tr>";
             return;
         }
 
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = d.time.toDate();
+            const dt = d.time ? d.time.toDate() : new Date();
             
             // Apply Filters
             if (search && !d.name.toLowerCase().includes(search)) return;
@@ -211,23 +203,20 @@ function load() {
             if (sDate && dt < sDate) return;
             if (eDate && dt > eDate) return;
 
-            // Create Table Row
-            const row = `<tr>
-                <td>${d.name}</td>
-                <td>${d.campus}</td>
+            list.innerHTML += `<tr>
+                <td>${d.name || '-'}</td>
+                <td>${d.campus || '-'}</td>
                 <td style="color:${d.type==='OUT'?'#d32f2f':'#28a745'}; font-weight:bold">${d.type}</td>
                 <td>${dt.toLocaleDateString()}<br>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
             </tr>`;
-            list.innerHTML += row;
         });
     });
 }
 
-// CSV EXPORT
+// CSV
 function exportCSV() {
     let csv = "Teacher,Campus,Type,Time\n";
-    const rows = document.querySelectorAll("#list tr");
-    rows.forEach(tr => {
+    document.querySelectorAll("#list tr").forEach(tr => {
         const c = tr.querySelectorAll("td");
         if(c.length >= 4) {
             csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText}"\n`;
@@ -236,61 +225,47 @@ function exportCSV() {
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "Attendance_Report.csv";
+    a.download = "VGA_Attendance.csv";
     a.click();
 }
 
-// SALARY REPORT
+// SALARY REPORT FIXED
 function generateSalary() {
     const sStr = document.getElementById("start").value;
     const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select From/To Dates first");
+    if(!sStr || !eStr) return alert("Select 'From' and 'To' dates in the logs section first.");
 
     const start = new Date(sStr);
     const end = new Date(eStr);
     end.setHours(23,59,59);
-    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
 
     db.collection("attendance").get().then(snap => {
         let map = {};
-        let totalDays = new Set();
-
         snap.forEach(doc => {
             const d = doc.data();
             const dt = d.time.toDate();
-            const dateKey = dt.toISOString().split('T')[0];
 
             if(dt >= start && dt <= end) {
-                totalDays.add(dateKey);
-                if(!map[d.name]) map[name] = { present: new Set(), late: 0 }; // Fixed variable name
-                if(!map[d.name]) map[d.name] = { present: new Set(), late: 0 };
-                if(d.type === "IN") map[d.name].present.add(dateKey);
+                if(!map[d.name]) map[d.name] = { present: 0, late: 0 };
+                if(d.type === "IN") map[d.name].present++;
                 if(d.late) map[d.name].late++;
             }
         });
 
         let out = `VGA SALARY REPORT (${sStr} to ${eStr})\n\n`;
         for(let name in map) {
-            let p = map[name].present.size;
-            let l = map[name].late;
-            let a = 0;
-            totalDays.forEach(day => {
-                if(new Date(day) >= joinDate && !map[name].present.has(day)) a++;
-            });
-
-            out += `${name}\nPresent: ${p} | Late: ${l} | Absent: ${a}\n`;
-            out += `Late Penalty: ${Math.floor(l/3)} Days\n------------------------\n`;
+            out += `${name}\nPresent: ${map[name].present} Days | Late: ${map[name].late}\n------------------------\n`;
         }
-        document.getElementById("output").innerText = out;
+        document.getElementById("output").innerText = Object.keys(map).length ? out : "No records found for these dates.";
     });
 }
 
-// SAVE IMAGE
+// IMAGE
 function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
         const a = document.createElement("a");
         a.href = canvas.toDataURL("image/png");
-        a.download = "VGA_Report.png";
+        a.download = "VGA_Salary_Report.png";
         a.click();
     });
 }
