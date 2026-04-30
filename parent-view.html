@@ -16,48 +16,24 @@
         }
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
-        
-        /* Nav Menu matching other pages */
         .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
-
         .container { padding: 15px; max-width: 600px; margin: auto; }
-
-        .card { 
-            background: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            margin-bottom: 20px;
-        }
-
-        /* Branding Header */
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
         .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
         .header h1 { color: var(--primary-color); margin: 0; font-size: 20px; font-weight: 800; }
         .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-
-        /* Form Elements */
         label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        
-        .btn-action { 
-            background: var(--primary-color); color: white; border: none; width: 100%; padding: 15px; 
-            border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase;
-        }
-
-        /* Dashboard Content */
+        .btn-action { background: var(--primary-color); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase; }
         .hidden { display: none; }
         .section-title { background: #f0f2f5; padding: 10px; border-radius: 4px; font-weight: 800; margin-top: 20px; color: var(--primary-color); font-size: 12px; }
         .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-        
-        /* Attendance Badges */
         .status-badge { padding: 6px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: bold; }
         .bg-present { background: var(--success-color); }
         .bg-absent { background: var(--secondary-color); }
         .fee-balance { color: var(--secondary-color); font-weight: bold; font-size: 16px; }
-
-        /* Marks Table */
         .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .marks-table th { background: #f8f9fa; color: #555; padding: 8px; border: 1px solid #ddd; text-align: center; }
         .marks-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
@@ -81,10 +57,8 @@
         <div id="loginSection">
             <label>Admission Number</label>
             <input type="text" id="loginAdmNo" placeholder="Enter Admission No.">
-            
             <label>Parent Mobile Number</label>
             <input type="text" id="loginMobile" placeholder="Registered Mobile No.">
-            
             <button class="btn-action" onclick="checkStudent()">VIEW DASHBOARD</button>
         </div>
 
@@ -92,14 +66,15 @@
             <h2 id="dispName" style="color: var(--primary-color); margin: 0; text-align: center;"></h2>
             <p id="dispInfo" style="color: #666; font-size: 13px; text-align: center; margin-top: 5px;"></p>
             
-          <div id="noticeBox" style="display: none; background: #fff9c4; border-left: 5px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-        <span style="font-size: 20px;">📢</span>
-        <label style="color: #f57f17; font-weight: 900; margin: 0;">SCHOOL ANNOUNCEMENT</label>
-    </div>
-    <p id="noticeText" style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #333; line-height: 1.4;"></p>
-    <div id="noticeDate" style="font-size: 10px; color: #777; text-align: right; margin-top: 5px;"></div>
-</div>
+            <div id="noticeBox" style="display: none; background: #fff9c4; border-left: 5px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">📢</span>
+                    <label style="color: #f57f17; font-weight: 900; margin: 0;">SCHOOL ANNOUNCEMENT</label>
+                </div>
+                <p id="noticeText" style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #333;"></p>
+                <div id="noticeDate" style="font-size: 10px; color: #777; text-align: right;"></div>
+            </div>
+
             <div class="section-title">TODAY'S ATTENDANCE</div>
             <div class="data-row">
                 <span>Date: <b id="currentDate"></b></span>
@@ -118,28 +93,31 @@
                     <option value="SA2">Summative Assessment 2 (SA2)</option>
                 </select>
             </div>
+            
             <div id="marksArea"></div>
 
             <div class="section-title">FEE SETTLEMENT SUMMARY</div>
             <div id="feeArea"></div>
-<div id="pdfFooter" class="hidden" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-    <div style="text-align: center;">
-        <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-        <p style="font-size: 10px; font-weight: bold; margin: 0;">PARENT SIGNATURE</p>
-    </div>
-    <div style="text-align: center;">
-        <p style="font-size: 10px; color: blue; font-style: italic; margin-bottom: 2px;">Digitally Verified</p>
-        <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-        <p style="font-size: 10px; font-weight: bold; margin: 0;">PRINCIPAL / SECRETARY</p>
-    </div>
-</div>
 
-<div id="downloadSection" class="hidden" style="margin-top: 15px;">
-    <button class="btn-action" style="background: #4527a0;" onclick="downloadPDF()">
-        📥 DOWNLOAD REPORT CARD (PDF)
-    </button>
-</div>
-     <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
+            <div id="pdfFooter" style="display: none; margin-top: 30px; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+                <div style="text-align: center;">
+                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
+                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PARENT SIGNATURE</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="font-size: 10px; color: blue; font-style: italic; margin-bottom: 2px;">Digitally Verified</p>
+                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
+                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PRINCIPAL / SECRETARY</p>
+                </div>
+            </div>
+
+            <div id="downloadSection" style="display: none; margin-top: 15px;">
+                <button class="btn-action" style="background: #4527a0;" onclick="downloadPDF()">
+                    📥 DOWNLOAD REPORT CARD (PDF)
+                </button>
+            </div>
+
+            <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
         </div>
     </div>
 </div>
@@ -160,13 +138,11 @@
     async function checkStudent() {
         const adm = document.getElementById('loginAdmNo').value;
         const mob = document.getElementById('loginMobile').value;
-
         if(!adm || !mob) return alert("Please enter both Admission No and Mobile.");
 
         try {
             const docRef = db.collection("admissions").doc(adm);
             const doc = await docRef.get();
-
             if (doc.exists && doc.data().parentMobile === mob) {
                 showDashboard(doc.data());
             } else {
@@ -178,40 +154,34 @@
     }
 
     async function showDashboard(studentData) {
-                // Listen for live announcements
+        // Notification Listener
         db.collection("notifications").doc("latest").onSnapshot((doc) => {
             if (doc.exists) {
-                const data = doc.data();
                 document.getElementById('noticeBox').style.display = 'block';
-                document.getElementById('noticeText').innerText = data.text;
-                document.getElementById('noticeDate').innerText = "Posted: " + data.date;
+                document.getElementById('noticeText').innerText = doc.data().text;
+                document.getElementById('noticeDate').innerText = "Posted: " + doc.data().date;
             }
         });
 
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
-
         document.getElementById('dispName').innerText = studentData.studentName;
         document.getElementById('dispInfo').innerText = `Class: ${studentData.joinClass} | Campus: ${studentData.campus}`;
         
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('currentDate').innerText = today;
 
-        // 1. Fee Display
         const balance = studentData.grandBalance || "Check Office";
         document.getElementById('feeArea').innerHTML = `
             <div class="data-row"><span>Campus Location:</span> <span>${studentData.campus}</span></div>
             <div class="data-row"><span>Total Balance Due:</span> <span class="fee-balance">₹ ${balance}</span></div>
         `;
 
-        // 2. Attendance Fetch
         const attID = `${studentData.campus}_${studentData.joinClass}_${today}`;
         const attDoc = await db.collection("attendance").doc(attID).get();
         const statusEl = document.getElementById('attStatus');
-
         if(attDoc.exists) {
-            const records = attDoc.data().records;
-            const myRecord = records.find(r => r.admNo === studentData.admissionNo);
+            const myRecord = attDoc.data().records.find(r => r.admNo === studentData.admissionNo);
             if(myRecord) {
                 statusEl.innerHTML = myRecord.status === "Present" 
                     ? `<span class="status-badge bg-present">✓ PRESENT</span>` 
@@ -223,119 +193,81 @@
     }
 
     async function fetchParentMarks() {
-    const admNo = document.getElementById('loginAdmNo').value;
-    const examFilter = document.getElementById('parentExamView').value;
-    const marksArea = document.getElementById('marksArea');
+        const admNo = document.getElementById('loginAdmNo').value;
+        const examFilter = document.getElementById('parentExamView').value;
+        const marksArea = document.getElementById('marksArea');
 
-    if(!examFilter) { marksArea.innerHTML = ""; return; }
-    marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Calculating Report Card...</p>";
-
-    try {
-        const snapshot = await db.collection("marks").get();
-        let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
-        
-        let found = false;
-        let grandTotal = 0;
-        let maxPossible = 0;
-        let hasFailedSubject = false;
-
-        snapshot.forEach(doc => {
-            const m = doc.data();
-            if (doc.id.startsWith(admNo) && m.examType === examFilter) {
-                const marksVal = parseFloat(m.total);
-                const isSA = examFilter.startsWith("SA");
-                const subjectMax = isSA ? 100 : 50;
-                
-                // Logic: Fail if marks are less than 40% of the maximum
-                const passMark = subjectMax * 0.4;
-                const isFail = marksVal < passMark;
-                const displayGrade = isFail ? "F" : m.grade;
-                const rowStyle = isFail ? "color: red; font-weight: bold;" : "";
-
-                html += `<tr>
-                    <td style="text-align:left;">${m.subject}</td>
-                    <td style="${rowStyle}">${m.total}</td>
-                    <td class="grade-bold" style="${rowStyle}">${displayGrade}</td>
-                </tr>`;
-                
-                grandTotal += marksVal;
-                maxPossible += subjectMax;
-                if (isFail) hasFailedSubject = true;
-                found = true;
-            }
-        });
-
-        if(found) {
-            // Calculate Overall Percentage and Grade
-            const percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
-            let finalGrade = "F";
-            if (percentage >= 90) finalGrade = "A1";
-            else if (percentage >= 80) finalGrade = "A2";
-            else if (percentage >= 70) finalGrade = "B1";
-            else if (percentage >= 60) finalGrade = "B2";
-            else if (percentage >= 50) finalGrade = "C1";
-            else if (percentage >= 40) finalGrade = "C2";
-            
-            // If any subject is failed, the overall result should reflect caution
-            if (hasFailedSubject) finalGrade = "F (Fail)";
-
-            html += `
-                <tr style="background: #e8f5e9; font-weight: bold;">
-                    <td style="text-align:left;">GRAND TOTAL</td>
-                    <td>${grandTotal} / ${maxPossible}</td>
-                    <td style="color: var(--primary-color);">${percentage}%</td>
-                </tr>
-                <tr style="background: var(--primary-color); color: white; font-weight: bold;">
-                    <td colspan="2" style="text-align:right;">OVERALL GRADE:</td>
-                    <td style="font-size: 16px;">${finalGrade}</td>
-                </tr>
-            `;
-            html += `</tbody></table>`;
-            marksArea.innerHTML = html;
-        } else {
-            marksArea.innerHTML = `<p style="text-align:center; color:red; padding:10px; font-size:12px;">No marks entered for ${examFilter}.</p>`;
+        if(!examFilter) {
+            marksArea.innerHTML = "";
+            document.getElementById('downloadSection').style.display = 'none';
+            document.getElementById('pdfFooter').style.display = 'none';
+            return;
         }
-    } catch (e) {
-        marksArea.innerHTML = "Error loading marks.";
+        
+        marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Loading...</p>";
+
+        try {
+            const snapshot = await db.collection("marks").get();
+            let subjectMap = new Map();
+            snapshot.forEach(doc => {
+                const m = doc.data();
+                if (doc.id.startsWith(admNo) && m.examType === examFilter) {
+                    subjectMap.set(m.subject, m);
+                }
+            });
+
+            if(subjectMap.size > 0) {
+                let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
+                let grandTotal = 0, maxPossible = 0, hasFailed = false;
+
+                subjectMap.forEach((m, subName) => {
+                    const marksVal = parseFloat(m.total);
+                    const subMax = examFilter.startsWith("SA") ? 100 : 50;
+                    const isFail = marksVal < (subMax * 0.4);
+                    const rowStyle = isFail ? "color:red; font-weight:bold;" : "";
+                    
+                    html += `<tr><td style="text-align:left;">${subName}</td><td style="${rowStyle}">${m.total}</td><td style="${rowStyle}">${isFail ? 'F' : m.grade}</td></tr>`;
+                    grandTotal += marksVal; maxPossible += subMax;
+                    if(isFail) hasFailed = true;
+                });
+
+                const per = ((grandTotal / maxPossible) * 100).toFixed(1);
+                let finalG = "F";
+                if(per >= 90) finalG = "A1"; else if(per >= 80) finalG = "A2"; else if(per >= 70) finalG = "B1"; else if(per >= 60) finalG = "B2"; else if(per >= 50) finalG = "C1"; else if(per >= 40) finalG = "C2";
+                if(hasFailed) finalG = "F (Fail)";
+
+                html += `<tr style="background:#e8f5e9; font-weight:bold;"><td style="text-align:left;">GRAND TOTAL</td><td>${grandTotal}/${maxPossible}</td><td>${per}%</td></tr>
+                         <tr style="background:var(--primary-color); color:white; font-weight:bold;"><td colspan="2" style="text-align:right;">OVERALL GRADE:</td><td>${finalG}</td></tr></tbody></table>`;
+                
+                marksArea.innerHTML = html;
+                document.getElementById('downloadSection').style.display = 'block';
+                document.getElementById('pdfFooter').style.display = 'flex';
+            } else {
+                marksArea.innerHTML = `<p style="color:red; text-align:center;">No marks for ${examFilter}.</p>`;
+                document.getElementById('downloadSection').style.display = 'none';
+                document.getElementById('pdfFooter').style.display = 'none';
+            }
+        } catch (e) { marksArea.innerHTML = "Error loading marks."; }
     }
-}
-    // --- Place this at the bottom of fetchParentMarks() after the loop ---
-if(found) {
-    marksArea.innerHTML = html;
-    document.getElementById('downloadSection').classList.remove('hidden');
-    document.getElementById('pdfFooter').classList.remove('hidden'); // Show signature area
-}
 
-// --- The Actual Download Function ---
-async function downloadPDF() {
-    const studentName = document.getElementById('dispName').innerText;
-    const examName = document.getElementById('parentExamView').value;
-    const element = document.getElementById('dashboard').cloneNode(true);
+    async function downloadPDF() {
+        const studentName = document.getElementById('dispName').innerText;
+        const examName = document.getElementById('parentExamView').value;
+        const element = document.getElementById('dashboard').cloneNode(true);
+        
+        // Cleanup for PDF
+        element.querySelectorAll('button, select').forEach(el => el.remove());
+        const notice = element.querySelector('#noticeBox'); if(notice) notice.remove();
 
-    // Remove buttons from the PDF version so it looks clean
-    const buttons = element.querySelectorAll('button, select');
-    buttons.forEach(btn => btn.remove());
-    
-    // Ensure the notice box doesn't show in the PDF if you don't want it there
-    const notice = element.querySelector('#noticeBox');
-    if(notice) notice.remove();
-
-    const opt = {
-        margin: [10, 10, 20, 10], // top, left, bottom, right
-        filename: `${studentName}_${examName}_VGA_Report.pdf`,
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 3, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    try {
-        await html2pdf().set(opt).from(element).save();
-    } catch (error) {
-        alert("Error generating PDF. Please try again.");
+        const opt = {
+            margin: [10, 10, 20, 10],
+            filename: `${studentName}_${examName}_VGA_Report.pdf`,
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("PDF Error"); }
     }
-}
-    
-
 </script>
 </body>
 </html>
