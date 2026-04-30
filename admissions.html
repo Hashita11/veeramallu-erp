@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,11 +36,14 @@
         label { font-size: 10px; font-weight: 800; color: #777; margin-bottom: 4px; text-transform: uppercase; }
         input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: #fff; }
 
+        /* Table Optimization */
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; border: 1px solid #eee; }
-        th, td { padding: 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; border: 1px solid #eee; }
+        th, td { padding: 8px; text-align: left; font-size: 13px; border: 1px solid #eee; }
         th { background: #f8f9fa; color: #555; text-transform: uppercase; font-size: 11px; }
-        .date-input { width: 130px; padding: 5px; font-size: 12px; border: 1px solid #ddd; }
+        
+        .p-field { width: 90%; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; }
+        .total-in, .bal-in { width: 80px; padding: 5px; font-weight: bold; border: 1px solid #eee; }
         .balance { color: var(--secondary-color); font-weight: bold; }
         .total-row { font-weight: bold; background: #fdfdfd; }
 
@@ -119,38 +121,87 @@
         </div>
     </div>
 
-    <div class="section-title">3. DETAILED FEE SETTLEMENT</div>
+    <div class="section-title">3. DETAILED FEE SETTLEMENT (Supports Part Payments)</div>
     <div class="table-container">
-        <table>
+        <table id="feeTable">
             <thead>
                 <tr>
                     <th>PARTICULARS</th>
-                    <th>PAID DATE</th>
                     <th>TOTAL (₹)</th>
-                    <th>PAID (₹)</th>
+                    <th>PMT 1 (Date/₹)</th>
+                    <th>PMT 2 (Date/₹)</th>
+                    <th>PMT 3 (Date/₹)</th>
+                    <th>PMT 4 (Date/₹)</th>
                     <th>BALANCE (₹)</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td>Admission Fee</td>
-                    <td><input type="date" class="date-input" value="2026-04-28"></td>
-                    <td>1,000</td>
-                    <td>1,000</td>
-                    <td>0</td>
+                    <td><b>Admission Fee</b></td>
+                    <td><input type="number" class="total-in" value="1000"></td>
+                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
+                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
+                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
+                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
+                    <td><input type="number" class="bal-in" value="0"></td>
                 </tr>
                 <tr>
-                    <td>Tuition Fee</td>
-                    <td><input type="date" class="date-input" value="2026-04-28"></td>
-                    <td>15,000</td>
-                    <td>5,000</td>
-                    <td class="balance">10,000</td>
+                    <td><b>Tuition Fee</b></td>
+                    <td><input type="number" class="total-in" value="15000"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in" value="10000"></td>
+                </tr>
+                <tr>
+                    <td><b>Books Fee</b></td>
+                    <td><input type="number" class="total-in" value="4000"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in"></td>
+                </tr>
+                <tr>
+                    <td><b>Exam Fee</b></td>
+                    <td><input type="number" class="total-in" value="2000"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in"></td>
+                </tr>
+                <tr>
+                    <td><b>Uniform Fee</b></td>
+                    <td><input type="number" class="total-in" value="4000"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in"></td>
+                </tr>
+                <tr>
+                    <td><b>Transport Fee</b></td>
+                    <td><input type="number" class="total-in" value="8000"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in"></td>
+                </tr>
+                <tr>
+                    <td><b>Miscellaneous</b></td>
+                    <td><input type="number" class="total-in" value="0"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="text" class="p-field"></td>
+                    <td><input type="number" class="bal-in"></td>
                 </tr>
                 <tr class="total-row">
-                    <td colspan="2" style="text-align: right;">GRAND TOTAL</td>
-                    <td>34,000</td>
-                    <td>10,000</td>
-                    <td class="balance" id="grandBalance">24,000</td>
+                    <td colspan="6" style="text-align: right;">GRAND TOTAL BALANCE DUE:</td>
+                    <td class="balance"><input type="number" id="grandBalance" style="color:red; font-weight:bold; border:none; width:80px;" value="24000"></td>
                 </tr>
             </tbody>
         </table>
@@ -172,28 +223,55 @@
     const db = firebase.firestore();
 
     async function saveAndPrint() {
+        // Collect detailed fee data
+        const feeRecords = {};
+        const rows = document.querySelectorAll("#feeTable tbody tr:not(.total-row)");
+        
+        rows.forEach(row => {
+            const category = row.cells[0].innerText;
+            feeRecords[category] = {
+                total: row.cells[1].querySelector('input').value,
+                payments: [
+                    row.cells[2].querySelector('input').value,
+                    row.cells[3].querySelector('input').value,
+                    row.cells[4].querySelector('input').value,
+                    row.cells[5].querySelector('input').value
+                ],
+                balance: row.cells[6].querySelector('input').value
+            };
+        });
+
         const data = {
             admissionNo: document.getElementById('admNo').value,
             studentName: document.getElementById('stuName').value,
             campus: document.getElementById('campus').value,
             joinClass: document.getElementById('joinClass').value,
             section: document.getElementById('section').value,
+            city: document.getElementById('city').value,
+            fatherName: document.getElementById('fName').value,
+            motherName: document.getElementById('mName').value,
             parentMobile: document.getElementById('parentMobile').value,
+            // Internal Govt Data
             fatherAadhaar: document.getElementById('fAadhaar').value,
             motherAadhaar: document.getElementById('mAadhaar').value,
-            grandBalance: document.getElementById('grandBalance').innerText,
+            rationCard: document.getElementById('rationCard').value,
+            accountNo: document.getElementById('accNo').value,
+            ifsc: document.getElementById('ifsc').value,
+            prevSchool: document.getElementById('prevSchool').value,
+            // Fee Data
+            feeSettlement: feeRecords,
+            grandBalance: document.getElementById('grandBalance').value,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if(!data.joinClass || !data.parentMobile) {
-            alert("Error: Class and Parent Mobile are required for Attendance and Parent Portal!");
+            alert("Error: Class and Parent Mobile are required!");
             return;
         }
 
         try {
-            // Using set() with admissionNo as ID ensures we don't get duplicate records in Firebase
             await db.collection("admissions").doc(data.admissionNo).set(data);
-            alert("Success: Registered student " + data.studentName + " in VGA Database!");
+            alert("Success: Saved to VGA Database!");
             window.print();
         } catch (e) {
             alert("Error: " + e.message);
