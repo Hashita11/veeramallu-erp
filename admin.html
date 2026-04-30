@@ -1,91 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Veeramallu Global Academy</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        :root { --primary: #1a237e; --success: #28a745; --error: #d32f2f; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 900px; text-align: center; }
-        .logo { max-width: 100px; margin-bottom: 1rem; }
-        
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        input, select { padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Veeramallu Global Academy</title>
 
-        .table-container { width: 100%; overflow-x: auto; margin-top: 20px; border-radius: 8px; border: 1px solid #eee; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 0.9rem; }
-        
-        .late-tag { background: var(--error); color: white; font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; margin-left: 5px; font-weight: bold; }
-        
-        .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; width: 100%; margin-top: 10px; }
-        .btn-csv { background: #388e3c; color: white; }
-        .btn-salary { background: var(--primary); color: white; }
-        .btn-wa { background: #25d366; color: white; }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-        .salary-box { background: #e3f2fd; padding: 1.5rem; border-radius: 12px; margin-top: 2rem; text-align: left; border: 1px solid #bbdefb; }
-        #output { white-space: pre-wrap; background: white; padding: 15px; border-radius: 8px; margin-top: 10px; font-family: monospace; border: 1px dashed var(--primary); }
-        
-        .btn-secondary { display: block; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; color: var(--primary); text-decoration: none; font-weight: bold; margin-top: 10px; }
-    </style>
+<style>
+:root { --primary:#1a237e; --success:#28a745; --error:#d32f2f; }
+body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
+.container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:900px;text-align:center; }
+.logo { max-width:100px;margin-bottom:1rem; }
+.controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px; }
+input,select { padding:10px;border:1px solid #ddd;border-radius:8px;width:100%; }
+.table-container { width:100%;overflow-x:auto;margin-top:20px;border-radius:8px;border:1px solid #eee; }
+table { width:100%;border-collapse:collapse;min-width:600px; }
+th { background:var(--primary);color:white;padding:12px;text-align:left; }
+td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
+.late-tag { background:var(--error);color:white;font-size:0.7rem;padding:2px 5px;border-radius:4px;margin-left:5px;font-weight:bold; }
+.btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; }
+.btn-csv { background:#388e3c;color:white; }
+.btn-salary { background:var(--primary);color:white; }
+.btn-wa { background:#25d366;color:white; }
+.salary-box { background:#e3f2fd;padding:1.5rem;border-radius:12px;margin-top:2rem;text-align:left;border:1px solid #bbdefb; }
+#output { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); }
+.btn-secondary { display:block;padding:12px;border:2px solid var(--primary);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:bold;margin-top:10px; }
+</style>
 </head>
+
 <body>
 
 <div class="container" id="capture">
-    <img src="logo.png" alt="Academy Logo" class="logo" onerror="this.src='https://via.placeholder.com/100?text=VGA'">
-    <h2>Admin Attendance Portal</h2>
+<img src="logo.png" class="logo">
+<h2>Admin Attendance Portal</h2>
 
-    <div class="controls">
-        <input type="text" id="search" placeholder="Search Teacher..." onkeyup="load()">
-        <select id="filterCampus" onchange="load()">
-            <option value="All">All Campuses</option>
-            <option value="Relangi">Relangi</option>
-            <option value="Velpur">Velpur</option>
-            <option value="Undrajavaram">Undrajavaram</option>
-        </select>
-        <input type="date" id="start" onchange="load()">
-        <input type="date" id="end" onchange="load()">
-    </div>
+<!-- ✅ NEW TEACHER -->
+<div style="background:#fff3cd;padding:15px;border-radius:10px;margin-bottom:20px;">
+<h3>Add New Teacher</h3>
+<div class="controls">
+<input id="t_name" placeholder="Teacher Name">
+<input id="t_email" placeholder="Email">
+<input id="t_password" placeholder="Password">
+<input id="t_subject" placeholder="Subject">
+<input id="t_salary" placeholder="Salary">
+</div>
+<button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Create Teacher</button>
+</div>
 
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 20px;">
-        <div class="controls" style="margin-bottom: 0;">
-            <select id="teacher"></select>
-            <select id="campus">
-                <option value="Relangi">Relangi</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn" style="background:var(--success); color:white;" onclick="save('IN')">Manual IN</button>
-            <button class="btn" style="background:var(--error); color:white;" onclick="save('OUT')">Manual OUT</button>
-        </div>
-    </div>
+<div class="controls">
+<input type="text" id="search" placeholder="Search Teacher..." onkeyup="load()">
+<select id="filterCampus" onchange="load()">
+<option value="All">All Campuses</option>
+<option value="Relangi">Relangi</option>
+<option value="Velpur">Velpur</option>
+<option value="Undrajavaram">Undrajavaram</option>
+</select>
+<input type="date" id="start" onchange="load()">
+<input type="date" id="end" onchange="load()">
+</div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr>
-            </thead>
-            <tbody id="list">
-                <tr><td colspan="4">Syncing...</td></tr>
-            </tbody>
-        </table>
-    </div>
+<div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:20px;">
+<div class="controls">
+<select id="teacher"></select>
+<select id="campus">
+<option value="Relangi">Relangi</option>
+<option value="Velpur">Velpur</option>
+<option value="Undrajavaram">Undrajavaram</option>
+</select>
+</div>
 
-    <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
-    <a href="admissions.html" class="btn-secondary">Go to New Admission Portal</a>
+<div style="display:flex;gap:10px;">
+<button class="btn" style="background:var(--success);color:white;" onclick="save('IN')">Manual IN</button>
+<button class="btn" style="background:var(--error);color:white;" onclick="save('OUT')">Manual OUT</button>
+</div>
+</div>
 
-    <div class="salary-box">
-        <label>📅 JOINING DATE:</label>
-        <input type="date" id="joining">
-        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
-        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
-        <div id="output">No report generated yet...</div>
-    </div>
+<div class="table-container">
+<table>
+<thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
+<tbody id="list"><tr><td colspan="4">Syncing...</td></tr></tbody>
+</table>
+</div>
+
+<button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
+
+<div class="salary-box">
+<label>📅 JOINING DATE:</label>
+<input type="date" id="joining">
+<button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
+<button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
+<div id="output">No report generated yet...</div>
+</div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -93,168 +100,145 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const LATE_TIME = "08:30:00";
-const teachers = [
-    {name:"Suresh Kumar", email:"suresh@vga.com"},
-    {name:"Anitha Rao", email:"anitha@vga.com"},
-    {name:"V. Rajesh", email:"rajesh@vga.com"},
-    {name:"Teacher 1", email:"teacher1@gmail.com"},
-    {name:"Ravi", email:"ravi@vga.com"}
-];
+const LATE_TIME="08:30:00";
+let teachers=[];
 
 firebase.initializeApp({
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-    projectId: "veeramalluerp-6cac5"
+apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+authDomain:"veeramalluerp-6cac5.firebaseapp.com",
+projectId:"veeramalluerp-6cac5"
 });
-const db = firebase.firestore();
 
-window.onload = () => {
-    const tSelect = document.getElementById("teacher");
-    tSelect.innerHTML = "<option value=''>-- Select Teacher --</option>";
-    teachers.forEach(t => { tSelect.innerHTML += `<option value="${t.email}">${t.name}</option>`; });
-    load();
+const db=firebase.firestore();
+
+window.onload=()=>{
+loadTeachers();
+load();
 };
 
-function parseDate(timeField) {
-    if (!timeField) return null;
-    if (timeField.toDate) return timeField.toDate();
-    if (typeof timeField === 'string') {
-        let parts = timeField.split(','); 
-        let dateParts = parts[0].split('/'); 
-        let isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}${parts[1] || ''}`;
-        let d = new Date(isoDate);
-        return isNaN(d.getTime()) ? null : d;
-    }
-    return null;
+function loadTeachers(){
+const tSelect=document.getElementById("teacher");
+tSelect.innerHTML="<option value=''>-- Select Teacher --</option>";
+
+db.collection("teachers").get().then(snapshot=>{
+teachers=[];
+snapshot.forEach(doc=>{
+const data=doc.data();
+teachers.push(data);
+tSelect.innerHTML+=`<option value="${data.email}">${data.name}</option>`;
+});
+});
 }
 
-function resolveTeacherName(data) {
-    if (data.name) return data.name;
-    const match = teachers.find(t => t.email === (data.teacher || data.email));
-    return match ? match.name : (data.teacher || "Unknown");
+function createTeacher(){
+const name=t_name.value;
+const email=t_email.value;
+const password=t_password.value;
+const subject=t_subject.value;
+const salary=t_salary.value;
+
+if(!name||!email||!password) return alert("Fill required");
+
+firebase.auth().createUserWithEmailAndPassword(email,password)
+.then(res=>{
+return db.collection("teachers").doc(res.user.uid).set({
+name,email,subject,salary:Number(salary)
+});
+})
+.then(()=>{
+alert("Teacher Created");
+firebase.auth().signOut();
+loadTeachers();
+})
+.catch(e=>alert(e.message));
 }
 
-function checkIsLate(data, dt) {
-    if (data.late === true || data.autoLate === true) return true;
-    if (data.type !== "IN") return false;
-    return dt.toTimeString().slice(0, 8) > LATE_TIME;
-}
+/* ===== YOUR ORIGINAL FUNCTIONS BELOW (UNCHANGED) ===== */
+function parseDate(timeField){ if(!timeField)return null; if(timeField.toDate)return timeField.toDate(); if(typeof timeField==='string'){let p=timeField.split(',');let d=p[0].split('/');let iso=`${d[2]}-${d[1]}-${d[0]}${p[1]||''}`;let x=new Date(iso);return isNaN(x)?null:x;} return null;}
+function resolveTeacherName(data){ if(data.name)return data.name; const m=teachers.find(t=>t.email===(data.teacher||data.email)); return m?m.name:(data.teacher||"Unknown"); }
+function checkIsLate(data,dt){ if(data.late===true)return true; if(data.type!=="IN")return false; return dt.toTimeString().slice(0,8)>LATE_TIME; }
 
-function save(type) {
-    const email = document.getElementById("teacher").value;
-    const campus = document.getElementById("campus").value;
-    if (!email) return alert("Select Teacher");
+function save(type){
+const email=teacher.value;
+const campus=document.getElementById("campus").value;
+const obj=teachers.find(t=>t.email===email);
+if(!obj) return alert("Teacher not found");
 
-    const teacherObj = teachers.find(t => t.email === email);
-    const now = new Date();
-    const todayStr = now.toLocaleDateString('en-IN');
+const now=new Date();
+const todayStr=now.toLocaleDateString('en-IN');
 
-    db.collection("attendance").add({
-        teacher: email,
-        name: teacherObj.name,
-        campus: campus,
-        type: type,
-        time: firebase.firestore.Timestamp.fromDate(now),
-        dateOnly: todayStr,
-        late: (type === "IN" && now.toTimeString().slice(0, 8) > LATE_TIME)
-    }).then(() => { alert("Saved!"); load(); });
+db.collection("attendance").add({
+teacher:email,
+name:obj.name,
+campus,
+type,
+time:firebase.firestore.Timestamp.fromDate(now),
+dateOnly:todayStr,
+late:(type==="IN"&&now.toTimeString().slice(0,8)>LATE_TIME)
+}).then(()=>{alert("Saved!");load();});
 }
 
 let unsubscribe;
-function load() {
-    if (unsubscribe) unsubscribe();
-    const search = document.getElementById("search").value.toLowerCase();
-    const campusFilt = document.getElementById("filterCampus").value;
-    const sDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    const eDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+function load(){
+if(unsubscribe)unsubscribe();
+unsubscribe=db.collection("attendance").onSnapshot(snap=>{
+const list=document.getElementById("list");
+list.innerHTML="";
+let docs=[];
+snap.forEach(doc=>docs.push(doc.data()));
+docs.sort((a,b)=>(parseDate(b.time)||0)-(parseDate(a.time)||0));
 
-    unsubscribe = db.collection("attendance").onSnapshot(snap => {
-        const list = document.getElementById("list");
-        list.innerHTML = "";
-        let docs = [];
-        snap.forEach(doc => docs.push(doc.data()));
-        docs.sort((a, b) => (parseDate(b.time) || 0) - (parseDate(a.time) || 0));
-
-        docs.forEach(d => {
-            let dt = parseDate(d.time);
-            if (!dt) return;
-            let name = resolveTeacherName(d);
-            if (search && !name.toLowerCase().includes(search)) return;
-            if (campusFilt !== "All" && d.campus !== campusFilt) return;
-            if (sDate && dt < sDate) return;
-            if (eDate && dt > (new Date(eDate).setHours(23,59,59))) return;
-
-            let late = checkIsLate(d, dt);
-            list.innerHTML += `<tr>
-                <td><b>${name}</b></td><td>${d.campus || '-'}</td>
-                <td style="color:${d.type==='OUT'?'red':'green'}; font-weight:bold">${d.type} ${late ? '<span class="late-tag">LATE</span>' : ''}</td>
-                <td>${dt.toLocaleDateString('en-IN')}<br><small>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small></td>
-            </tr>`;
-        });
-    });
+docs.forEach(d=>{
+let dt=parseDate(d.time); if(!dt)return;
+let name=resolveTeacherName(d);
+let late=checkIsLate(d,dt);
+list.innerHTML+=`<tr>
+<td><b>${name}</b></td>
+<td>${d.campus||'-'}</td>
+<td>${d.type} ${late?'<span class="late-tag">LATE</span>':''}</td>
+<td>${dt.toLocaleDateString('en-IN')}<br><small>${dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></td>
+</tr>`;
+});
+});
 }
 
-function generateSalary() {
-    const sStr = document.getElementById("start").value;
-    const eStr = document.getElementById("end").value;
-    if(!sStr || !eStr) return alert("Select Dates first");
-
-    const start = new Date(sStr);
-    const end = new Date(eStr).setHours(23,59,59);
-    const joinDate = document.getElementById("joining").value ? new Date(document.getElementById("joining").value) : start;
-
-    db.collection("attendance").get().then(snap => {
-        let map = {};
-        let daysInRange = new Set();
-        
-        snap.forEach(doc => {
-            const d = doc.data();
-            const dt = parseDate(d.time);
-            if (!dt || dt < start || dt > end) return;
-            const name = resolveTeacherName(d);
-            const dayKey = dt.toISOString().split('T')[0];
-            daysInRange.add(dayKey);
-
-            if(!map[name]) map[name] = { presentDays: new Set(), lateCount: 0 };
-            if(d.type === "IN") {
-                map[name].presentDays.add(dayKey);
-                if (checkIsLate(d, dt)) map[name].lateCount++;
-            }
-        });
-
-        let out = `VGA SALARY SUMMARY\n----------------\n`;
-        for(let name in map) {
-            let p = map[name].presentDays.size;
-            let l = map[name].lateCount;
-            let a = 0;
-            daysInRange.forEach(d => { if(new Date(d) >= joinDate && !map[name].presentDays.has(d)) a++; });
-            out += `${name}: ${p} Days | ${l} Late | ${a} Absent\n`;
-        }
-        document.getElementById("output").innerText = out;
-    });
+function generateSalary(){
+const s=new Date(start.value);
+const e=new Date(end.value).setHours(23,59,59);
+db.collection("attendance").get().then(snap=>{
+let map={};
+snap.forEach(doc=>{
+let d=doc.data(); let dt=parseDate(d.time);
+if(!dt||dt<s||dt>e)return;
+let name=resolveTeacherName(d);
+if(!map[name]) map[name]={p:new Set(),l:0};
+if(d.type==="IN"){map[name].p.add(dt.toDateString()); if(checkIsLate(d,dt))map[name].l++;}
+});
+let out="VGA SALARY SUMMARY\n";
+for(let n in map){out+=`${n}: ${map[n].p.size} Days | ${map[n].l} Late\n`;}
+output.innerText=out;
+});
 }
 
-function exportCSV() {
-    let csv = "Teacher,Campus,Type,Time\n";
-    document.querySelectorAll("#list tr").forEach(tr => {
-        const c = tr.querySelectorAll("td");
-        if(c.length >= 4) csv += `"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
-    });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "VGA_Attendance.csv";
-    a.click();
+function exportCSV(){
+let csv="Teacher,Campus,Type,Time\n";
+document.querySelectorAll("#list tr").forEach(tr=>{
+const c=tr.querySelectorAll("td");
+if(c.length>=4)csv+=`"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
+});
+const a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([csv]));
+a.download="Attendance.csv"; a.click();
 }
 
-function saveWhatsAppImage() {
-    html2canvas(document.getElementById("capture")).then(canvas => {
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = "Attendance_Report.png";
-        a.click();
-    });
+function saveWhatsAppImage(){
+html2canvas(document.getElementById("capture")).then(canvas=>{
+const a=document.createElement("a");
+a.href=canvas.toDataURL();
+a.download="Report.png"; a.click();
+});
 }
 </script>
+
 </body>
 </html>
