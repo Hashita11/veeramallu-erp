@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGA | Marks Entry</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary-color: #1a237e; --secondary-color: #c62828; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 15px; }
+        .card { background: white; max-width: 700px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-menu { background: var(--primary-color); padding: 10px; text-align: center; margin-bottom: 20px; }
+        .nav-menu a { color: white; margin: 0 10px; text-decoration: none; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; }
+        label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: center; }
+        .grade-display { font-size: 24px; font-weight: 800; color: var(--secondary-color); }
+        .btn-save { background: var(--primary-color); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="nav-menu">
+    <a href="admissions.html">Admission</a>
+    <a href="attendance.html">Attendance</a>
+    <a href="marks-entry.html">Marks Entry</a>
+</div>
+
+<div class="card">
+    <h2 style="text-align:center; color:var(--primary-color);">MARKS ENTRY PORTAL</h2>
+    
+    <div class="grid">
+        <div><label>Admission No</label><input type="text" id="mAdmNo" onchange="fetchStudent()"></div>
+        <div><label>Student Name</label><input type="text" id="mStuName" readonly></div>
+        <div>
+            <label>Exam Type</label>
+            <select id="examType" onchange="updateScale()">
+                <option value="FA">FA (Max 50)</option>
+                <option value="SA">SA (Max 100)</option>
+            </select>
+        </div>
+        <div>
+            <label>Subject</label>
+            <select id="subject" onchange="updateScale()">
+                <option>Telugu</option><option>Hindi</option><option>English</option>
+                <option>Mathematics</option><option>Science</option><option>Social</option>
+                <option value="GK">GK</option><option value="Computer">Computer</option><option value="Drawing">Drawing</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead><tr><th>Section</th><th>Marks</th><th>Max</th></tr></thead>
+        <tbody>
+            <tr id="internalRow"><td>Internal</td><td><input type="number" id="intM" oninput="calculate()"></td><td id="maxI">15</td></tr>
+            <tr><td>External</td><td><input type="number" id="extM" oninput="calculate()"></td><td id="maxE">35</td></tr>
+            <tr style="background:#f9f9f9;"><td><b>TOTAL</b></td><td id="totM" style="font-weight:bold;">0</td><td id="maxT">50</td></tr>
+        </tbody>
+    </table>
+
+    <div style="text-align:center; margin-top:20px;">
+        <label>ASSIGNED GRADE</label>
+        <div id="gradeRes" class="grade-display">-</div>
+    </div>
+
+    <button class="btn-save" onclick="saveToFirebase()">SAVE MARKS</button>
+</div>
+
+<script>
+    // Configuration from your Firebase setup
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339669496",
+        appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function updateScale() {
+        const sub = document.getElementById('subject').value;
+        const exam = document.getElementById('examType').value;
+        const intRow = document.getElementById('internalRow');
+        
+        // No Internals for GK, Computer, Drawing
+        if (["GK", "Computer", "Drawing"].includes(sub)) {
+            intRow.style.display = 'none';
+            document.getElementById('intM').value = 0;
+            document.getElementById('maxE').innerText = (exam === "FA") ? 50 : 100;
+        } else {
+            intRow.style.display = 'table-row';
+            document.getElementById('maxI').innerText = (exam === "FA") ? 15 : 20;
+            document.getElementById('maxE').innerText = (exam === "FA") ? 35 : 80;
+        }
+        document.getElementById('maxT').innerText = (exam === "FA") ? 50 : 100;
+        calculate();
+    }
+
+    function calculate() {
+        const intM = parseFloat(document.getElementById('intM').value) || 0;
+        const extM = parseFloat(document.getElementById('extM').value) || 0;
+        const total = intM + extM;
+        const max = parseFloat(document.getElementById('maxT').innerText);
+        
+        document.getElementById('totM').innerText = total;
+        
+        // Calculate Grade based on Percentage
+        const per = (total / max) * 100;
+        let grade = "F";
+        if (per >= 90) grade = "A1";
+        else if (per >= 80) grade = "A2";
+        else if (per >= 70) grade = "B1";
+        else if (per >= 60) grade = "B2";
+        else if (per >= 50) grade = "C1";
+        else if (per >= 40) grade = "C2";
+        
+        document.getElementById('gradeRes').innerText = grade;
+    }
+
+    async function fetchStudent() {
+        const adm = document.getElementById('mAdmNo').value;
+        const doc = await db.collection("admissions").doc(adm).get();
+        if(doc.exists) document.getElementById('mStuName').value = doc.data().studentName;
+    }
+
+    async function saveToFirebase() {
+        const adm = document.getElementById('mAdmNo').value;
+        const sub = document.getElementById('subject').value;
+        const exam = document.getElementById('examType').value;
+        
+        const data = {
+            subject: sub,
+            examType: exam,
+            total: document.getElementById('totM').innerText,
+            grade: document.getElementById('gradeRes').innerText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+            await db.collection("marks").doc(`${adm}_${exam}_${sub}`).set(data);
+            alert("Marks and Grade Saved!");
+        } catch (e) { alert(e.message); }
+    }
+</script>
+</body>
+</html>
