@@ -7,61 +7,110 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; padding: 15px; }
-        .attendance-card { background: white; max-width: 800px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .header-box { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        :root { 
+            --primary-color: #1a237e; 
+            --secondary-color: #c62828; 
+            --success-color: #2e7d32; 
+            --bg-light: #f9f9f9;
+        }
         
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        select, input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
         
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; background: #f0f2f5; padding: 12px; font-size: 11px; text-transform: uppercase; }
-        td { padding: 12px; border-bottom: 1px solid #eee; }
+        /* Navigation Menu */
+        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
+        .nav-menu a:hover { opacity: 0.8; }
 
-        /* Status Buttons */
-        .status-toggle { padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; width: 110px; }
+        .container { padding: 15px; }
+
+        .attendance-card { 
+            background: white; 
+            max-width: 800px; 
+            margin: 20px auto; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+        }
+
+        /* Header Style matching admission.html */
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 22px; font-weight: 800; }
+        .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        /* Controls Area */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        select, input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; font-size: 14px; }
+        .load-btn { background: #eee; border: 1px solid #ccc; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .load-btn:hover { background: #ddd; }
+
+        /* Table Styling */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; background: #f0f2f5; padding: 12px; font-size: 11px; text-transform: uppercase; color: #555; }
+        td { padding: 15px 12px; border-bottom: 1px solid #eee; }
+
+        /* Attendance Toggle Buttons */
+        .status-toggle { padding: 10px 18px; border-radius: 25px; border: none; cursor: pointer; font-weight: 800; width: 120px; font-size: 12px; transition: 0.2s; }
         .is-present { background: #e8f5e9; color: var(--success-color); border: 2px solid var(--success-color); }
         .is-absent { background: #ffebee; color: var(--secondary-color); border: 2px solid var(--secondary-color); }
         
-        .save-btn { background: var(--primary-color); color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        .save-btn { background: var(--primary-color); color: white; width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 16px; font-weight: 800; margin-top: 25px; cursor: pointer; }
+        .save-btn:hover { background: #0d144d; }
+
+        @media (max-width: 600px) {
+            .controls { flex-direction: column; }
+            .status-toggle { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-<div class="attendance-card">
-    <div class="header-box">
-        <h2 style="color: var(--primary-color);">DAILY ATTENDANCE</h2>
-        <p style="font-size: 12px; color: #666;">VEERAMALLU GLOBAL ACADEMY</p>
-    </div>
+<div class="nav-menu">
+    <a href="admissions.html">+ New Admission</a>
+    <a href="attendance.html">✓ Daily Attendance</a>
+</div>
 
-    <div class="controls">
-        <input type="date" id="attDate">
-        <select id="classPicker">
-            <option value="">Select Class</option>
-            <option value="1">Class 1</option>
-            <option value="2">Class 2</option>
-            <option value="3">Class 3</option>
+<div class="container">
+    <div class="attendance-card">
+        <div class="header">
+            <img src="logo.png" alt="VGA Logo" class="logo-img">
+            <h1>VEERAMALLU GLOBAL ACADEMY</h1>
+            <p>Teacher's Attendance Portal | 2026-2027</p>
+        </div>
+
+        <div class="controls">
+            <input type="date" id="attDate">
+            <select id="classPicker">
+                <option value="">Select Class</option>
+                <option value="1">Class 1</option>
+                <option value="2">Class 2</option>
+                <option value="3">Class 3</option>
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
             </select>
-        <button onclick="loadClassList()" style="padding: 10px; cursor: pointer;">Load List</button>
-    </div>
+            <button class="load-btn" onclick="loadClassList()">LOAD LIST</button>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Student Name</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody id="studentTableBody">
+        <table>
+            <thead>
+                <tr>
+                    <th>STUDENT DETAILS</th>
+                    <th style="text-align: center;">ATTENDANCE STATUS</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <tr>
+                    <td colspan="2" style="text-align: center; color: #999;">Select a class and click "Load List"</td>
+                </tr>
             </tbody>
-    </table>
+        </table>
 
-    <button class="save-btn" onclick="submitAttendance()">UPLOAD TO SERVER</button>
+        <button class="save-btn" onclick="submitAttendance()">SYNC ATTENDANCE TO CLOUD</button>
+    </div>
 </div>
 
 <script>
-    // USE YOUR SAME FIREBASE CONFIG
+    // Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -70,6 +119,7 @@
         messagingSenderId: "379339669496",
         appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -78,41 +128,64 @@
     async function loadClassList() {
         const selectedClass = document.getElementById('classPicker').value;
         const tbody = document.getElementById('studentTableBody');
-        tbody.innerHTML = "Searching...";
-
-        // Query students admitted to this specific class
-        const snapshot = await db.collection("admissions").where("joinClass", "==", selectedClass).get();
         
-        tbody.innerHTML = "";
-        studentsArray = [];
+        if(!selectedClass) return alert("Please select a class first.");
+        
+        tbody.innerHTML = "<tr><td colspan='2' style='text-align: center;'>Fetching students...</td></tr>";
 
-        snapshot.forEach(doc => {
-            const student = doc.data();
-            studentsArray.push({ id: doc.id, name: student.studentName, status: "Present" });
+        try {
+            // Searching students in "admissions" collection matching the joinClass field
+            const snapshot = await db.collection("admissions").where("joinClass", "==", selectedClass).get();
             
-            const row = `
-                <tr>
-                    <td><b>${student.studentName}</b><br><small>${student.admissionNo}</small></td>
-                    <td>
-                        <button id="btn-${doc.id}" class="status-toggle is-present" onclick="toggle('${doc.id}')">
-                            ✓ Present
-                        </button>
-                    </td>
-                </tr>`;
-            tbody.innerHTML += row;
-        });
+            tbody.innerHTML = "";
+            studentsArray = [];
+
+            if (snapshot.empty) {
+                tbody.innerHTML = "<tr><td colspan='2' style='text-align: center; color: red;'>No students found for this class.</td></tr>";
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const student = doc.data();
+                // Defaulting everyone to "Present" for faster marking
+                studentsArray.push({ 
+                    id: doc.id, 
+                    name: student.studentName, 
+                    admNo: student.admissionNo,
+                    status: "Present" 
+                });
+                
+                const row = `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 800; color: #333;">${student.studentName}</div>
+                            <div style="font-size: 11px; color: #777;">ADM: ${student.admissionNo}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <button id="btn-${doc.id}" class="status-toggle is-present" onclick="toggle('${doc.id}')">
+                                ✓ PRESENT
+                            </button>
+                        </td>
+                    </tr>`;
+                tbody.innerHTML += row;
+            });
+        } catch (error) {
+            alert("Error loading list: " + error.message);
+        }
     }
 
+    // Toggle logic for Tick Mark (✓) and Absent (X)
     function toggle(id) {
         const student = studentsArray.find(s => s.id === id);
         const btn = document.getElementById(`btn-${id}`);
+        
         if(student.status === "Present") {
             student.status = "Absent";
-            btn.innerText = "X Absent";
+            btn.innerText = "X ABSENT";
             btn.className = "status-toggle is-absent";
         } else {
             student.status = "Present";
-            btn.innerText = "✓ Present";
+            btn.innerText = "✓ PRESENT";
             btn.className = "status-toggle is-present";
         }
     }
@@ -121,23 +194,27 @@
         const date = document.getElementById('attDate').value;
         const className = document.getElementById('classPicker').value;
         
-        if(!date || !className) return alert("Select Date and Class");
+        if(!date || !className) return alert("Select Date and Class before saving.");
+        if(studentsArray.length === 0) return alert("No students to mark.");
 
         try {
+            // Using Class_Date as the document name to prevent duplicates
             await db.collection("attendance").doc(`${className}_${date}`).set({
                 className: className,
                 date: date,
                 records: studentsArray,
                 submittedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert("Attendance synced to VGA Cloud!");
+            alert("Attendance successfully synced to VGA Cloud!");
         } catch (e) {
-            alert("Error: " + e.message);
+            alert("Upload Error: " + e.message);
         }
     }
     
-    // Set default date to today
+    // Auto-set the date to Today
     document.getElementById('attDate').valueAsDate = new Date();
 </script>
+
 </body>
 </html>
+
