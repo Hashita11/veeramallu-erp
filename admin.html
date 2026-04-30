@@ -245,23 +245,35 @@ const a=document.createElement("a");
 a.href=canvas.toDataURL();
 a.download="Report.png"; a.click();
 });
-}
-  async function sendNotice() {
+    
+    async function sendNotice() {
     const msg = document.getElementById('noticeMsg').value;
-    if(!msg) return alert("Please type a message before sending!");
+    if(!msg) return alert("Please type a message!");
+
+    // Check if db is initialized
+    if (typeof db === 'undefined') {
+        return alert("Database not connected. Check your Firebase Config at the top of the file.");
+    }
 
     try {
-        // This updates the 'latest' notice which all parents see instantly
         await db.collection("notifications").doc("latest").set({
             text: msg,
-            date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }),
+            date: new Date().toLocaleDateString('en-IN', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric' 
+            }),
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("📢 Notification posted successfully! Parents will see this on their portal now.");
-        document.getElementById('noticeMsg').value = ""; // Clear the box
-    } catch (e) {
-        alert("Error posting notice: " + e.message);
+        
+        alert("✅ Success! Notification sent to Firebase.");
+        document.getElementById('noticeMsg').value = "";
+    } catch (e) { 
+        console.error("Error Detail:", e);
+        alert("Firebase Error: " + e.message); 
     }
+}
+
     
 </script>
 
