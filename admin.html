@@ -92,7 +92,15 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
 <button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
 <div id="output">No report generated yet...</div>
 </div>
-
+<div class="section-title" style="background: var(--secondary-color);">📢 POST SCHOOL ANNOUNCEMENT</div>
+<div class="card" style="padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fffde7;">
+    <label style="font-size: 11px; font-weight: bold; color: #555;">MESSAGE TO ALL PARENTS:</label>
+    <textarea id="noticeMsg" style="width: 100%; height: 80px; margin-top: 10px; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit;" placeholder="Type holidays, exam dates, or important news here..."></textarea>
+    <button onclick="sendNotice()" style="background: var(--secondary-color); color: white; border: none; padding: 12px 25px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%;">
+        SEND LIVE NOTIFICATION
+    </button>
+</div>
+  
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -238,6 +246,23 @@ a.href=canvas.toDataURL();
 a.download="Report.png"; a.click();
 });
 }
+  async function sendNotice() {
+    const msg = document.getElementById('noticeMsg').value;
+    if(!msg) return alert("Please type a message before sending!");
+
+    try {
+        // This updates the 'latest' notice which all parents see instantly
+        await db.collection("notifications").doc("latest").set({
+            text: msg,
+            date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("📢 Notification posted successfully! Parents will see this on their portal now.");
+        document.getElementById('noticeMsg').value = ""; // Clear the box
+    } catch (e) {
+        alert("Error posting notice: " + e.message);
+    }
+    
 </script>
 
 </body>
