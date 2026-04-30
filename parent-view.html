@@ -98,18 +98,23 @@
 
             <div class="section-title">FEE SETTLEMENT SUMMARY</div>
             <div id="feeArea"></div>
+<div id="pdfFooter" style="display: none; margin-top: 30px; padding: 0 10px;">
+    
+    <table style="width:100%; text-align:center;">
+        <tr>
+            <td>
+                <img src="https://i.ibb.co/4pDNDk1/signature-line.png" width="120"><br>
+                <span style="font-size:11px; font-weight:bold;">PARENT SIGNATURE</span>
+            </td>
+            <td>
+                <span style="font-size:11px; color:blue; font-style:italic;">Digitally Verified</span><br>
+                <img src="https://i.ibb.co/4pDNDk1/signature-line.png" width="120"><br>
+                <span style="font-size:11px; font-weight:bold;">PRINCIPAL / SECRETARY</span>
+            </td>
+        </tr>
+    </table>
 
-            <div id="pdfFooter" style="display: none; margin-top: 30px; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-                <div style="text-align: center;">
-                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PARENT SIGNATURE</p>
-                </div>
-                <div style="text-align: center;">
-                    <p style="font-size: 10px; color: blue; font-style: italic; margin-bottom: 2px;">Digitally Verified</p>
-                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PRINCIPAL / SECRETARY</p>
-                </div>
-            </div>
+</div>
 
             <div id="downloadSection" style="display: none; margin-top: 15px;">
                 <button class="btn-action" style="background: #4527a0;" onclick="downloadPDF()">
