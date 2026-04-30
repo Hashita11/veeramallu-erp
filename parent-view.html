@@ -39,6 +39,15 @@
         .marks-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
         .grade-bold { font-weight: 800; color: var(--secondary-color); }
     </style>
+    #dashboard {
+    background: white;
+}
+
+@media print {
+    body {
+        background: white;
+    }
+}
 </head>
 <body>
 
@@ -254,31 +263,34 @@
             }
         } catch (e) { marksArea.innerHTML = "Error loading marks."; }
     }
-
     async function downloadPDF() {
     const studentName = document.getElementById('dispName').innerText;
     const examName = document.getElementById('parentExamView').value;
-
     const element = document.getElementById('dashboard');
 
-    // Show footer temporarily for PDF
+    // Force full height rendering
+    const originalHeight = element.style.height;
+    element.style.height = "auto";
+
+    // Show hidden elements (important)
     document.getElementById('pdfFooter').style.display = 'flex';
+    document.getElementById('downloadSection').style.display = 'none';
 
     const opt = {
         margin: 5,
         filename: `${studentName}_${examName}_VGA_Report.pdf`,
         image: { type: 'jpeg', quality: 1 },
-        html2canvas: { 
-            scale: 2, 
+        html2canvas: {
+            scale: 3,   // HIGH QUALITY
             useCORS: true,
-            scrollY: 0
+            scrollY: 0,
+            windowHeight: document.body.scrollHeight   // 🔥 FIX
         },
-        jsPDF: { 
-            unit: 'mm', 
-            format: 'a4', 
-            orientation: 'portrait' 
-        },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
     };
 
     try {
@@ -287,8 +299,10 @@
         alert("PDF Error: " + e.message);
     }
 
-    // Hide footer again after download
+    // Restore UI
+    element.style.height = originalHeight;
     document.getElementById('pdfFooter').style.display = 'none';
+    document.getElementById('downloadSection').style.display = 'block';
 }
 </script>
 </body>
