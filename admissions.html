@@ -117,51 +117,166 @@
                 <tr>
                     <td>Tuition Fee</td>
                     <td><input type="date" class="date-input" value="2026-04-28"></td>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGA Admission Portal | 2026-27</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #c62828;
+            --success-color: #2e7d32;
+            --border-color: #e0e0e0;
+        }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #333; }
+        
+        /* Navigation Menu */
+        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; }
+        .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
+
+        .container { width: 100%; max-width: 1100px; margin: auto; padding: 15px; box-sizing: border-box; }
+        
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+        .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 22px; font-weight: 800; }
+        .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        .section-title { background: var(--primary-color); color: white; padding: 10px 15px; border-radius: 4px; margin: 20px 0 12px 0; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .govt-title { background: var(--success-color); }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 768px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 10px; font-weight: 800; color: #777; margin-bottom: 4px; text-transform: uppercase; }
+        input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: #fff; }
+
+        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; border: 1px solid #eee; }
+        th, td { padding: 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: #555; text-transform: uppercase; font-size: 11px; }
+        .date-input { width: 130px; padding: 5px; font-size: 12px; border: 1px solid #ddd; }
+        .balance { color: var(--secondary-color); font-weight: bold; }
+        .total-row { font-weight: bold; background: #fdfdfd; }
+
+        @media print {
+            .no-print, .nav-menu { display: none !important; }
+            .container { padding: 0; }
+            input { border: none !important; font-weight: bold; padding: 0 !important; background: transparent !important; }
+            .section-title { border: 1px solid #000; color: #000 !important; background: #eee !important; -webkit-print-color-adjust: exact; }
+            table, th, td { border: 1px solid #000 !important; }
+        }
+
+        .btn-print { background: var(--secondary-color); color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+<div class="nav-menu no-print">
+    <a href="admissions.html">+ New Admission</a>
+    <a href="attendance.html">✓ Daily Attendance</a>
+    <a href="parent-view.html">👤 Parent Portal</a>
+</div>
+
+<div class="container">
+    <div class="header">
+        <img src="logo.png" alt="VGA Logo" class="logo-img">
+        <h1>VEERAMALLU GLOBAL ACADEMY</h1>
+        <p>Student Admission Receipt | 2026-2027</p>
+    </div>
+
+    <div class="section-title">1. ADMISSION & STUDENT INFO</div>
+    <div class="grid">
+        <div class="form-group"><label>Admission No</label><input type="text" id="admNo" value="23456"></div>
+        <div class="form-group"><label>Student Name</label><input type="text" id="stuName" value="Sudeep"></div>
+        <div class="form-group">
+            <label>Campus Location</label>
+            <select id="campus">
+                <option value="Velpur Campus">Velpur Campus</option>
+                <option value="Relangi Campus">Relangi Campus</option>
+                <option value="Undrajavaram Campus">Undrajavaram Campus</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Join Class</label>
+            <select id="joinClass">
+                <option value="PKG">PKG</option>
+                <option value="LKG">LKG</option>
+                <option value="UKG">UKG</option>
+                <option value="1">1st Class</option>
+                <option value="2">2nd Class</option>
+                <option value="3">3rd Class</option>
+                <option value="4">4th Class</option>
+                <option value="5">5th Class</option>
+                <option value="6">6th Class</option>
+                <option value="7">7th Class</option>
+                <option value="8">8th Class</option>
+                <option value="9">9th Class</option>
+                <option value="10">10th Class</option>
+            </select>
+        </div>
+        <div class="form-group"><label>Section</label><input type="text" id="section" value="A"></div>
+        <div class="form-group"><label>Village / City</label><input type="text" id="city" value="Velpur"></div>
+        <div class="form-group"><label>Father Name</label><input type="text" id="fName" value="Naresh"></div>
+        <div class="form-group"><label>Mother Name</label><input type="text" id="mName" placeholder="Mother Name"></div>
+        <div class="form-group"><label>Parent Mobile No</label><input type="text" id="parentMobile" placeholder="Mobile"></div>
+    </div>
+
+    <div class="government-only">
+        <div class="section-title govt-title">2. INTERNAL GOVT DATA (Talliki Vandanam)</div>
+        <div class="grid">
+            <div class="form-group"><label>Father Aadhaar</label><input type="text" id="fAadhaar"></div>
+            <div class="form-group"><label>Mother Aadhaar</label><input type="text" id="mAadhaar"></div>
+            <div class="form-group"><label>Ration Card No</label><input type="text" id="rationCard"></div>
+            <div class="form-group"><label>Mother Account No</label><input type="text" id="accNo"></div>
+            <div class="form-group"><label>IFSC Code</label><input type="text" id="ifsc"></div>
+            <div class="form-group"><label>Previous School</label><input type="text" id="prevSchool"></div>
+        </div>
+    </div>
+
+    <div class="section-title">3. DETAILED FEE SETTLEMENT</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>PARTICULARS</th>
+                    <th>PAID DATE</th>
+                    <th>TOTAL (₹)</th>
+                    <th>PAID (₹)</th>
+                    <th>BALANCE (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Admission Fee</td>
+                    <td><input type="date" class="date-input" value="2026-04-28"></td>
+                    <td>1,000</td>
+                    <td>1,000</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>Tuition Fee</td>
+                    <td><input type="date" class="date-input" value="2026-04-28"></td>
                     <td>15,000</td>
                     <td>5,000</td>
                     <td class="balance">10,000</td>
-                </tr>
-                <tr>
-                    <td>Books Fee</td>
-                    <td><input type="date" class="date-input"></td>
-                    <td>4,000</td>
-                    <td>0</td>
-                    <td class="balance">4,000</td>
-                </tr>
-                <tr>
-                    <td>Uniform Fee</td>
-                    <td><input type="date" class="date-input"></td>
-                    <td>4,000</td>
-                    <td>0</td>
-                    <td class="balance">4,000</td>
-                </tr>
-                <tr>
-                    <td>Exam Fee</td>
-                    <td><input type="date" class="date-input"></td>
-                    <td>2,000</td>
-                    <td>0</td>
-                    <td class="balance">2,000</td>
-                </tr>
-                <tr>
-                    <td>Transport Fee</td>
-                    <td><input type="date" class="date-input" value="2026-04-28"></td>
-                    <td>8,000</td>
-                    <td>4,000</td>
-                    <td class="balance">4,000</td>
                 </tr>
                 <tr class="total-row">
                     <td colspan="2" style="text-align: right;">GRAND TOTAL</td>
                     <td>34,000</td>
                     <td>10,000</td>
-                    <td class="balance">24,000</td>
+                    <td class="balance" id="grandBalance">24,000</td>
                 </tr>
             </tbody>
         </table>
     </div>
 <button class="btn-print no-print" onclick="saveAndPrint()">SAVE TO FIREBASE & PRINT RECEIPT</button>
 </div>
+
 <script>
-    // Configuration from your Firebase setup
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -176,22 +291,32 @@
 
     async function saveAndPrint() {
         const data = {
-            admissionNo: document.querySelector('input[value="23456"]').value,
-            studentName: document.querySelector('input[value="Sudeep"]').value,
-            campus: document.querySelector('select').value,
+            admissionNo: document.getElementById('admNo').value,
+            studentName: document.getElementById('stuName').value,
+            campus: document.getElementById('campus').value,
+            joinClass: document.getElementById('joinClass').value,
+            section: document.getElementById('section').value,
+            parentMobile: document.getElementById('parentMobile').value,
+            fatherAadhaar: document.getElementById('fAadhaar').value,
+            motherAadhaar: document.getElementById('mAadhaar').value,
+            grandBalance: document.getElementById('grandBalance').innerText,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
+        if(!data.joinClass || !data.parentMobile) {
+            alert("Error: Class and Parent Mobile are required for Attendance and Parent Portal!");
+            return;
+        }
+
         try {
-            // This saves the data to your 1GB free storage
-            await db.collection("admissions").add(data);
-            alert("Success: Saved to VeeramalluERP Database!");
+            // Using set() with admissionNo as ID ensures we don't get duplicate records in Firebase
+            await db.collection("admissions").doc(data.admissionNo).set(data);
+            alert("Success: Registered student " + data.studentName + " in VGA Database!");
             window.print();
         } catch (e) {
             alert("Error: " + e.message);
         }
     }
 </script>
-    
 </body>
 </html>
