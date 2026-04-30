@@ -188,37 +188,83 @@
     }
 
     async function fetchParentMarks() {
-        const admNo = document.getElementById('loginAdmNo').value;
-        const examFilter = document.getElementById('parentExamView').value;
-        const marksArea = document.getElementById('marksArea');
+    const admNo = document.getElementById('loginAdmNo').value;
+    const examFilter = document.getElementById('parentExamView').value;
+    const marksArea = document.getElementById('marksArea');
 
-        if(!examFilter) {
-            marksArea.innerHTML = "";
-            return;
-        }
+    if(!examFilter) { marksArea.innerHTML = ""; return; }
+    marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Calculating Report Card...</p>";
+
+    try {
+        const snapshot = await db.collection("marks").get();
+        let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
         
-        marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Loading Report Card...</p>";
+        let found = false;
+        let grandTotal = 0;
+        let maxPossible = 0;
+        let hasFailedSubject = false;
 
-        try {
-            const snapshot = await db.collection("marks").get();
-            let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
-            let found = false;
+        snapshot.forEach(doc => {
+            const m = doc.data();
+            if (doc.id.startsWith(admNo) && m.examType === examFilter) {
+                const marksVal = parseFloat(m.total);
+                const isSA = examFilter.startsWith("SA");
+                const subjectMax = isSA ? 100 : 50;
+                
+                // Logic: Fail if marks are less than 40% of the maximum
+                const passMark = subjectMax * 0.4;
+                const isFail = marksVal < passMark;
+                const displayGrade = isFail ? "F" : m.grade;
+                const rowStyle = isFail ? "color: red; font-weight: bold;" : "";
 
-            snapshot.forEach(doc => {
-                const m = doc.data();
-                // Match Admission number and exact exam type (FA1, FA2, etc.)
-                if (doc.id.startsWith(admNo) && m.examType === examFilter) {
-                    html += `<tr><td style="text-align:left;">${m.subject}</td><td>${m.total}</td><td class="grade-bold">${m.grade}</td></tr>`;
-                    found = true;
-                }
-            });
+                html += `<tr>
+                    <td style="text-align:left;">${m.subject}</td>
+                    <td style="${rowStyle}">${m.total}</td>
+                    <td class="grade-bold" style="${rowStyle}">${displayGrade}</td>
+                </tr>`;
+                
+                grandTotal += marksVal;
+                maxPossible += subjectMax;
+                if (isFail) hasFailedSubject = true;
+                found = true;
+            }
+        });
 
+        if(found) {
+            // Calculate Overall Percentage and Grade
+            const percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
+            let finalGrade = "F";
+            if (percentage >= 90) finalGrade = "A1";
+            else if (percentage >= 80) finalGrade = "A2";
+            else if (percentage >= 70) finalGrade = "B1";
+            else if (percentage >= 60) finalGrade = "B2";
+            else if (percentage >= 50) finalGrade = "C1";
+            else if (percentage >= 40) finalGrade = "C2";
+            
+            // If any subject is failed, the overall result should reflect caution
+            if (hasFailedSubject) finalGrade = "F (Fail)";
+
+            html += `
+                <tr style="background: #e8f5e9; font-weight: bold;">
+                    <td style="text-align:left;">GRAND TOTAL</td>
+                    <td>${grandTotal} / ${maxPossible}</td>
+                    <td style="color: var(--primary-color);">${percentage}%</td>
+                </tr>
+                <tr style="background: var(--primary-color); color: white; font-weight: bold;">
+                    <td colspan="2" style="text-align:right;">OVERALL GRADE:</td>
+                    <td style="font-size: 16px;">${finalGrade}</td>
+                </tr>
+            `;
             html += `</tbody></table>`;
-            marksArea.innerHTML = found ? html : `<p style="text-align:center; color:red; padding:10px; font-size:12px;">No marks entered yet for ${examFilter}.</p>`;
-        } catch (e) {
-            marksArea.innerHTML = "Error loading marks.";
+            marksArea.innerHTML = html;
+        } else {
+            marksArea.innerHTML = `<p style="text-align:center; color:red; padding:10px; font-size:12px;">No marks entered for ${examFilter}.</p>`;
         }
+    } catch (e) {
+        marksArea.innerHTML = "Error loading marks.";
     }
+}
+
 </script>
 </body>
 </html>
