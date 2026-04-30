@@ -8,13 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { 
-            --primary-color: #1a237e; 
-            --secondary-color: #c62828; 
-            --success-color: #2e7d32; 
-            --bg-light: #f4f7f6;
-        }
-        
+        :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; --bg-light: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
         .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
@@ -26,98 +20,71 @@
         .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        .btn-action { background: var(--primary-color); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase; }
+        .btn-action { background: var(--primary-color); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase; margin-top: 10px; }
         .hidden { display: none; }
         .section-title { background: #f0f2f5; padding: 10px; border-radius: 4px; font-weight: 800; margin-top: 20px; color: var(--primary-color); font-size: 12px; }
         .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
         .status-badge { padding: 6px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: bold; }
         .bg-present { background: var(--success-color); }
         .bg-absent { background: var(--secondary-color); }
-        .fee-balance { color: var(--secondary-color); font-weight: bold; font-size: 16px; }
         .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        .marks-table th { background: #f8f9fa; color: #555; padding: 8px; border: 1px solid #ddd; text-align: center; }
-        .marks-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        .marks-table th, .marks-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
         .grade-bold { font-weight: 800; color: var(--secondary-color); }
     </style>
 </head>
 <body>
 
-<div class="nav-menu">
-    <a href="parent-view.html">Parent Login</a>
-</div>
+<div class="nav-menu"><a>VGA Parent Portal</a></div>
 
 <div class="container">
     <div class="card">
         <div class="header">
-            <img src="logo.png" alt="VGA Logo" class="logo-img">
+            <img src="logo.png" alt="Logo" class="logo-img">
             <h1>VEERAMALLU GLOBAL ACADEMY</h1>
-            <p>Parent Portal | Student Tracking</p>
+            <p>Student Progress Report</p>
         </div>
 
         <div id="loginSection">
-            <label>Admission Number</label>
-            <input type="text" id="loginAdmNo" placeholder="Enter Admission No.">
-            <label>Parent Mobile Number</label>
-            <input type="text" id="loginMobile" placeholder="Registered Mobile No.">
-            <button class="btn-action" onclick="checkStudent()">VIEW DASHBOARD</button>
+            <label>Admission No</label><input type="text" id="loginAdmNo">
+            <label>Mobile No</label><input type="text" id="loginMobile">
+            <button class="btn-action" onclick="checkStudent()">Login</button>
         </div>
 
         <div id="dashboard" class="hidden">
-            <h2 id="dispName" style="color: var(--primary-color); margin: 0; text-align: center;"></h2>
-            <p id="dispInfo" style="color: #666; font-size: 13px; text-align: center; margin-top: 5px;"></p>
-            
             <div id="noticeBox" style="display: none; background: #fff9c4; border-left: 5px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">📢</span>
-                    <label style="color: #f57f17; font-weight: 900; margin: 0;">SCHOOL ANNOUNCEMENT</label>
-                </div>
-                <p id="noticeText" style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #333;"></p>
-                <div id="noticeDate" style="font-size: 10px; color: #777; text-align: right;"></div>
+                <b style="color: #f57f17;">📢 ANNOUNCEMENT:</b>
+                <p id="noticeText" style="margin: 5px 0; font-weight: 600;"></p>
+                <small id="noticeDate" style="color: #777;"></small>
             </div>
+
+            <h2 id="dispName" style="color: var(--primary-color); text-align: center; margin-bottom: 0;"></h2>
+            <p id="dispInfo" style="text-align: center; color: #666; margin-top: 5px;"></p>
 
             <div class="section-title">TODAY'S ATTENDANCE</div>
-            <div class="data-row">
-                <span>Date: <b id="currentDate"></b></span>
-                <span id="attStatus">Loading...</span>
-            </div>
+            <div class="data-row"><span>Date: <b id="currentDate"></b></span> <span id="attStatus">-</span></div>
 
             <div class="section-title">📊 ACADEMIC PERFORMANCE</div>
-            <div class="controls" style="margin-top:10px;">
-                <select id="parentExamView" onchange="fetchParentMarks()">
-                    <option value="">-- Choose Exam to View Marks --</option>
-                    <option value="FA1">Formative Assessment 1 (FA1)</option>
-                    <option value="FA2">Formative Assessment 2 (FA2)</option>
-                    <option value="FA3">Formative Assessment 3 (FA3)</option>
-                    <option value="FA4">Formative Assessment 4 (FA4)</option>
-                    <option value="SA1">Summative Assessment 1 (SA1)</option>
-                    <option value="SA2">Summative Assessment 2 (SA2)</option>
-                </select>
-            </div>
-            
+            <select id="parentExamView" onchange="fetchParentMarks()">
+                <option value="">-- Choose Exam --</option>
+                <option value="FA1">FA1</option><option value="FA2">FA2</option><option value="FA3">FA3</option><option value="FA4">FA4</option>
+                <option value="SA1">SA1</option><option value="SA2">SA2</option>
+            </select>
             <div id="marksArea"></div>
 
-            <div class="section-title">FEE SETTLEMENT SUMMARY</div>
-            <div id="feeArea"></div>
+            <div id="feeSection">
+                <div class="section-title">FEE SUMMARY</div>
+                <div id="feeArea"></div>
+            </div>
 
-            <div id="pdfFooter" style="display: none; margin-top: 30px; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-                <div style="text-align: center;">
-                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PARENT SIGNATURE</p>
-                </div>
-                <div style="text-align: center;">
-                    <p style="font-size: 10px; color: blue; font-style: italic; margin-bottom: 2px;">Digitally Verified</p>
-                    <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
-                    <p style="font-size: 10px; font-weight: bold; margin: 0;">PRINCIPAL / SECRETARY</p>
+            <div id="signatureArea" style="display: none; margin-top: 40px; justify-content: space-between;">
+                <div style="text-align: center; border-top: 1px solid #000; width: 120px; padding-top: 5px; font-size: 10px;">PARENT SIGNATURE</div>
+                <div style="text-align: center; border-top: 1px solid #000; width: 120px; padding-top: 5px; font-size: 10px;">
+                    <span style="color: blue; font-style: italic;">Digitally Verified</span><br><b>PRINCIPAL</b>
                 </div>
             </div>
 
-            <div id="downloadSection" style="display: none; margin-top: 15px;">
-                <button class="btn-action" style="background: #4527a0;" onclick="downloadPDF()">
-                    📥 DOWNLOAD REPORT CARD (PDF)
-                </button>
-            </div>
-
-            <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
+            <button id="dlBtn" class="btn-action" style="display: none; background: #4527a0;" onclick="downloadPDF()">📥 Download PDF Report</button>
+            <button class="btn-action" style="background:#555;" onclick="location.reload()">Logout</button>
         </div>
     </div>
 </div>
@@ -131,142 +98,82 @@
         messagingSenderId: "379339669496",
         appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
     };
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     async function checkStudent() {
         const adm = document.getElementById('loginAdmNo').value;
         const mob = document.getElementById('loginMobile').value;
-        if(!adm || !mob) return alert("Please enter both Admission No and Mobile.");
-
-        try {
-            const docRef = db.collection("admissions").doc(adm);
-            const doc = await docRef.get();
-            if (doc.exists && doc.data().parentMobile === mob) {
-                showDashboard(doc.data());
-            } else {
-                alert("Incorrect Admission No or Mobile Number.");
-            }
-        } catch (error) {
-            alert("Login Error: " + error.message);
-        }
+        const doc = await db.collection("admissions").doc(adm).get();
+        if (doc.exists && doc.data().parentMobile === mob) { showDashboard(doc.data()); }
+        else { alert("Invalid Credentials"); }
     }
 
-    async function showDashboard(studentData) {
-        // Notification Listener
-        db.collection("notifications").doc("latest").onSnapshot((doc) => {
-            if (doc.exists) {
+    function showDashboard(data) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('dispName').innerText = data.studentName;
+        document.getElementById('dispInfo').innerText = `Class: ${data.joinClass} | Campus: ${data.campus}`;
+        
+        // Live Notifications
+        db.collection("notifications").doc("latest").onSnapshot(doc => {
+            if(doc.exists) {
                 document.getElementById('noticeBox').style.display = 'block';
                 document.getElementById('noticeText').innerText = doc.data().text;
-                document.getElementById('noticeDate').innerText = "Posted: " + doc.data().date;
+                document.getElementById('noticeDate').innerText = doc.data().date;
             }
         });
 
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        document.getElementById('dispName').innerText = studentData.studentName;
-        document.getElementById('dispInfo').innerText = `Class: ${studentData.joinClass} | Campus: ${studentData.campus}`;
-        
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('currentDate').innerText = today;
-
-        const balance = studentData.grandBalance || "Check Office";
-        document.getElementById('feeArea').innerHTML = `
-            <div class="data-row"><span>Campus Location:</span> <span>${studentData.campus}</span></div>
-            <div class="data-row"><span>Total Balance Due:</span> <span class="fee-balance">₹ ${balance}</span></div>
-        `;
-
-        const attID = `${studentData.campus}_${studentData.joinClass}_${today}`;
-        const attDoc = await db.collection("attendance").doc(attID).get();
-        const statusEl = document.getElementById('attStatus');
-        if(attDoc.exists) {
-            const myRecord = attDoc.data().records.find(r => r.admNo === studentData.admissionNo);
-            if(myRecord) {
-                statusEl.innerHTML = myRecord.status === "Present" 
-                    ? `<span class="status-badge bg-present">✓ PRESENT</span>` 
-                    : `<span class="status-badge bg-absent">X ABSENT</span>`;
-            }
-        } else {
-            statusEl.innerText = "Not marked yet.";
-        }
+        document.getElementById('feeArea').innerHTML = `<div class="data-row"><span>Balance Due:</span> <b style="color:red">₹ ${data.grandBalance || 0}</b></div>`;
     }
 
     async function fetchParentMarks() {
         const admNo = document.getElementById('loginAdmNo').value;
-        const examFilter = document.getElementById('parentExamView').value;
-        const marksArea = document.getElementById('marksArea');
-
-        if(!examFilter) {
-            marksArea.innerHTML = "";
-            document.getElementById('downloadSection').style.display = 'none';
-            document.getElementById('pdfFooter').style.display = 'none';
-            return;
-        }
+        const exam = document.getElementById('parentExamView').value;
+        if(!exam) return;
         
-        marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Loading...</p>";
+        const snapshot = await db.collection("marks").get();
+        let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
+        let found = false, gTotal = 0, mTotal = 0;
 
-        try {
-            const snapshot = await db.collection("marks").get();
-            let subjectMap = new Map();
-            snapshot.forEach(doc => {
-                const m = doc.data();
-                if (doc.id.startsWith(admNo) && m.examType === examFilter) {
-                    subjectMap.set(m.subject, m);
-                }
-            });
-
-            if(subjectMap.size > 0) {
-                let html = `<table class="marks-table"><thead><tr><th>Subject</th><th>Marks</th><th>Grade</th></tr></thead><tbody>`;
-                let grandTotal = 0, maxPossible = 0, hasFailed = false;
-
-                subjectMap.forEach((m, subName) => {
-                    const marksVal = parseFloat(m.total);
-                    const subMax = examFilter.startsWith("SA") ? 100 : 50;
-                    const isFail = marksVal < (subMax * 0.4);
-                    const rowStyle = isFail ? "color:red; font-weight:bold;" : "";
-                    
-                    html += `<tr><td style="text-align:left;">${subName}</td><td style="${rowStyle}">${m.total}</td><td style="${rowStyle}">${isFail ? 'F' : m.grade}</td></tr>`;
-                    grandTotal += marksVal; maxPossible += subMax;
-                    if(isFail) hasFailed = true;
-                });
-
-                const per = ((grandTotal / maxPossible) * 100).toFixed(1);
-                let finalG = "F";
-                if(per >= 90) finalG = "A1"; else if(per >= 80) finalG = "A2"; else if(per >= 70) finalG = "B1"; else if(per >= 60) finalG = "B2"; else if(per >= 50) finalG = "C1"; else if(per >= 40) finalG = "C2";
-                if(hasFailed) finalG = "F (Fail)";
-
-                html += `<tr style="background:#e8f5e9; font-weight:bold;"><td style="text-align:left;">GRAND TOTAL</td><td>${grandTotal}/${maxPossible}</td><td>${per}%</td></tr>
-                         <tr style="background:var(--primary-color); color:white; font-weight:bold;"><td colspan="2" style="text-align:right;">OVERALL GRADE:</td><td>${finalG}</td></tr></tbody></table>`;
-                
-                marksArea.innerHTML = html;
-                document.getElementById('downloadSection').style.display = 'block';
-                document.getElementById('pdfFooter').style.display = 'flex';
-            } else {
-                marksArea.innerHTML = `<p style="color:red; text-align:center;">No marks for ${examFilter}.</p>`;
-                document.getElementById('downloadSection').style.display = 'none';
-                document.getElementById('pdfFooter').style.display = 'none';
+        snapshot.forEach(doc => {
+            const m = doc.data();
+            if(doc.id.startsWith(admNo) && m.examType === exam) {
+                const subMax = exam.startsWith("SA") ? 100 : 50;
+                const isFail = parseFloat(m.total) < (subMax * 0.4);
+                html += `<tr><td>${m.subject}</td><td style="${isFail?'color:red':''}">${m.total}</td><td>${isFail?'F':m.grade}</td></tr>`;
+                gTotal += parseFloat(m.total); mTotal += subMax;
+                found = true;
             }
-        } catch (e) { marksArea.innerHTML = "Error loading marks."; }
+        });
+
+        if(found) {
+            const per = ((gTotal/mTotal)*100).toFixed(1);
+            html += `<tr style="background:#eee"><td><b>TOTAL</b></td><td><b>${gTotal}/${mTotal}</b></td><td><b>${per}%</b></td></tr></tbody></table>`;
+            document.getElementById('marksArea').innerHTML = html;
+            document.getElementById('dlBtn').style.display = 'block';
+            document.getElementById('signatureArea').style.display = 'flex';
+        } else {
+            document.getElementById('marksArea').innerHTML = "<p>No marks found.</p>";
+            document.getElementById('dlBtn').style.display = 'none';
+        }
     }
 
     async function downloadPDF() {
-        const studentName = document.getElementById('dispName').innerText;
-        const examName = document.getElementById('parentExamView').value;
         const element = document.getElementById('dashboard').cloneNode(true);
+        // Hide buttons from PDF
+        element.querySelectorAll('button, select').forEach(el => el.style.display = 'none');
         
-        // Cleanup for PDF
-        element.querySelectorAll('button, select').forEach(el => el.remove());
-        const notice = element.querySelector('#noticeBox'); if(notice) notice.remove();
-
         const opt = {
-            margin: [10, 10, 20, 10],
-            filename: `${studentName}_${examName}_VGA_Report.pdf`,
-            image: { type: 'jpeg', quality: 1 },
-            html2canvas: { scale: 3, useCORS: true },
+            margin: 10,
+            filename: 'VGA_Report_Card.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, width: 600 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-        try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("PDF Error"); }
+        html2pdf().set(opt).from(element).save();
     }
 </script>
 </body>
