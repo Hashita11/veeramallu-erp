@@ -179,15 +179,32 @@
     }
 
     async function saveToFirebase() {
-        const adm = document.getElementById('mAdmNo').value;
-        const sub = document.getElementById('subject').value;
-        const exam = document.getElementById('examType').value;
-        
-        if(!adm || !document.getElementById('mStuName').value) {
-            alert("Please enter a valid Admission Number first!");
-            return;
+    const adm = document.getElementById('mAdmNo').value;
+    const sub = document.getElementById('subject').value;
+    const exam = document.getElementById('examType').value;
+    
+    if(!adm || !document.getElementById('mStuName').value) {
+        alert("Please enter a valid Admission Number first!");
+        return;
+    }
+
+    // Define the unique Document ID (e.g., 23456_FA1_Telugu)
+    const docID = `${adm}_${exam}_${sub}`;
+
+    try {
+        // STEP 1: Check if this record already exists
+        const docRef = db.collection("marks").doc(docID);
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists) {
+            // Ask the teacher for permission to overwrite
+            const confirmOverwrite = confirm(`Marks for ${sub} (${exam}) already exist. Do you want to update/overwrite them?`);
+            if (!confirmOverwrite) {
+                return; // Stop if they click 'Cancel'
+            }
         }
 
+        // STEP 2: Prepare and save the data
         const data = {
             subject: sub,
             examType: exam,
@@ -198,14 +215,14 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        try {
-            // Using a unique ID: AdmissionNumber_Exam_Subject (e.g. 23456_FA1_Telugu)
-            await db.collection("marks").doc(`${adm}_${exam}_${sub}`).set(data);
-            alert(`Success: ${exam} marks for ${sub} saved!`);
-        } catch (e) { 
-            alert("Error: " + e.message); 
-        }
+        await docRef.set(data);
+        alert(`Success: ${exam} marks for ${sub} saved!`);
+        
+    } catch (e) { 
+        alert("Error saving: " + e.message); 
     }
+}
+
     
     // Run update scale on load to set initial values
     window.onload = updateScale;
