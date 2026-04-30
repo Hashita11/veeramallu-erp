@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGA | Teacher Attendance Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f9f9f9; padding: 15px; }
+        .attendance-card { background: white; max-width: 800px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-box { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; }
+        
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        select, input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; flex: 1; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; background: #f0f2f5; padding: 12px; font-size: 11px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+
+        /* Status Buttons */
+        .status-toggle { padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; width: 110px; }
+        .is-present { background: #e8f5e9; color: var(--success-color); border: 2px solid var(--success-color); }
+        .is-absent { background: #ffebee; color: var(--secondary-color); border: 2px solid var(--secondary-color); }
+        
+        .save-btn { background: var(--primary-color); color: white; width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="attendance-card">
+    <div class="header-box">
+        <h2 style="color: var(--primary-color);">DAILY ATTENDANCE</h2>
+        <p style="font-size: 12px; color: #666;">VEERAMALLU GLOBAL ACADEMY</p>
+    </div>
+
+    <div class="controls">
+        <input type="date" id="attDate">
+        <select id="classPicker">
+            <option value="">Select Class</option>
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            </select>
+        <button onclick="loadClassList()" style="padding: 10px; cursor: pointer;">Load List</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="studentTableBody">
+            </tbody>
+    </table>
+
+    <button class="save-btn" onclick="submitAttendance()">UPLOAD TO SERVER</button>
+</div>
+
+<script>
+    // USE YOUR SAME FIREBASE CONFIG
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339669496",
+        appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let studentsArray = [];
+
+    async function loadClassList() {
+        const selectedClass = document.getElementById('classPicker').value;
+        const tbody = document.getElementById('studentTableBody');
+        tbody.innerHTML = "Searching...";
+
+        // Query students admitted to this specific class
+        const snapshot = await db.collection("admissions").where("joinClass", "==", selectedClass).get();
+        
+        tbody.innerHTML = "";
+        studentsArray = [];
+
+        snapshot.forEach(doc => {
+            const student = doc.data();
+            studentsArray.push({ id: doc.id, name: student.studentName, status: "Present" });
+            
+            const row = `
+                <tr>
+                    <td><b>${student.studentName}</b><br><small>${student.admissionNo}</small></td>
+                    <td>
+                        <button id="btn-${doc.id}" class="status-toggle is-present" onclick="toggle('${doc.id}')">
+                            ✓ Present
+                        </button>
+                    </td>
+                </tr>`;
+            tbody.innerHTML += row;
+        });
+    }
+
+    function toggle(id) {
+        const student = studentsArray.find(s => s.id === id);
+        const btn = document.getElementById(`btn-${id}`);
+        if(student.status === "Present") {
+            student.status = "Absent";
+            btn.innerText = "X Absent";
+            btn.className = "status-toggle is-absent";
+        } else {
+            student.status = "Present";
+            btn.innerText = "✓ Present";
+            btn.className = "status-toggle is-present";
+        }
+    }
+
+    async function submitAttendance() {
+        const date = document.getElementById('attDate').value;
+        const className = document.getElementById('classPicker').value;
+        
+        if(!date || !className) return alert("Select Date and Class");
+
+        try {
+            await db.collection("attendance").doc(`${className}_${date}`).set({
+                className: className,
+                date: date,
+                records: studentsArray,
+                submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("Attendance synced to VGA Cloud!");
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+    
+    // Set default date to today
+    document.getElementById('attDate').valueAsDate = new Date();
+</script>
+</body>
+</html>
