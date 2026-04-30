@@ -16,7 +16,7 @@
         
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
         
-        /* Nav Menu */
+        /* Nav Menu matching other pages */
         .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
 
@@ -101,8 +101,12 @@
             <div class="controls" style="margin-top:10px;">
                 <select id="parentExamView" onchange="fetchParentMarks()">
                     <option value="">-- Choose Exam to View Marks --</option>
-                    <option value="FA">Formative Assessment (FA)</option>
-                    <option value="SA">Summative Assessment (SA)</option>
+                    <option value="FA1">Formative Assessment 1 (FA1)</option>
+                    <option value="FA2">Formative Assessment 2 (FA2)</option>
+                    <option value="FA3">Formative Assessment 3 (FA3)</option>
+                    <option value="FA4">Formative Assessment 4 (FA4)</option>
+                    <option value="SA1">Summative Assessment 1 (SA1)</option>
+                    <option value="SA2">Summative Assessment 2 (SA2)</option>
                 </select>
             </div>
             <div id="marksArea"></div>
@@ -188,7 +192,11 @@
         const examFilter = document.getElementById('parentExamView').value;
         const marksArea = document.getElementById('marksArea');
 
-        if(!examFilter) return;
+        if(!examFilter) {
+            marksArea.innerHTML = "";
+            return;
+        }
+        
         marksArea.innerHTML = "<p style='text-align:center; font-size:12px;'>Loading Report Card...</p>";
 
         try {
@@ -197,15 +205,16 @@
             let found = false;
 
             snapshot.forEach(doc => {
-                if (doc.id.startsWith(admNo) && doc.id.includes(examFilter)) {
-                    const m = doc.data();
+                const m = doc.data();
+                // Match Admission number and exact exam type (FA1, FA2, etc.)
+                if (doc.id.startsWith(admNo) && m.examType === examFilter) {
                     html += `<tr><td style="text-align:left;">${m.subject}</td><td>${m.total}</td><td class="grade-bold">${m.grade}</td></tr>`;
                     found = true;
                 }
             });
 
             html += `</tbody></table>`;
-            marksArea.innerHTML = found ? html : `<p style="text-align:center; color:red; padding:10px; font-size:12px;">No marks released for ${examFilter}.</p>`;
+            marksArea.innerHTML = found ? html : `<p style="text-align:center; color:red; padding:10px; font-size:12px;">No marks entered yet for ${examFilter}.</p>`;
         } catch (e) {
             marksArea.innerHTML = "Error loading marks.";
         }
