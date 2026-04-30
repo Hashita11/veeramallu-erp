@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VGA | Parent Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root { 
+            --primary-color: #1a237e; 
+            --secondary-color: #c62828; 
+            --success-color: #2e7d32; 
+            --bg-light: #f4f7f6;
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
+        
+        /* Nav Menu matching other pages */
+        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; }
+        .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
+
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+
+        .card { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            margin-bottom: 20px;
+        }
+
+        /* Branding Header */
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
+        .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
+        .header h1 { color: var(--primary-color); margin: 0; font-size: 20px; font-weight: 800; }
+        .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+
+        /* Login & UI Elements */
+        label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        .btn-action { 
+            background: var(--primary-color); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 800; 
+            cursor: pointer; 
+            font-size: 15px;
+            text-transform: uppercase;
+        }
+
+        /* Dashboard Styles */
+        .hidden { display: none; }
+        .section-title { background: #f0f2f5; padding: 10px; border-radius: 4px; font-weight: 800; margin-top: 20px; color: var(--primary-color); font-size: 12px; }
+        .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; color: white; font-size: 12px; font-weight: bold; }
+        .bg-present { background: var(--success-color); }
+        .bg-absent { background: var(--secondary-color); }
+        .fee-balance { color: var(--secondary-color); font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="nav-menu">
+    <a href="parent-view.html">Parent Login</a>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <img src="logo.png" alt="VGA Logo" class="logo-img">
+            <h1>VEERAMALLU GLOBAL ACADEMY</h1>
+            <p>Parent Portal | Student Tracking</p>
+        </div>
+
+        <div id="loginSection">
+            <label>Admission Number</label>
+            <input type="text" id="loginAdmNo" placeholder="Enter Admission No.">
+            
+            <label>Parent Mobile Number</label>
+            <input type="text" id="loginMobile" placeholder="Registered Mobile No.">
+            
+            <button class="btn-action" onclick="checkStudent()">VIEW DASHBOARD</button>
+        </div>
+
+        <div id="dashboard" class="hidden">
+            <h2 id="dispName" style="color: var(--primary-color); margin: 0; text-align: center;"></h2>
+            <p id="dispInfo" style="color: #666; font-size: 13px; text-align: center; margin-top: 5px;"></p>
+            
+            <div class="section-title">TODAY'S ATTENDANCE</div>
+            <div class="data-row">
+                <span>Date: <b id="currentDate"></b></span>
+                <span id="attStatus">Loading...</span>
+            </div>
+
+            <div class="section-title">FEE SETTLEMENT SUMMARY</div>
+            <div id="feeArea">
+                </div>
+            
+            <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Use your existing Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.appspot.com",
+        messagingSenderId: "379339669496",
+        appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function checkStudent() {
+        const adm = document.getElementById('loginAdmNo').value;
+        const mob = document.getElementById('loginMobile').value;
+
+        if(!adm || !mob) return alert("Please enter both Admission No and Mobile Number.");
+
+        try {
+            // Check the admissions collection for this student
+            const docRef = db.collection("admissions").doc(adm);
+            const doc = await docRef.get();
+
+            if (doc.exists && doc.data().parentMobile === mob) {
+                showDashboard(doc.data());
+            } else {
+                alert("Incorrect Admission No or Mobile Number. Please try again.");
+            }
+        } catch (error) {
+            alert("Login Error: " + error.message);
+        }
+    }
+
+    async function showDashboard(studentData) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+
+        document.getElementById('dispName').innerText = studentData.studentName;
+        document.getElementById('dispInfo').innerText = `Class: ${studentData.joinClass} | Campus: ${studentData.campus}`;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('currentDate').innerText = today;
+
+        // 1. Show Fee Info (Assuming fields like tutionFee, balance are in the doc)
+        // You can update these keys to match your exact admission form fields
+        document.getElementById('feeArea').innerHTML = `
+            <div class="data-row"><span>Campus Location:</span> <span>${studentData.campus}</span></div>
+            <div class="data-row"><span>Total Balance Due:</span> <span class="fee-balance">₹ 24,000*</span></div>
+            <p style="font-size: 10px; color: #999; margin-top: 5px;">*Please contact the office for detailed receipt.</p>
+        `;
+
+        // 2. Fetch Attendance for Today
+        const attID = `${studentData.campus}_${studentData.joinClass}_${today}`;
+        const attDoc = await db.collection("attendance").doc(attID).get();
+        const statusEl = document.getElementById('attStatus');
+
+        if(attDoc.exists) {
+            const records = attDoc.data().records;
+            const myRecord = records.find(r => r.admNo === studentData.admissionNo);
+            if(myRecord) {
+                statusEl.innerHTML = myRecord.status === "Present" 
+                    ? `<span class="status-badge bg-present">✓ PRESENT</span>` 
+                    : `<span class="status-badge bg-absent">X ABSENT</span>`;
+            } else {
+                statusEl.innerText = "Record not found.";
+            }
+        } else {
+            statusEl.innerText = "Not marked yet.";
+        }
+    }
+</script>
+
+</body>
+</html>
