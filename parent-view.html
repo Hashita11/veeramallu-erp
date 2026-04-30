@@ -91,6 +91,14 @@
             <h2 id="dispName" style="color: var(--primary-color); margin: 0; text-align: center;"></h2>
             <p id="dispInfo" style="color: #666; font-size: 13px; text-align: center; margin-top: 5px;"></p>
             
+          <div id="noticeBox" style="display: none; background: #fff9c4; border-left: 5px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+        <span style="font-size: 20px;">📢</span>
+        <label style="color: #f57f17; font-weight: 900; margin: 0;">SCHOOL ANNOUNCEMENT</label>
+    </div>
+    <p id="noticeText" style="margin: 5px 0; font-size: 14px; font-weight: 600; color: #333; line-height: 1.4;"></p>
+    <div id="noticeDate" style="font-size: 10px; color: #777; text-align: right; margin-top: 5px;"></div>
+</div>
             <div class="section-title">TODAY'S ATTENDANCE</div>
             <div class="data-row">
                 <span>Date: <b id="currentDate"></b></span>
@@ -153,6 +161,16 @@
     }
 
     async function showDashboard(studentData) {
+                // Listen for live announcements
+        db.collection("notifications").doc("latest").onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                document.getElementById('noticeBox').style.display = 'block';
+                document.getElementById('noticeText').innerText = data.text;
+                document.getElementById('noticeDate').innerText = "Posted: " + data.date;
+            }
+        });
+
         document.getElementById('loginSection').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
 
