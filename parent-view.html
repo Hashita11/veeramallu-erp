@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VGA | Parent Portal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
@@ -121,8 +122,24 @@
 
             <div class="section-title">FEE SETTLEMENT SUMMARY</div>
             <div id="feeArea"></div>
+<div id="pdfFooter" class="hidden" style="margin-top: 30px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+    <div style="text-align: center;">
+        <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
+        <p style="font-size: 10px; font-weight: bold; margin: 0;">PARENT SIGNATURE</p>
+    </div>
+    <div style="text-align: center;">
+        <p style="font-size: 10px; color: blue; font-style: italic; margin-bottom: 2px;">Digitally Verified</p>
+        <div style="border-bottom: 1px solid #000; width: 120px; margin-bottom: 5px;"></div>
+        <p style="font-size: 10px; font-weight: bold; margin: 0;">PRINCIPAL / SECRETARY</p>
+    </div>
+</div>
 
-            <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
+<div id="downloadSection" class="hidden" style="margin-top: 15px;">
+    <button class="btn-action" style="background: #4527a0;" onclick="downloadPDF()">
+        📥 DOWNLOAD REPORT CARD (PDF)
+    </button>
+</div>
+     <button class="btn-action" style="margin-top:25px; background:#555;" onclick="location.reload()">LOGOUT</button>
         </div>
     </div>
 </div>
@@ -282,6 +299,42 @@
         marksArea.innerHTML = "Error loading marks.";
     }
 }
+    // --- Place this at the bottom of fetchParentMarks() after the loop ---
+if(found) {
+    marksArea.innerHTML = html;
+    document.getElementById('downloadSection').classList.remove('hidden');
+    document.getElementById('pdfFooter').classList.remove('hidden'); // Show signature area
+}
+
+// --- The Actual Download Function ---
+async function downloadPDF() {
+    const studentName = document.getElementById('dispName').innerText;
+    const examName = document.getElementById('parentExamView').value;
+    const element = document.getElementById('dashboard').cloneNode(true);
+
+    // Remove buttons from the PDF version so it looks clean
+    const buttons = element.querySelectorAll('button, select');
+    buttons.forEach(btn => btn.remove());
+    
+    // Ensure the notice box doesn't show in the PDF if you don't want it there
+    const notice = element.querySelector('#noticeBox');
+    if(notice) notice.remove();
+
+    const opt = {
+        margin: [10, 10, 20, 10], // top, left, bottom, right
+        filename: `${studentName}_${examName}_VGA_Report.pdf`,
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 3, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+        await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+        alert("Error generating PDF. Please try again.");
+    }
+}
+    
 
 </script>
 </body>
