@@ -6,7 +6,7 @@
 <title>Admin Dashboard | Veeramallu Global Academy</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-:root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; }
+:root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
 body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
 .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
 .logo { max-width:100px;margin-bottom:10px; }
@@ -20,11 +20,12 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
 .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
 .btn:hover { opacity: 0.8; }
 .btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
+.btn-aca { background:var(--academic); color:white; font-size: 1rem; }
 .btn-csv { background:#388e3c;color:white; }
 .btn-salary { background:var(--secondary);color:white; }
 .btn-wa { background:#25d366;color:white; }
-.salary-box { background:#e3f2fd;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #bbdefb; }
-#output { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; }
+.salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
+#output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; }
 .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
 </style>
 </head>
@@ -38,11 +39,27 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
 
     <div class="section-header">ADMISSIONS & REGISTRATION</div>
     <div style="background:#fff4e5; padding:20px; border-radius:12px; border:1px solid #ffe0b2;">
-        <p style="margin:0 0 15px 0; font-weight:bold; color: #e65100;">Manage New Student Enrollments and Entrance Tests</p>
         <div class="nav-grid">
             <button class="btn btn-adm" onclick="location.href='admissions.html'">➕ Add New Admission</button>
             <button class="btn btn-adm" style="background:#0288d1; border-color:#01579b;" onclick="location.href='admissions.html#view'">📋 View Admission List</button>
         </div>
+    </div>
+
+    <div class="section-header">ACADEMIC MANAGEMENT</div>
+    <div class="marks-box">
+        <button class="btn btn-aca" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
+        <p style="margin:15px 0 5px 0; font-weight:bold;">Search Student Results:</p>
+        <div class="controls">
+            <input id="searchAdmNo" placeholder="Admission Number">
+            <select id="searchExam">
+                <option value="Unit-1">Unit Test 1</option>
+                <option value="Quarterly">Quarterly Exam</option>
+                <option value="Half-Yearly">Half-Yearly Exam</option>
+                <option value="Annual">Annual Exam</option>
+            </select>
+        </div>
+        <button class="btn" style="background:var(--academic); color:white;" onclick="viewMarks()">View Marks Report</button>
+        <div id="marksOutput">Results will appear here...</div>
     </div>
 
     <div class="section-header">STAFF RECRUITMENT</div>
@@ -57,7 +74,7 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
         <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Register Staff Account</button>
     </div>
 
-    <div class="section-header">ATTENDANCE RECORDS</div>
+    <div class="section-header">STAFF ATTENDANCE LOGS</div>
     <div class="controls">
         <input id="search" placeholder="Search Staff Name..." onkeyup="load()">
         <select id="filterCampus" onchange="load()">
@@ -81,8 +98,8 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
     <div class="section-header">ADMIN MANUAL ENTRY</div>
     <div style="background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #ddd;">
         <div class="controls">
-            <select id="teacher"></select>
-            <select id="campus">
+            <select id="teacherSelect"></select>
+            <select id="campusSelect">
                 <option>Relangi</option>
                 <option>Velpur</option>
                 <option>Undrajavaram</option>
@@ -94,8 +111,8 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
         </div>
     </div>
 
-    <div class="section-header">PAYROLL (Rules: 3 Lates = 1 Day Loss)</div>
-    <div class="salary-box">
+    <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
+    <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
         <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
         <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
@@ -127,7 +144,7 @@ let teachers=[], unsubscribe;
 window.onload=()=>{ loadTeachers(); load(); };
 
 function loadTeachers(){
-    let t_select = document.getElementById("teacher");
+    let t_select = document.getElementById("teacherSelect");
     t_select.innerHTML="<option value=''>Select Staff</option>";
     db.collection("teachers").get().then(s=>{
         teachers=[];
@@ -151,6 +168,38 @@ function createTeacher(){
         t_name.value=''; t_email.value=''; t_password.value=''; 
         loadTeachers(); 
     });
+}
+
+// Logic to view marks
+function viewMarks(){
+    let admNo = document.getElementById("searchAdmNo").value;
+    let exam = document.getElementById("searchExam").value;
+    let marksDiv = document.getElementById("marksOutput");
+    if(!admNo) return alert("Enter Admission Number");
+
+    db.collection("marks")
+      .where("admissionNo", "==", admNo)
+      .where("examType", "==", exam)
+      .get().then(s => {
+          if(s.empty) {
+              marksDiv.innerText = "No marks found for this Admission No & Exam.";
+              return;
+          }
+          let out = "";
+          s.forEach(doc => {
+              let d = doc.data();
+              out += `Student: ${d.studentName} (${d.class})\nExam: ${d.examType}\n------------------\n`;
+              // Loop through subjects if they exist in your data structure
+              if(d.subjects) {
+                  for(let sub in d.subjects) {
+                      out += `${sub}: ${d.subjects[sub]}\n`;
+                  }
+              } else {
+                  out += `Total Marks: ${d.total || 'N/A'}\nPercentage: ${d.percentage || 'N/A'}%`;
+              }
+          });
+          marksDiv.innerText = out;
+      });
 }
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
@@ -185,27 +234,25 @@ function load(){
 }
 
 async function save(type){
-    let uid = document.getElementById("teacher").value;
-    let c = document.getElementById("campus").value;
+    let uid = document.getElementById("teacherSelect").value;
+    let c = document.getElementById("campusSelect").value;
     let obj = teachers.find(t=>t.uid==uid);
-    if(!obj) return alert("Select a staff member first");
+    if(!obj) return alert("Select staff");
     let now = new Date();
     db.collection("attendance").add({
         teacherId:uid, teacherEmail:obj.email, name:obj.name,
         campus:c, type:type, time:firebase.firestore.Timestamp.fromDate(now),
         dateOnly:now.toLocaleDateString('en-IN'),
         late: checkLate(type, now)
-    }).then(()=>alert("Manual Attendance Logged"));
+    }).then(()=>alert("Saved"));
 }
 
 function generateSalary(){
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Please select the Month Date Range in the filters first.");
-
+    if(!s_val || !e_val) return alert("Select date range");
     let start=new Date(s_val); start.setHours(0,0,0,0);
     let end=new Date(e_val); end.setHours(23,59,59,999);
-
     db.collection("attendance").get().then(snap=>{
         let map={};
         snap.forEach(doc=>{
@@ -218,26 +265,22 @@ function generateSalary(){
                 if(checkLate("IN", dt)) map[name].l++;
             }
         });
-
-        let totalWorkingDays=0;
+        let wd=0;
         let dayRange = [];
         for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
             let iso=d.toISOString().slice(0,10);
             let isHoliday = (d.getDay()==0 || HOLIDAYS.includes(iso));
             dayRange.push({dateStr: d.toDateString(), isHoliday: isHoliday});
-            if(!isHoliday) totalWorkingDays++;
+            if(!isHoliday) wd++;
         }
-
-        let out="VEERAMALLU GLOBAL ACADEMY - PAYROLL\n" + start.toLocaleDateString() + " to " + end.toLocaleDateString() + "\n\n";
+        let out="PAYROLL REPORT\n";
         for(let n in map){
             let teacherObj=teachers.find(x=>x.name==n);
             let monthlySal=teacherObj?.salary||0;
-            let perDayRate=monthlySal/totalWorkingDays;
-            
+            let perDayRate=monthlySal/wd;
             let presentDays=map[n].p.size;
             let lateCount=map[n].l;
             let lateLossDays = Math.floor(lateCount/3);
-            
             let holidayLoss = 0;
             dayRange.forEach((day, index) => {
                 if(day.isHoliday && index > 0 && index < dayRange.length - 1){
@@ -246,12 +289,10 @@ function generateSalary(){
                     if(!map[n].p.has(before) && !map[n].p.has(after)) holidayLoss++;
                 }
             });
-
-            let absents = (totalWorkingDays - presentDays);
+            let absents = (wd - presentDays);
             let totalDeductionDays = absents + lateLossDays + holidayLoss;
             let finalPay = monthlySal - (totalDeductionDays * perDayRate);
-
-            out+=`${n.toUpperCase()}\nStatus: P:${presentDays} | L:${lateCount} | Abs:${absents}\nDeductions: Late Loss(${lateLossDays}) + Holiday Loss(${holidayLoss})\nNet Salary: ₹${Math.max(0, finalPay).toFixed(0)}\n--------------------------\n`;
+            out+=`${n}: ₹${Math.max(0, finalPay).toFixed(0)}\n`;
         }
         document.getElementById("output").innerText=out;
     });
@@ -264,7 +305,7 @@ function exportCSV(){
     });
     let a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download="Staff_Attendance.csv";
+    a.download="Attendance.csv";
     a.click();
 }
 
@@ -272,19 +313,19 @@ function saveWhatsAppImage(){
     html2canvas(document.getElementById("capture")).then(c=>{
         let a=document.createElement("a");
         a.href=c.toDataURL();
-        a.download="ERP_Summary_Report.png";
+        a.download="Report.png";
         a.click();
     });
 }
 
 async function sendNotice(){
     let msg=document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Enter message text");
+    if(!msg) return alert("Enter message");
     await db.collection("notifications").doc("latest").set({
         text:msg, date:new Date().toLocaleDateString('en-IN'),
         timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Notification Broadcasted");
+    alert("Broadcasted");
     document.getElementById("noticeMsg").value="";
 }
 </script>
