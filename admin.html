@@ -178,30 +178,35 @@ function viewMarks() {
     let ex = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
-    if (!admInput) return alert("Please enter the Admission Number");
+    if (!admInput) return alert("Enter Admission Number");
     
-    // 1. Convert Admission Number to a real Number
-    let admNo = Number(admInput);
-    
-    box.innerText = "Searching records...";
+    // Create both Number and String versions to be 100% sure
+    let admNum = Number(admInput);
+    let admStr = admInput.toString();
 
-    // 2. CLEAN-UP LOGIC: Convert "FA 1 (Formative)" or "FA-1" into just "FA1"
-    // This removes spaces, dashes, and everything in brackets.
-    let dbExamCode = ex.split(' ')[0].replace('-', ''); 
+    // Clean up Exam Code (e.g., "FA 1" -> "FA1")
+    let dbExamCode = ex.split(' ')[0].replace('-', '').trim(); 
 
-    console.log("Searching for Adm:", admNo, "ExamCode:", dbExamCode);
+    box.innerText = "Searching database...";
 
+    // We check for ALL variations of the Admission Number (Number or Text)
     db.collection("marks")
-        .where("admissionNo", "==", admNo)
         .where("examType", "==", dbExamCode)
         .get().then(s => {
-            if (s.empty) {
-                box.innerText = `No records found.\nTarget Adm No: ${admNo}\nTarget Exam: ${dbExamCode}\n\nCheck if the Admission Number in Firebase is exactly ${admNo}.`;
+            // Filter locally to catch both String and Number types and handle hidden spaces
+            let docs = s.docs.filter(doc => {
+                let d = doc.data();
+                let dAdm = d.admissionNo?.toString().trim();
+                return dAdm == admStr; 
+            });
+
+            if (docs.length === 0) {
+                box.innerText = `No records found.\nAdm No: ${admInput}\nExam: ${dbExamCode}\n\nTip: Check if the Admission No in Firebase has hidden spaces.`;
                 return;
             }
 
             let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-            out += `ADM NO: ${admNo} | EXAM: ${dbExamCode}\n`;
+            out += `ADM NO: ${admInput} | EXAM: ${dbExamCode}\n`;
             out += `----------------------------------\n`;
             out += `SUBJECT      | MARKS | GRADE\n`;
             out += `----------------------------------\n`;
@@ -209,9 +214,8 @@ function viewMarks() {
             let grandTotal = 0;
             let subjectCount = 0;
 
-            s.forEach(doc => {
+            docs.forEach(doc => {
                 let d = doc.data();
-                // Match the 'external' field from your screenshot
                 let marks = parseInt(d.external || d.total || 0);
                 let subName = (d.subject || "Subject").padEnd(12);
                 let subGrade = d.grade || "N/A";
@@ -225,6 +229,7 @@ function viewMarks() {
             let maxPossible = subjectCount * 50;
             let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
             
+            // Grading logic
             let overallGrade = "F";
             if (percentage >= 91) overallGrade = "A1";
             else if (percentage >= 81) overallGrade = "A2";
@@ -244,8 +249,6 @@ function viewMarks() {
             box.innerText = "Error: " + err.message;
         });
 }
-
-
 
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
