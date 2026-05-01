@@ -1,33 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard | Veeramallu Global Academy</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<style>
-:root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
-body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
-.container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
-.logo { max-width:100px;margin-bottom:10px; }
-.section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
-.controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
-input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
-.table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
-table { width:100%;border-collapse:collapse; }
-th { background:var(--primary);color:white;padding:12px; }
-td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
-.btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
-.btn:hover { opacity: 0.8; }
-.btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
-.btn-aca { background:var(--academic); color:white; font-size: 1rem; }
-.btn-csv { background:#388e3c;color:white; }
-.btn-salary { background:var(--secondary);color:white; }
-.btn-wa { background:#25d366;color:white; }
-.salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
-#output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; }
-.nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Veeramallu Global Academy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
+        body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
+        .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
+        .logo { max-width:100px;margin-bottom:10px; }
+        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
+        input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
+        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
+        table { width:100%;border-collapse:collapse; }
+        th { background:var(--primary);color:white;padding:12px; }
+        td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
+        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
+        .btn-aca { background:var(--academic); color:white; font-size: 1rem; }
+        .btn-csv { background:#388e3c;color:white; }
+        .btn-salary { background:var(--secondary);color:white; }
+        .btn-wa { background:#25d366;color:white; }
+        .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
+        #output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; min-height: 50px; }
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    </style>
 </head>
 
 <body>
@@ -108,8 +111,8 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
             </select>
         </div>
         <div style="display:flex;gap:10px;">
-            <button class="btn" style="background:#2e7d32;color:white;" onclick="save('IN')">FORCE IN</button>
-            <button class="btn" style="background:#c62828;color:white;" onclick="save('OUT')">FORCE OUT</button>
+            <button class="btn" style="background:#2e7d32;color:white;" onclick="saveAttendance('IN')">FORCE IN</button>
+            <button class="btn" style="background:#c62828;color:white;" onclick="saveAttendance('OUT')">FORCE OUT</button>
         </div>
     </div>
 
@@ -120,7 +123,8 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
         <div id="output">Salary results will appear here...</div>
     </div>
-        <div class="section-header">Class-Wise Attendance Overview</div>
+
+    <div class="section-header">Class-Wise Attendance Overview</div>
     <div class="salary-box" style="background: #f1f8e9; border-color: #c5e1a5;">
         <div class="controls">
             <select id="viewCampus">
@@ -129,24 +133,15 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
                 <option value="Undrajavaram">Undrajavaram</option>
             </select>
             <select id="viewClass">
-                <option value="1">Class 1</option>
-                <option value="2">Class 2</option>
-                <option value="3">Class 3</option>
-                <option value="4">Class 4</option>
-                <option value="5">Class 5</option>
-                <option value="6">Class 6</option>
-                <option value="7">Class 7</option>
-                <option value="8">Class 8</option>
-                <option value="9">Class 9</option>
+                <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option>
+                <option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option>
+                <option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option>
                 <option value="10">Class 10</option>
             </select>
             <input type="date" id="viewDate">
         </div>
         <button class="btn" style="background: #388e3c; color: white;" onclick="checkClassAttendance()">Check Present Members</button>
-        
-        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">
-            Results will appear here...
-        </div>
+        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">Results will appear here...</div>
     </div>
 
     <div class="section-header">NOTICE BOARD BROADCAST</div>
@@ -154,54 +149,58 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
     <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
 <script>
-const LATE_TIME="08:30:00";
-const HOLIDAYS=["2026-01-26","2026-08-15","2026-10-02"];
+// --- CONFIG & GLOBALS ---
+const LATE_TIME = "08:30:00";
+const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
-firebase.initializeApp({
-    apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-    authDomain:"veeramalluerp-6cac5.firebaseapp.com",
-    projectId:"veeramalluerp-6cac5"
-});
+const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
+    messagingSenderId: "379339669496",
+    appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+};
 
-const db=firebase.firestore();
-let teachers=[], unsubscribe;
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+let teachers = [], unsubscribe;
 
-window.onload=()=>{ loadTeachers(); load(); };
+window.onload = () => { loadTeachers(); loadAttendance(); };
 
-function loadTeachers(){
+// --- STAFF FUNCTIONS ---
+function loadTeachers() {
     let t_select = document.getElementById("teacherSelect");
-    t_select.innerHTML="<option value=''>Select Staff</option>";
-    db.collection("teachers").get().then(s=>{
-        teachers=[];
-        s.forEach(doc=>{
-            let d=doc.data(); d.uid=doc.id;
+    t_select.innerHTML = "<option value=''>Select Staff</option>";
+    db.collection("teachers").get().then(s => {
+        teachers = [];
+        s.forEach(doc => {
+            let d = doc.data(); d.uid = doc.id;
             teachers.push(d);
-            t_select.innerHTML+=`<option value="${doc.id}">${d.name}</option>`;
+            t_select.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
         });
     });
 }
 
-function createTeacher(){
-    let n=t_name.value, e=t_email.value, p=t_password.value, s=t_subject.value, sa=t_salary.value;
-    if(!n||!e||!p) return alert("All fields are mandatory");
-    firebase.auth().createUserWithEmailAndPassword(e,p).then(r=> {
+function createTeacher() {
+    let n = document.getElementById("t_name").value, 
+        e = document.getElementById("t_email").value, 
+        p = document.getElementById("t_password").value, 
+        s = document.getElementById("t_subject").value, 
+        sa = document.getElementById("t_salary").value;
+    if(!n || !e || !p) return alert("Name, Email and Password are required");
+    firebase.auth().createUserWithEmailAndPassword(e, p).then(r => {
         return db.collection("teachers").doc(r.user.uid).set({
-            uid:r.user.uid, name:n, email:e, subject:s, salary:Number(sa||0)
+            uid: r.user.uid, name: n, email: e, subject: s, salary: Number(sa || 0)
         });
-    }).then(()=>{ 
+    }).then(() => { 
         alert("Staff Account Created"); 
-        t_name.value=''; t_email.value=''; t_password.value=''; 
-        loadTeachers(); 
-    });
+        location.reload();
+    }).catch(err => alert(err.message));
 }
 
-// Logic to view marks
-async function viewMarks() {
+// --- ACADEMIC MARKS ---
 async function viewMarks() {
     let admInput = document.getElementById("searchAdmNo").value.trim();
     let exSelection = document.getElementById("searchExam").value;
@@ -210,76 +209,39 @@ async function viewMarks() {
     if (!admInput) return alert("Please enter the Admission Number");
     box.innerText = "🔍 Generating Report Card...";
 
-    // Map selection to match Parent View codes (FA1, SA1)
     let examMap = {
-        "FA 1 (Formative)": "FA1",
-        "FA 2 (Formative)": "FA2",
-        "FA 3 (Formative)": "FA3",
-        "FA 4 (Formative)": "FA4",
-        "SA 1 (Summative)": "SA1",
-        "SA 2 (Summative)": "SA2"
+        "FA 1 (Formative)": "FA1", "FA 2 (Formative)": "FA2", "FA 3 (Formative)": "FA3",
+        "FA 4 (Formative)": "FA4", "SA 1 (Summative)": "SA1", "SA 2 (Summative)": "SA2"
     };
     let targetExam = examMap[exSelection] || "FA1";
 
     try {
-        // Fetch ALL marks to perform local filtering (The Parent View Strategy)
         const snapshot = await db.collection("marks").get();
-        
-        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `REPORT: ${admInput} | ${targetExam}\n`;
-        out += `----------------------------------\n`;
-        out += `SUBJECT      | MARKS | GRADE\n`;
-        out += `----------------------------------\n`;
-
-        let grandTotal = 0;
-        let count = 0;
-        let found = false;
+        let out = `VEERAMALLU GLOBAL ACADEMY\nREPORT: ${admInput} | ${targetExam}\n----------------------------------\nSUBJECT      | MARKS | GRADE\n----------------------------------\n`;
+        let grandTotal = 0, count = 0, found = false;
 
         snapshot.forEach(doc => {
             const m = doc.data();
-            // ✅ SUCCESS LOGIC: Match ID starts with AdmNo AND check ExamType
-            // This is exactly how your Parent View finds the data
             if (doc.id.startsWith(admInput) && String(m.examType).trim() === targetExam) {
                 found = true;
                 const marksVal = parseFloat(m.total || m.external || 0);
-                const subName = (m.subject || "Subject").padEnd(12);
-                const subGrade = m.grade || "N/A";
-
-                out += `${subName} | ${marksVal.toString().padEnd(5)} | ${subGrade}\n`;
-                grandTotal += marksVal;
-                count++;
+                out += `${(m.subject || "Subject").padEnd(12)} | ${marksVal.toString().padEnd(5)} | ${m.grade || "N/A"}\n`;
+                grandTotal += marksVal; count++;
             }
         });
 
-        if (!found) {
-            box.innerText = `❌ No records found.\nAdm No: ${admInput}\nExam: ${targetExam}\n\nEnsure marks were entered for this specific student and exam.`;
-            return;
-        }
-
-        // Auto-calculate Max Marks (FA = 50, SA = 100)
+        if (!found) return box.innerText = "❌ No records found.";
         const subMax = targetExam.startsWith("SA") ? 100 : 50;
-        const maxPossible = count * subMax;
-        const per = ((grandTotal / maxPossible) * 100).toFixed(1);
-
-        out += `----------------------------------\n`;
-        out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
-        out += `PERCENTAGE   : ${per}%\n`;
-        
+        out += `----------------------------------\nGRAND TOTAL  : ${grandTotal} / ${count * subMax}\nPERCENTAGE   : ${((grandTotal / (count * subMax)) * 100).toFixed(1)}%\n`;
         box.innerText = out;
-
-    } catch (e) {
-        console.error(e);
-        box.innerText = "Connection Error. Check Firebase settings.";
-    }
+    } catch (e) { box.innerText = "Connection Error."; }
 }
 
+// --- ATTENDANCE LOGS ---
+function parseDate(t) { return t?.toDate ? t.toDate() : null; }
+function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME; }
 
-
-    
-function parseDate(t){return t?.toDate ? t.toDate() : null;}
-function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) > LATE_TIME; }
-
-function load(){
+function loadAttendance() {
     if(unsubscribe) unsubscribe();
     let searchTerm = document.getElementById("search").value.toLowerCase();
     let selCampus = document.getElementById("filterCampus").value;
@@ -296,161 +258,136 @@ function load(){
             let d = doc.data();
             let dt = parseDate(d.time);
             if(!dt) return;
-            let name = d.name || teachers.find(t=>t.uid==d.teacherId)?.name || d.teacher || "Unknown";
+            let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
             if(searchTerm && !name.toLowerCase().includes(searchTerm)) return;
             if(selCampus !== "All" && d.campus !== selCampus) return;
             if(startDate && dt < startDate) return;
             if(endDate && dt > endDate) return;
             let late = checkLate(d.type, dt);
-            list.innerHTML += `<tr><td><b>${name}</b></td><td>${d.campus || '-'}</td><td>${d.type || '-'} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
+            list.innerHTML += `<tr><td><b>${name}</b></td><td>${d.campus || '-'}</td><td>${d.type || '-'} ${late ? '<span style="color:red;font-weight:bold;"><br>⬇ LATE</span>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
         });
     });
 }
 
-async function save(type){
+async function saveAttendance(type) {
     let uid = document.getElementById("teacherSelect").value;
     let c = document.getElementById("campusSelect").value;
-    let obj = teachers.find(t=>t.uid==uid);
-    if(!obj) return alert("Select staff");
+    let obj = teachers.find(t => t.uid == uid);
+    if(!obj) return alert("Select staff member first");
     let now = new Date();
     db.collection("attendance").add({
-        teacherId:uid, teacherEmail:obj.email, name:obj.name,
-        campus:c, type:type, time:firebase.firestore.Timestamp.fromDate(now),
-        dateOnly:now.toLocaleDateString('en-IN'),
+        teacherId: uid, name: obj.name, campus: c, type: type,
+        time: firebase.firestore.Timestamp.fromDate(now),
+        dateOnly: now.toLocaleDateString('en-IN'),
         late: checkLate(type, now)
-    }).then(()=>alert("Saved"));
+    }).then(() => alert("Attendance Recorded Successfully"));
 }
 
-function generateSalary(){
+// --- PAYROLL ---
+function generateSalary() {
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Select date range");
-    let start=new Date(s_val); start.setHours(0,0,0,0);
-    let end=new Date(e_val); end.setHours(23,59,59,999);
-    db.collection("attendance").get().then(snap=>{
-        let map={};
-        snap.forEach(doc=>{
-            let d=doc.data(), dt=parseDate(d.time);
+    if(!s_val || !e_val) return alert("Select start and end dates first");
+    let start = new Date(s_val); start.setHours(0,0,0,0);
+    let end = new Date(e_val); end.setHours(23,59,59,999);
+    
+    db.collection("attendance").get().then(snap => {
+        let map = {};
+        snap.forEach(doc => {
+            let d = doc.data(), dt = parseDate(d.time);
             if(!dt || dt < start || dt > end) return;
-            let name = d.name || teachers.find(t=>t.uid==d.teacherId)?.name || "Unknown";
-            if(!map[name]) map[name]={p:new Set(), l:0};
-            if(d.type=="IN"){
+            let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
+            if(!map[name]) map[name] = { p: new Set(), l: 0 };
+            if(d.type == "IN") {
                 map[name].p.add(dt.toDateString());
                 if(checkLate("IN", dt)) map[name].l++;
             }
         });
-        let wd=0;
+
+        let workingDays = 0;
         let dayRange = [];
-        for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
-            let iso=d.toISOString().slice(0,10);
-            let isHoliday = (d.getDay()==0 || HOLIDAYS.includes(iso));
-            dayRange.push({dateStr: d.toDateString(), isHoliday: isHoliday});
-            if(!isHoliday) wd++;
+        for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            let iso = d.toISOString().slice(0, 10);
+            let isHoliday = (d.getDay() == 0 || HOLIDAYS.includes(iso));
+            dayRange.push({ dateStr: d.toDateString(), isHoliday: isHoliday });
+            if(!isHoliday) workingDays++;
         }
-        let out="PAYROLL REPORT\n";
-        for(let n in map){
-            let teacherObj=teachers.find(x=>x.name==n);
-            let monthlySal=teacherObj?.salary||0;
-            let perDayRate=monthlySal/wd;
-            let presentDays=map[n].p.size;
-            let lateCount=map[n].l;
-            let lateLossDays = Math.floor(lateCount/3);
+
+        let out = "PAYROLL REPORT SUMMARY\n----------------------\n";
+        for(let n in map) {
+            let teacherObj = teachers.find(x => x.name == n);
+            let monthlySal = teacherObj?.salary || 0;
+            let rate = monthlySal / workingDays;
+            let present = map[n].p.size;
+            let lates = map[n].l;
+            let lateLoss = Math.floor(lates / 3);
+            
             let holidayLoss = 0;
-            dayRange.forEach((day, index) => {
-                if(day.isHoliday && index > 0 && index < dayRange.length - 1){
-                    let before = dayRange[index-1].dateStr;
-                    let after = dayRange[index+1].dateStr;
-                    if(!map[n].p.has(before) && !map[n].p.has(after)) holidayLoss++;
+            dayRange.forEach((day, i) => {
+                if(day.isHoliday && i > 0 && i < dayRange.length - 1) {
+                    if(!map[n].p.has(dayRange[i-1].dateStr) && !map[n].p.has(dayRange[i+1].dateStr)) holidayLoss++;
                 }
             });
-            let absents = (wd - presentDays);
-            let totalDeductionDays = absents + lateLossDays + holidayLoss;
-            let finalPay = monthlySal - (totalDeductionDays * perDayRate);
-            out+=`${n}: ₹${Math.max(0, finalPay).toFixed(0)}\n`;
+
+            let finalPay = monthlySal - (( (workingDays - present) + lateLoss + holidayLoss ) * rate);
+            out += `${n}: ₹${Math.max(0, finalPay).toFixed(0)} (Lates: ${lates})\n`;
         }
-        document.getElementById("output").innerText=out;
+        document.getElementById("output").innerText = out;
     });
 }
 
-function exportCSV(){
-    let csv="Name,Campus,Type,Time\n";
-    document.querySelectorAll("#list tr").forEach(tr=>{
-        if(tr.children.length > 1) csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
+// --- UTILITIES ---
+function exportCSV() {
+    let csv = "Name,Campus,Type,Time\n";
+    document.querySelectorAll("#list tr").forEach(tr => {
+        if(tr.children.length > 1) csv += `"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
     });
-    let a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download="Attendance.csv";
-    a.click();
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = "VGA_Attendance.csv"; a.click();
 }
 
-function saveWhatsAppImage(){
-    html2canvas(document.getElementById("capture")).then(c=>{
-        let a=document.createElement("a");
-        a.href=c.toDataURL();
-        a.download="Report.png";
-        a.click();
+function saveWhatsAppImage() {
+    html2canvas(document.getElementById("capture")).then(c => {
+        let a = document.createElement("a"); a.href = c.toDataURL();
+        a.download = "Payroll_Report.png"; a.click();
     });
 }
 
-async function sendNotice(){
-    let msg=document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Enter message");
+async function sendNotice() {
+    let msg = document.getElementById("noticeMsg").value;
+    if(!msg) return alert("Enter a message to broadcast");
     await db.collection("notifications").doc("latest").set({
-        text:msg, date:new Date().toLocaleDateString('en-IN'),
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+        text: msg, date: new Date().toLocaleDateString('en-IN'),
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Broadcasted");
-    document.getElementById("noticeMsg").value="";
+    alert("Notice Broadcasted Successfully");
+    document.getElementById("noticeMsg").value = "";
 }
-    async function checkClassAttendance() {
+
+async function checkClassAttendance() {
     const campus = document.getElementById('viewCampus').value;
     const className = document.getElementById('viewClass').value;
     const dateInput = document.getElementById('viewDate').value;
     const reportDiv = document.getElementById('classReport');
-
     if(!dateInput) return alert("Please select a date.");
-
-    // Format date to match your DB entry (YYYY-MM-DD)
     const docID = `${campus}_${className}_${dateInput}`;
-    
-    reportDiv.innerHTML = "⌛ Fetching data...";
-
+    reportDiv.innerHTML = "⌛ Fetching records...";
     try {
         const doc = await db.collection("attendance").doc(docID).get();
-
         if (!doc.exists) {
-            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No attendance found for ${campus} - Class ${className} on ${dateInput}</div>`;
+            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No records found for ${campus} Class ${className} on ${dateInput}</div>`;
             return;
         }
-
         const data = doc.data();
         const presentList = data.records.filter(r => r.status === "Present");
-        const absentList = data.records.filter(r => r.status === "Absent");
-
-        let html = `
-            <div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd;">
-                <p style="margin:0;">Total Strength: ${data.records.length}</p>
-                <p style="color:green; margin:5px 0;">✅ Present: ${presentList.length}</p>
-                <p style="color:red; margin:5px 0;">❌ Absent: ${absentList.length}</p>
-                <hr>
-                <p style="text-decoration:underline;">LIST OF PRESENT STUDENTS:</p>
-                <div style="max-height: 200px; overflow-y: auto;">
-                    <table style="width:100%; font-size:12px; font-weight:normal;">
-        `;
-
-        presentList.forEach((student, index) => {
-            html += `<tr><td>${index + 1}. ${student.studentName}</td><td style="text-align:right;">ID: ${student.admNo}</td></tr>`;
+        let html = `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd;"><p>Strength: ${data.records.length} | ✅ Present: ${presentList.length}</p><hr><table style="width:100%; font-size:12px;">`;
+        presentList.forEach((s, i) => {
+            html += `<tr><td>${i + 1}. ${s.studentName}</td><td style="text-align:right;">ID: ${s.admNo}</td></tr>`;
         });
-
-        html += `</table></div></div>`;
-        reportDiv.innerHTML = html;
-
-    } catch (error) {
-        console.error(error);
-        reportDiv.innerHTML = "Error loading class data. Please try again.";
-    }
-    }
-    
+        reportDiv.innerHTML = html + `</table></div>`;
+    } catch (e) { reportDiv.innerHTML = "Error loading data."; }
+}
 </script>
 </body>
 </html>
