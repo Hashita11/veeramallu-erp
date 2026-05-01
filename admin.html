@@ -174,14 +174,18 @@ function createTeacher(){
 
 // Logic to view marks
 function viewMarks() {
-    let adm = document.getElementById("searchAdmNo").value.trim();
+    let admInput = document.getElementById("searchAdmNo").value.trim();
     let ex = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
-    if (!adm) return alert("Please enter the Admission Number");
-    box.innerText = "Calculating results...";
+    if (!admInput) return alert("Please enter the Admission Number");
+    
+    // ✅ FIX 1: Convert input to Number because your Firebase field is a Number
+    let admNo = Number(admInput);
+    
+    box.innerText = "Searching records for " + admNo + "...";
 
-    // Map dropdown to your Firebase "FA1" style
+    // ✅ FIX 2: Map dropdown to your exact Firebase codes (FA1, SA1, etc.)
     let dbExamCode = "";
     if (ex.includes("FA 1")) dbExamCode = "FA1";
     else if (ex.includes("FA 2")) dbExamCode = "FA2";
@@ -192,17 +196,19 @@ function viewMarks() {
     else dbExamCode = ex;
 
     db.collection("marks")
-        .where("admissionNo", "==", adm)
+        .where("admissionNo", "==", admNo) // Searching as Number
         .where("examType", "==", dbExamCode)
         .get().then(s => {
             if (s.empty) {
-                box.innerText = "No records found for " + dbExamCode;
+                box.innerText = "No records found for Adm No: " + admNo + " (" + dbExamCode + ")";
                 return;
             }
 
-            let out = `REPORT FOR: ${adm} | EXAM: ${dbExamCode}\n`;
+            let out = `VEERAMALLU GLOBAL ACADEMY\n`;
+            out += `REPORT FOR ADM NO: ${admNo}\n`;
+            out += `EXAM: ${dbExamCode}\n`;
             out += `----------------------------------\n`;
-            out += `SUBJECT      MARKS    GRADE\n`;
+            out += `SUBJECT      | MARKS | GRADE\n`;
             out += `----------------------------------\n`;
 
             let grandTotal = 0;
@@ -210,20 +216,22 @@ function viewMarks() {
 
             s.forEach(doc => {
                 let d = doc.data();
+                // ✅ FIX 3: Pull 'external' marks and 'subject' name from your structure
                 let marks = parseInt(d.external || d.total || 0);
-                let subjectName = (d.subject || "Unknown").padEnd(12);
-                let grade = d.grade || "--";
+                let subName = (d.subject || "Subject").padEnd(12);
+                let subGrade = d.grade || "N/A";
 
-                out += `${subjectName} : ${marks.toString().padEnd(5)} : ${grade}\n`;
+                out += `${subName} | ${marks.toString().padEnd(5)} | ${subGrade}\n`;
                 
                 grandTotal += marks;
                 subjectCount++;
             });
 
-            // Calculate Overall Percentage and Grade based on 50 marks per subject
+            // Summary Calculation (Assuming 50 marks per subject)
             let maxPossible = subjectCount * 50;
             let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
             
+            // Auto-Grade Logic
             let overallGrade = "F";
             if (percentage >= 91) overallGrade = "A1";
             else if (percentage >= 81) overallGrade = "A2";
@@ -231,7 +239,7 @@ function viewMarks() {
             else if (percentage >= 61) overallGrade = "B2";
             else if (percentage >= 51) overallGrade = "C1";
             else if (percentage >= 41) overallGrade = "C2";
-            else overallGrade = "D/Needs Imp.";
+            else overallGrade = "D";
 
             out += `----------------------------------\n`;
             out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
@@ -240,9 +248,10 @@ function viewMarks() {
             
             box.innerText = out;
         }).catch(err => {
-            box.innerText = "Error: " + err.message;
+            box.innerText = "Connection Error: " + err.message;
         });
 }
+
 
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
