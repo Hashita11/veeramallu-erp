@@ -6,23 +6,26 @@
 <title>Admin Dashboard | Veeramallu Global Academy</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-:root { --primary:#1a237e; --success:#28a745; --error:#d32f2f; }
+:root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; }
 body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
 .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
 .logo { max-width:100px;margin-bottom:10px; }
-.section-header { background: #1a237e; color: white; padding: 10px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; }
+.section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
 .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
-input,select,textarea { padding:10px;border:1px solid #ddd;border-radius:8px;width:100%; }
+input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
 .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
 table { width:100%;border-collapse:collapse; }
-th { background:var(--primary);color:white;padding:10px; }
-td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
-.btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; }
+th { background:var(--primary);color:white;padding:12px; }
+td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
+.btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
+.btn:hover { opacity: 0.8; }
+.btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
 .btn-csv { background:#388e3c;color:white; }
-.btn-salary { background:var(--primary);color:white; }
+.btn-salary { background:var(--secondary);color:white; }
 .btn-wa { background:#25d366;color:white; }
-.salary-box { background:#e3f2fd;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; }
-#output { white-space:pre-wrap;background:white;padding:10px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); }
+.salary-box { background:#e3f2fd;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #bbdefb; }
+#output { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; }
+.nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
 </style>
 </head>
 
@@ -31,24 +34,32 @@ td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
 <div class="container" id="capture">
     <img src="logo.png" class="logo">
     <h1 style="color:#1a237e; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
-    <h3 style="margin-top:5px;">ADMIN DASHBOARD</h3>
+    <h3 style="margin-top:5px; color: #555;">ERP CENTRAL ADMINISTRATION</h3>
 
-    <div class="section-header">MANAGE STAFF MEMBERS</div>
+    <div class="section-header">ADMISSIONS & REGISTRATION</div>
+    <div style="background:#fff4e5; padding:20px; border-radius:12px; border:1px solid #ffe0b2;">
+        <p style="margin:0 0 15px 0; font-weight:bold; color: #e65100;">Manage New Student Enrollments and Entrance Tests</p>
+        <div class="nav-grid">
+            <button class="btn btn-adm" onclick="location.href='admissions.html'">➕ Add New Admission</button>
+            <button class="btn btn-adm" style="background:#0288d1; border-color:#01579b;" onclick="location.href='admissions.html#view'">📋 View Admission List</button>
+        </div>
+    </div>
+
+    <div class="section-header">STAFF RECRUITMENT</div>
     <div style="background:#fff3cd;padding:15px;border-radius:10px; border: 1px solid #ffeeba;">
-        <h3 style="margin-top:0;">Add New Teacher</h3>
         <div class="controls">
             <input id="t_name" placeholder="Full Name">
             <input id="t_email" placeholder="Email Address">
-            <input id="t_password" type="password" placeholder="Password">
-            <input id="t_subject" placeholder="Subject">
-            <input id="t_salary" placeholder="Monthly Salary">
+            <input id="t_password" type="password" placeholder="Set Password">
+            <input id="t_subject" placeholder="Subject/Role">
+            <input id="t_salary" type="number" placeholder="Monthly Salary">
         </div>
-        <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Create Teacher Account</button>
+        <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Register Staff Account</button>
     </div>
 
-    <div class="section-header">ATTENDANCE LOGS & SEARCH</div>
+    <div class="section-header">ATTENDANCE RECORDS</div>
     <div class="controls">
-        <input id="search" placeholder="Search by Name..." onkeyup="load()">
+        <input id="search" placeholder="Search Staff Name..." onkeyup="load()">
         <select id="filterCampus" onchange="load()">
             <option value="All">All Campuses</option>
             <option value="Relangi">Relangi</option>
@@ -65,7 +76,7 @@ td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
             <tbody id="list"></tbody>
         </table>
     </div>
-    <button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
+    <button class="btn btn-csv" onclick="exportCSV()">Download CSV Report</button>
 
     <div class="section-header">ADMIN MANUAL ENTRY</div>
     <div style="background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #ddd;">
@@ -78,22 +89,22 @@ td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
             </select>
         </div>
         <div style="display:flex;gap:10px;">
-            <button class="btn" style="background:green;color:white;" onclick="save('IN')">FORCE IN</button>
-            <button class="btn" style="background:red;color:white;" onclick="save('OUT')">FORCE OUT</button>
+            <button class="btn" style="background:#2e7d32;color:white;" onclick="save('IN')">FORCE IN</button>
+            <button class="btn" style="background:#c62828;color:white;" onclick="save('OUT')">FORCE OUT</button>
         </div>
     </div>
 
-    <div class="section-header">SALARY CALCULATION (3 Lates = 1 Day Loss)</div>
+    <div class="section-header">PAYROLL (Rules: 3 Lates = 1 Day Loss)</div>
     <div class="salary-box">
-        <p style="margin:0 0 10px 0; font-weight:bold;">Filter dates above first, then click generate.</p>
-        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
-        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Download Report Image</button>
-        <div id="output"></div>
+        <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
+        <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
+        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
+        <div id="output">Salary results will appear here...</div>
     </div>
 
-    <div class="section-header">ANNOUNCEMENTS</div>
-    <textarea id="noticeMsg" style="height:80px;" placeholder="Type notice here..."></textarea>
-    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Broadcast Notification</button>
+    <div class="section-header">NOTICE BOARD BROADCAST</div>
+    <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
+    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -117,7 +128,7 @@ window.onload=()=>{ loadTeachers(); load(); };
 
 function loadTeachers(){
     let t_select = document.getElementById("teacher");
-    t_select.innerHTML="<option value=''>Select Teacher</option>";
+    t_select.innerHTML="<option value=''>Select Staff</option>";
     db.collection("teachers").get().then(s=>{
         teachers=[];
         s.forEach(doc=>{
@@ -130,12 +141,16 @@ function loadTeachers(){
 
 function createTeacher(){
     let n=t_name.value, e=t_email.value, p=t_password.value, s=t_subject.value, sa=t_salary.value;
-    if(!n||!e||!p) return alert("Fill required fields");
+    if(!n||!e||!p) return alert("All fields are mandatory");
     firebase.auth().createUserWithEmailAndPassword(e,p).then(r=> {
         return db.collection("teachers").doc(r.user.uid).set({
             uid:r.user.uid, name:n, email:e, subject:s, salary:Number(sa||0)
         });
-    }).then(()=>{ alert("Created!"); t_name.value=''; t_email.value=''; t_password.value=''; loadTeachers(); });
+    }).then(()=>{ 
+        alert("Staff Account Created"); 
+        t_name.value=''; t_email.value=''; t_password.value=''; 
+        loadTeachers(); 
+    });
 }
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
@@ -173,20 +188,20 @@ async function save(type){
     let uid = document.getElementById("teacher").value;
     let c = document.getElementById("campus").value;
     let obj = teachers.find(t=>t.uid==uid);
-    if(!obj) return alert("Select teacher");
+    if(!obj) return alert("Select a staff member first");
     let now = new Date();
     db.collection("attendance").add({
         teacherId:uid, teacherEmail:obj.email, name:obj.name,
         campus:c, type:type, time:firebase.firestore.Timestamp.fromDate(now),
         dateOnly:now.toLocaleDateString('en-IN'),
         late: checkLate(type, now)
-    }).then(()=>alert("Saved"));
+    }).then(()=>alert("Manual Attendance Logged"));
 }
 
 function generateSalary(){
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Select Date Range");
+    if(!s_val || !e_val) return alert("Please select the Month Date Range in the filters first.");
 
     let start=new Date(s_val); start.setHours(0,0,0,0);
     let end=new Date(e_val); end.setHours(23,59,59,999);
@@ -213,7 +228,7 @@ function generateSalary(){
             if(!isHoliday) totalWorkingDays++;
         }
 
-        let out="VEERAMALLU GLOBAL ACADEMY\nSALARY REPORT\n\n";
+        let out="VEERAMALLU GLOBAL ACADEMY - PAYROLL\n" + start.toLocaleDateString() + " to " + end.toLocaleDateString() + "\n\n";
         for(let n in map){
             let teacherObj=teachers.find(x=>x.name==n);
             let monthlySal=teacherObj?.salary||0;
@@ -223,15 +238,12 @@ function generateSalary(){
             let lateCount=map[n].l;
             let lateLossDays = Math.floor(lateCount/3);
             
-            // Sandwich Rule: Loss of Holiday if absent before AND after
             let holidayLoss = 0;
             dayRange.forEach((day, index) => {
                 if(day.isHoliday && index > 0 && index < dayRange.length - 1){
                     let before = dayRange[index-1].dateStr;
                     let after = dayRange[index+1].dateStr;
-                    if(!map[n].p.has(before) && !map[n].p.has(after)){
-                        holidayLoss++;
-                    }
+                    if(!map[n].p.has(before) && !map[n].p.has(after)) holidayLoss++;
                 }
             });
 
@@ -239,7 +251,7 @@ function generateSalary(){
             let totalDeductionDays = absents + lateLossDays + holidayLoss;
             let finalPay = monthlySal - (totalDeductionDays * perDayRate);
 
-            out+=`${n}\nPresent: ${presentDays} | Lates: ${lateCount}\nLate Loss: ${lateLossDays} day(s)\nHoliday Loss: ${holidayLoss} day(s)\nNet Payable: ₹${Math.max(0, finalPay).toFixed(0)}\n------------------\n`;
+            out+=`${n.toUpperCase()}\nStatus: P:${presentDays} | L:${lateCount} | Abs:${absents}\nDeductions: Late Loss(${lateLossDays}) + Holiday Loss(${holidayLoss})\nNet Salary: ₹${Math.max(0, finalPay).toFixed(0)}\n--------------------------\n`;
         }
         document.getElementById("output").innerText=out;
     });
@@ -252,7 +264,7 @@ function exportCSV(){
     });
     let a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download="Attendance.csv";
+    a.download="Staff_Attendance.csv";
     a.click();
 }
 
@@ -260,19 +272,19 @@ function saveWhatsAppImage(){
     html2canvas(document.getElementById("capture")).then(c=>{
         let a=document.createElement("a");
         a.href=c.toDataURL();
-        a.download="Salary_Report.png";
+        a.download="ERP_Summary_Report.png";
         a.click();
     });
 }
 
 async function sendNotice(){
     let msg=document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Type a message");
+    if(!msg) return alert("Enter message text");
     await db.collection("notifications").doc("latest").set({
         text:msg, date:new Date().toLocaleDateString('en-IN'),
         timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Broadcasted");
+    alert("Notification Broadcasted");
     document.getElementById("noticeMsg").value="";
 }
 </script>
