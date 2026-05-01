@@ -194,42 +194,38 @@ async function viewMarks() {
     let dbExamCode = examMap[exSelection] || "FA1";
 
     try {
-        const snapshot = await db.collection("marks")
-            .where("examType", "==", dbExamCode)
-            .get();
+        const snapshot = await db.collection("marks").get();
 
-        if (snapshot.empty) {
-            box.innerText = "No records found for this exam.";
-            return;
-        }
-
+        let found = false;
         let out = `🏫 VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `STUDENT ID: ${admInput}\nEXAM: ${dbExamCode}\n`;
+        out += `ADM: ${admInput} | EXAM: ${dbExamCode}\n`;
         out += `----------------------------------\n`;
-        out += `SUBJECT      | MARKS | GRADE\n`;
+        out += `SUBJECT   | MARKS | GRADE\n`;
         out += `----------------------------------\n`;
 
         let total = 0;
         let count = 0;
-        let found = false;
         let studentName = "";
 
         snapshot.forEach(doc => {
             let d = doc.data();
 
+            // 🔥 CLEAN BOTH SIDES
             let dbAdm = String(d.admissionNo || "").trim();
+            let dbExam = String(d.examType || "").toUpperCase().replace(/\s/g,'');
 
-            if (dbAdm === admInput) {
+            let inputExam = dbExamCode.toUpperCase().replace(/\s/g,'');
+
+            if (dbAdm === admInput && dbExam === inputExam) {
+
                 found = true;
-
                 studentName = d.studentName || studentName;
 
-                let marks = parseInt(d.total ?? (d.internal + d.external) ?? 0);
-
-                let sub = (d.subject || "Subject").padEnd(12);
+                let marks = parseInt(d.total ?? 0);
+                let subject = (d.subject || "Sub").padEnd(10);
                 let grade = d.grade || "-";
 
-                out += `${sub} | ${marks.toString().padEnd(5)} | ${grade}\n`;
+                out += `${subject} | ${marks.toString().padEnd(5)} | ${grade}\n`;
 
                 total += marks;
                 count++;
@@ -237,21 +233,23 @@ async function viewMarks() {
         });
 
         if (!found) {
-            box.innerText = `❌ No records found for Admission No: ${admInput}`;
+            box.innerText =
+`❌ No records found
+
+CHECK THIS:
+1. Admission No EXACT? → ${admInput}
+2. examType in Firebase → ${dbExamCode}
+3. Old data missing admissionNo?`;
             return;
         }
 
-        // ✅ FIX: Dynamic max marks
-        let isSA = dbExamCode.startsWith("SA");
-        let maxPerSub = isSA ? 100 : 50;
-        let maxTotal = count * maxPerSub;
-
-        let percent = ((total / maxTotal) * 100).toFixed(1);
+        let max = (dbExamCode.startsWith("SA") ? 100 : 50) * count;
+        let percent = ((total / max) * 100).toFixed(1);
 
         out += `----------------------------------\n`;
-        out += `NAME         : ${studentName}\n`;
-        out += `TOTAL        : ${total} / ${maxTotal}\n`;
-        out += `PERCENTAGE   : ${percent}%\n`;
+        out += `NAME: ${studentName}\n`;
+        out += `TOTAL: ${total}/${max}\n`;
+        out += `PERCENT: ${percent}%`;
 
         box.innerText = out;
 
