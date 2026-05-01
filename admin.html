@@ -120,6 +120,34 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
         <div id="output">Salary results will appear here...</div>
     </div>
+        <div class="section-header">Class-Wise Attendance Overview</div>
+    <div class="salary-box" style="background: #f1f8e9; border-color: #c5e1a5;">
+        <div class="controls">
+            <select id="viewCampus">
+                <option value="Relangi">Relangi</option>
+                <option value="Velpur">Velpur</option>
+                <option value="Undrajavaram">Undrajavaram</option>
+            </select>
+            <select id="viewClass">
+                <option value="1">Class 1</option>
+                <option value="2">Class 2</option>
+                <option value="3">Class 3</option>
+                <option value="4">Class 4</option>
+                <option value="5">Class 5</option>
+                <option value="6">Class 6</option>
+                <option value="7">Class 7</option>
+                <option value="8">Class 8</option>
+                <option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+            </select>
+            <input type="date" id="viewDate">
+        </div>
+        <button class="btn" style="background: #388e3c; color: white;" onclick="checkClassAttendance()">Check Present Members</button>
+        
+        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">
+            Results will appear here...
+        </div>
+    </div>
 
     <div class="section-header">NOTICE BOARD BROADCAST</div>
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
@@ -374,6 +402,55 @@ async function sendNotice(){
     alert("Broadcasted");
     document.getElementById("noticeMsg").value="";
 }
+    async function checkClassAttendance() {
+    const campus = document.getElementById('viewCampus').value;
+    const className = document.getElementById('viewClass').value;
+    const dateInput = document.getElementById('viewDate').value;
+    const reportDiv = document.getElementById('classReport');
+
+    if(!dateInput) return alert("Please select a date.");
+
+    // Format date to match your DB entry (YYYY-MM-DD)
+    const docID = `${campus}_${className}_${dateInput}`;
+    
+    reportDiv.innerHTML = "⌛ Fetching data...";
+
+    try {
+        const doc = await db.collection("attendance").doc(docID).get();
+
+        if (!doc.exists) {
+            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No attendance found for ${campus} - Class ${className} on ${dateInput}</div>`;
+            return;
+        }
+
+        const data = doc.data();
+        const presentList = data.records.filter(r => r.status === "Present");
+        const absentList = data.records.filter(r => r.status === "Absent");
+
+        let html = `
+            <div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd;">
+                <p style="margin:0;">Total Strength: ${data.records.length}</p>
+                <p style="color:green; margin:5px 0;">✅ Present: ${presentList.length}</p>
+                <p style="color:red; margin:5px 0;">❌ Absent: ${absentList.length}</p>
+                <hr>
+                <p style="text-decoration:underline;">LIST OF PRESENT STUDENTS:</p>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table style="width:100%; font-size:12px; font-weight:normal;">
+        `;
+
+        presentList.forEach((student, index) => {
+            html += `<tr><td>${index + 1}. ${student.studentName}</td><td style="text-align:right;">ID: ${student.admNo}</td></tr>`;
+        });
+
+        html += `</table></div></div>`;
+        reportDiv.innerHTML = html;
+
+    } catch (error) {
+        console.error(error);
+        reportDiv.innerHTML = "Error loading class data. Please try again.";
+    }
+    }
+    
 </script>
 </body>
 </html>
