@@ -180,9 +180,9 @@ function viewMarks() {
 
     if (!admInput) return alert("Enter Admission Number");
     
-    box.innerText = "Searching records...";
+    box.innerText = "Fetching report...";
 
-    // ✅ DIRECT MAPPING: This exactly matches your Firebase "FA1", "SA1" style
+    // Direct mapping to match your Firebase codes
     let examMap = {
         "FA 1 (Formative)": "FA1",
         "FA 2 (Formative)": "FA2",
@@ -194,49 +194,49 @@ function viewMarks() {
 
     let dbExamCode = examMap[exSelection] || "FA1"; 
 
-    console.log("Searching for:", admInput, "with code:", dbExamCode);
-
+    // ✅ NEW STRATEGY: Fetch by Admission No first (Simple Index)
+    // We check both Number and String versions of Admission No
     db.collection("marks")
-        .where("examType", "==", dbExamCode)
         .get().then(s => {
-            // Match admissionNo as a string to match your Firebase quotes
+            // Locally filter to avoid Index errors and handle hidden spaces
             let docs = s.docs.filter(doc => {
                 let d = doc.data();
-                return String(d.admissionNo).trim() === admInput; 
+                let matchAdm = String(d.admissionNo).trim() === String(admInput).trim();
+                let matchEx = String(d.examType).trim() === dbExamCode;
+                return matchAdm && matchEx;
             });
 
             if (docs.length === 0) {
-                box.innerText = `No records found.\nAdm No: ${admInput}\nExam Code: ${dbExamCode}\n\nPlease verify the Admission No in Firebase.`;
+                box.innerText = `Record Not Found.\nAdm: ${admInput}\nExam: ${dbExamCode}\n\nHint: Verify that data exists for this specific student in the "marks" collection.`;
                 return;
             }
 
             let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-            out += `ADM NO: ${admInput} | EXAM: ${dbExamCode}\n`;
+            out += `REPORT: ${admInput} | ${dbExamCode}\n`;
             out += `----------------------------------\n`;
             out += `SUBJECT      | MARKS | GRADE\n`;
             out += `----------------------------------\n`;
 
-            let grandTotal = 0;
-            let subjectCount = 0;
+            let total = 0;
+            let count = 0;
 
             docs.forEach(doc => {
                 let d = doc.data();
-                let marks = parseInt(d.external || d.total || 0);
-                let subName = (d.subject || "Subject").padEnd(12);
-                let subGrade = d.grade || "N/A";
+                let m = parseInt(d.external || d.total || 0);
+                let sub = (d.subject || "Subject").padEnd(12);
+                let grd = d.grade || "N/A";
 
-                out += `${subName} | ${marks.toString().padEnd(5)} | ${subGrade}\n`;
-                
-                grandTotal += marks;
-                subjectCount++;
+                out += `${sub} | ${m.toString().padEnd(5)} | ${grd}\n`;
+                total += m;
+                count++;
             });
 
-            let maxPossible = subjectCount * 50;
-            let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
-            
+            let maxPossible = count * 50;
+            let percent = ((total / maxPossible) * 100).toFixed(1);
+
             out += `----------------------------------\n`;
-            out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
-            out += `PERCENTAGE   : ${percentage}%\n`;
+            out += `GRAND TOTAL  : ${total} / ${maxPossible}\n`;
+            out += `PERCENTAGE   : ${percent}%\n`;
             
             box.innerText = out;
         }).catch(err => {
