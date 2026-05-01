@@ -3,390 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Veeramallu Global Academy</title>
+    <title>Admin Dashboard | VGA ERP</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
-        body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
-        .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
-        .logo { max-width:100px;margin-bottom:10px; }
-        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
+        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --academic:#6a1b9a; }
+        body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:10px;display:flex;justify-content:center; }
+        .container { background:white;padding:1.5rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
+        .logo { max-width:80px;margin-bottom:10px; }
+        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1rem; font-weight: bold; }
+        .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:15px; }
         input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
-        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
-        table { width:100%;border-collapse:collapse; }
-        th { background:var(--primary);color:white;padding:12px; }
-        td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
-        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
-        .btn:hover { opacity: 0.8; }
-        .btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
-        .btn-aca { background:var(--academic); color:white; font-size: 1rem; }
-        .btn-csv { background:#388e3c;color:white; }
-        .btn-salary { background:var(--secondary);color:white; }
-        .btn-wa { background:#25d366;color:white; }
-        .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
-        #output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; min-height: 50px; }
-        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; height: 300px; }
+        table { width:100%;border-collapse:collapse; background: white; }
+        th { background:var(--primary);color:white;padding:10px; font-size: 0.8rem; }
+        td { padding:10px;border-bottom:1px solid #eee;font-size:0.85rem; }
+        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; color: white; }
+        .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:10px;text-align:left; border: 1px solid #e1bee7; }
+        #output, #marksOutput, #classReport { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 13px; }
     </style>
 </head>
-
 <body>
 
 <div class="container" id="capture">
     <img src="logo.png" class="logo">
-    <h1 style="color:#1a237e; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
-    <h3 style="margin-top:5px; color: #555;">ERP CENTRAL ADMINISTRATION</h3>
+    <h1 style="color:#1a237e; font-size: 1.4rem; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
+    <h3 style="margin-top:5px; color: #555; font-size: 0.9rem;">ERP CENTRAL ADMINISTRATION</h3>
 
     <div class="section-header">ADMISSIONS & REGISTRATION</div>
-    <div style="background:#fff4e5; padding:20px; border-radius:12px; border:1px solid #ffe0b2;">
-        <div class="nav-grid">
-            <button class="btn btn-adm" onclick="location.href='admissions.html'">➕ Add New Admission</button>
-            <button class="btn btn-adm" style="background:#0288d1; border-color:#01579b;" onclick="location.href='admissions.html#view'">📋 View Admission List</button>
-        </div>
+    <div class="controls" style="background:#fff4e5; padding:15px; border-radius:10px;">
+        <button class="btn" style="background:#ff9800;" onclick="location.href='admissions.html'">➕ Add Admission</button>
+        <button class="btn" style="background:#0288d1;" onclick="location.href='admissions.html#view'">📋 View List</button>
     </div>
 
     <div class="section-header">ACADEMIC MANAGEMENT</div>
     <div class="marks-box">
-        <button class="btn btn-aca" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
-        <p style="margin:15px 0 5px 0; font-weight:bold;">Search Student Results:</p>
         <div class="controls">
             <input id="searchAdmNo" placeholder="Admission Number">
             <select id="searchExam">
-                <option value="FA 1 (Formative)">FA 1 (Formative)</option>
-                <option value="FA 2 (Formative)">FA 2 (Formative)</option>
-                <option value="FA 3 (Formative)">FA 3 (Formative)</option>
-                <option value="FA 4 (Formative)">FA 4 (Formative)</option>
-                <option value="SA 1 (Summative)">SA 1 (Summative)</option>
-                <option value="SA 2 (Summative)">SA 2 (Summative)</option>
+                <option value="FA1">FA 1 (Formative)</option>
+                <option value="FA2">FA 2 (Formative)</option>
+                <option value="SA1">SA 1 (Summative)</option>
+                <option value="SA2">SA 2 (Summative)</option>
             </select>
         </div>
-        <button class="btn" style="background:var(--academic); color:white;" onclick="viewMarks()">View Marks Report</button>
+        <button class="btn" style="background:var(--academic);" onclick="viewMarks()">View Marks Report</button>
         <div id="marksOutput">Results will appear here...</div>
-    </div>
-
-    <div class="section-header">STAFF RECRUITMENT</div>
-    <div style="background:#fff3cd;padding:15px;border-radius:10px; border: 1px solid #ffeeba;">
-        <div class="controls">
-            <input id="t_name" placeholder="Full Name">
-            <input id="t_email" placeholder="Email Address">
-            <input id="t_password" type="password" placeholder="Set Password">
-            <input id="t_subject" placeholder="Subject/Role">
-            <input id="t_salary" type="number" placeholder="Monthly Salary">
-        </div>
-        <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Register Staff Account</button>
     </div>
 
     <div class="section-header">STAFF ATTENDANCE LOGS</div>
     <div class="controls">
-        <input id="search" placeholder="Search Staff Name..." onkeyup="load()">
-        <select id="filterCampus" onchange="load()">
+        <input id="searchName" placeholder="Search Name..." onkeyup="loadAttendance()">
+        <select id="filterCampus" onchange="loadAttendance()">
             <option value="All">All Campuses</option>
             <option value="Relangi">Relangi</option>
             <option value="Velpur">Velpur</option>
             <option value="Undrajavaram">Undrajavaram</option>
         </select>
-        <input type="date" id="start" onchange="load()">
-        <input type="date" id="end" onchange="load()">
+        <input type="date" id="startDate" onchange="loadAttendance()">
+        <input type="date" id="endDate" onchange="loadAttendance()">
     </div>
-
     <div class="table-container">
         <table>
             <thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"></tbody>
+            <tbody id="attendanceList"></tbody>
         </table>
     </div>
-    <button class="btn btn-csv" onclick="exportCSV()">Download CSV Report</button>
+    <button class="btn" style="background:#28a745;" onclick="exportCSV()">Download CSV Report</button>
 
     <div class="section-header">ADMIN MANUAL ENTRY</div>
-    <div style="background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #ddd;">
-        <div class="controls">
-            <select id="teacherSelect"></select>
-            <select id="campusSelect">
-                <option>Relangi</option>
-                <option>Velpur</option>
-                <option>Undrajavaram</option>
-            </select>
-        </div>
-        <div style="display:flex;gap:10px;">
-            <button class="btn" style="background:#2e7d32;color:white;" onclick="saveAttendance('IN')">FORCE IN</button>
-            <button class="btn" style="background:#c62828;color:white;" onclick="saveAttendance('OUT')">FORCE OUT</button>
-        </div>
+    <div class="controls" style="background:#f8f9fa; padding:15px; border-radius:10px;">
+        <select id="teacherSelect"></select>
+        <select id="campusSelect"><option>Relangi</option><option>Velpur</option><option>Undrajavaram</option></select>
+        <button class="btn" style="background:#2e7d32;" onclick="manualSave('IN')">FORCE IN</button>
+        <button class="btn" style="background:#c62828;" onclick="manualSave('OUT')">FORCE OUT</button>
     </div>
 
     <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
-    <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
-        <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
-        <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
-        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
+    <div class="salary-box" style="background:#e3f2fd;">
+        <button class="btn" style="background:var(--secondary);" onclick="generateSalary()">Process Staff Payroll</button>
+        <button class="btn" style="background:#25d366;" onclick="saveWhatsAppImage()">Export Summary Image</button>
         <div id="output">Salary results will appear here...</div>
     </div>
 
     <div class="section-header">Class-Wise Attendance Overview</div>
-    <div class="salary-box" style="background: #f1f8e9; border-color: #c5e1a5;">
+    <div class="salary-box" style="background: #f1f8e9;">
         <div class="controls">
-            <select id="viewCampus">
-                <option value="Relangi">Relangi</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-            <select id="viewClass">
-                <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option>
-                <option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option>
-                <option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option>
-                <option value="10">Class 10</option>
-            </select>
-            <input type="date" id="viewDate">
+            <select id="vCampus"><option>Relangi</option><option>Velpur</option><option>Undrajavaram</option></select>
+            <select id="vClass"><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option></select>
+            <input type="date" id="vDate">
         </div>
-        <button class="btn" style="background: #388e3c; color: white;" onclick="checkClassAttendance()">Check Present Members</button>
-        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">Results will appear here...</div>
+        <button class="btn" style="background: #388e3c;" onclick="checkClassAttendance()">Check Present Members</button>
+        <div id="classReport">Results will appear here...</div>
     </div>
 
     <div class="section-header">NOTICE BOARD BROADCAST</div>
-    <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
-    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
+    <textarea id="noticeMsg" placeholder="Message for Teachers & Parents..."></textarea>
+    <button class="btn" onclick="sendNotice()" style="background:var(--primary);">Send Push Notification</button>
 </div>
 
 <script>
-// --- CONFIG & GLOBALS ---
 const LATE_TIME = "08:30:00";
 const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+firebase.initializeApp({
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-    projectId: "veeramalluerp-6cac5",
-    storageBucket: "veeramalluerp-6cac5.appspot.com",
-    messagingSenderId: "379339669496",
-    appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    projectId: "veeramalluerp-6cac5"
+});
+const db = firebase.firestore();
+let teachers = [];
+
+window.onload = async () => {
+    const snap = await db.collection("teachers").get();
+    let ts = document.getElementById("teacherSelect");
+    ts.innerHTML = "<option>Select Staff</option>";
+    snap.forEach(doc => {
+        let d = doc.data(); d.uid = doc.id;
+        teachers.push(d);
+        ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
+    });
+    loadAttendance();
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-let teachers = [], unsubscribe;
+// ATTENDANCE LOGS WITH DATE FILTER
+async function loadAttendance() {
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+    const camp = document.getElementById("filterCampus").value;
+    const name = document.getElementById("searchName").value.toLowerCase();
+    const list = document.getElementById("attendanceList");
 
-window.onload = () => { loadTeachers(); loadAttendance(); };
+    const snap = await db.collection("attendance").orderBy("time", "desc").get();
+    list.innerHTML = "";
+    snap.forEach(doc => {
+        const d = doc.data();
+        const dt = d.time?.toDate();
+        if(!dt) return;
+        const ds = dt.toISOString().split('T')[0];
 
-// --- STAFF FUNCTIONS ---
-function loadTeachers() {
-    let t_select = document.getElementById("teacherSelect");
-    t_select.innerHTML = "<option value=''>Select Staff</option>";
-    db.collection("teachers").get().then(s => {
-        teachers = [];
-        s.forEach(doc => {
-            let d = doc.data(); d.uid = doc.id;
-            teachers.push(d);
-            t_select.innerHTML += `<option value="${doc.id}">${d.name}</option>`;
-        });
+        if(start && ds < start) return;
+        if(end && ds > end) return;
+        if(camp !== "All" && d.campus !== camp) return;
+        const tName = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
+        if(name && !tName.toLowerCase().includes(name)) return;
+
+        const isLate = d.type === "IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
+        list.innerHTML += `<tr><td><b>${tName}</b></td><td>${d.campus}</td><td>${d.type}${isLate?'<br><span style="color:red;font-weight:bold;">LATE</span>':''}</td><td>${dt.toLocaleString()}</td></tr>`;
     });
 }
 
-function createTeacher() {
-    let n = document.getElementById("t_name").value, 
-        e = document.getElementById("t_email").value, 
-        p = document.getElementById("t_password").value, 
-        s = document.getElementById("t_subject").value, 
-        sa = document.getElementById("t_salary").value;
-    if(!n || !e || !p) return alert("Name, Email and Password are required");
-    firebase.auth().createUserWithEmailAndPassword(e, p).then(r => {
-        return db.collection("teachers").doc(r.user.uid).set({
-            uid: r.user.uid, name: n, email: e, subject: s, salary: Number(sa || 0)
-        });
-    }).then(() => { 
-        alert("Staff Account Created"); 
-        location.reload();
-    }).catch(err => alert(err.message));
-}
+// PAYROLL LOGIC
+async function generateSalary() {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    if(!s || !e) return alert("Select Date Range in Logs section first");
 
-// --- ACADEMIC MARKS ---
-async function viewMarks() {
-    let admInput = document.getElementById("searchAdmNo").value.trim();
-    let exSelection = document.getElementById("searchExam").value;
-    let box = document.getElementById("marksOutput");
+    const snap = await db.collection("attendance").get();
+    let dataMap = {};
+    snap.forEach(doc => {
+        const d = doc.data(); const dt = d.time?.toDate();
+        if(!dt) return; const ds = dt.toISOString().split('T')[0];
+        if(ds < s || ds > e) return;
+        const n = d.name || teachers.find(t => t.uid == d.teacherId)?.name;
+        if(!n) return;
+        if(!dataMap[n]) dataMap[n] = { dates: new Set(), lates: 0 };
+        if(d.type === "IN") {
+            dataMap[n].dates.add(ds);
+            if(dt.toTimeString().slice(0,8) > LATE_TIME) dataMap[n].lates++;
+        }
+    });
 
-    if (!admInput) return alert("Please enter the Admission Number");
-    box.innerText = "🔍 Generating Report Card...";
+    let wDays = 0, calendar = [];
+    for(let d = new Date(s); d <= new Date(e); d.setDate(d.getDate()+1)){
+        const iso = d.toISOString().split('T')[0];
+        const isH = (d.getDay() === 0 || HOLIDAYS.includes(iso));
+        calendar.push({ iso, isH });
+        if(!isH) wDays++;
+    }
 
-    let examMap = {
-        "FA 1 (Formative)": "FA1", "FA 2 (Formative)": "FA2", "FA 3 (Formative)": "FA3",
-        "FA 4 (Formative)": "FA4", "SA 1 (Summative)": "SA1", "SA 2 (Summative)": "SA2"
-    };
-    let targetExam = examMap[exSelection] || "FA1";
-
-    try {
-        const snapshot = await db.collection("marks").get();
-        let out = `VEERAMALLU GLOBAL ACADEMY\nREPORT: ${admInput} | ${targetExam}\n----------------------------------\nSUBJECT      | MARKS | GRADE\n----------------------------------\n`;
-        let grandTotal = 0, count = 0, found = false;
-
-        snapshot.forEach(doc => {
-            const m = doc.data();
-            if (doc.id.startsWith(admInput) && String(m.examType).trim() === targetExam) {
-                found = true;
-                const marksVal = parseFloat(m.total || m.external || 0);
-                out += `${(m.subject || "Subject").padEnd(12)} | ${marksVal.toString().padEnd(5)} | ${m.grade || "N/A"}\n`;
-                grandTotal += marksVal; count++;
+    let report = "SALARY SUMMARY\n";
+    teachers.forEach(t => {
+        const m = dataMap[t.name] || { dates: new Set(), lates: 0 };
+        const rate = t.salary / wDays;
+        const lateLoss = Math.floor(m.lates / 3);
+        let sandwich = 0;
+        calendar.forEach((day, i) => {
+            if(day.isH && i > 0 && i < calendar.length - 1){
+                if(!m.dates.has(calendar[i-1].iso) && !m.dates.has(calendar[i+1].iso)) sandwich++;
             }
         });
-
-        if (!found) return box.innerText = "❌ No records found.";
-        const subMax = targetExam.startsWith("SA") ? 100 : 50;
-        out += `----------------------------------\nGRAND TOTAL  : ${grandTotal} / ${count * subMax}\nPERCENTAGE   : ${((grandTotal / (count * subMax)) * 100).toFixed(1)}%\n`;
-        box.innerText = out;
-    } catch (e) { box.innerText = "Connection Error."; }
-}
-
-// --- ATTENDANCE LOGS ---
-function parseDate(t) { return t?.toDate ? t.toDate() : null; }
-function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME; }
-
-function loadAttendance() {
-    if(unsubscribe) unsubscribe();
-    let searchTerm = document.getElementById("search").value.toLowerCase();
-    let selCampus = document.getElementById("filterCampus").value;
-    let startDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    let endDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
-    
-    if(startDate) startDate.setHours(0,0,0,0);
-    if(endDate) endDate.setHours(23,59,59,999);
-
-    unsubscribe = db.collection("attendance").orderBy("time","desc").onSnapshot(snap => {
-        let list = document.getElementById("list");
-        list.innerHTML = "";
-        snap.forEach(doc => {
-            let d = doc.data();
-            let dt = parseDate(d.time);
-            if(!dt) return;
-            let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
-            if(searchTerm && !name.toLowerCase().includes(searchTerm)) return;
-            if(selCampus !== "All" && d.campus !== selCampus) return;
-            if(startDate && dt < startDate) return;
-            if(endDate && dt > endDate) return;
-            let late = checkLate(d.type, dt);
-            list.innerHTML += `<tr><td><b>${name}</b></td><td>${d.campus || '-'}</td><td>${d.type || '-'} ${late ? '<span style="color:red;font-weight:bold;"><br>⬇ LATE</span>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
-        });
+        const loss = (wDays - m.dates.size) + lateLoss + sandwich;
+        report += `${t.name}: ₹${Math.max(0, t.salary - (loss * rate)).toFixed(0)}\n`;
     });
+    document.getElementById("output").innerText = report;
 }
 
-async function saveAttendance(type) {
-    let uid = document.getElementById("teacherSelect").value;
-    let c = document.getElementById("campusSelect").value;
-    let obj = teachers.find(t => t.uid == uid);
-    if(!obj) return alert("Select staff member first");
-    let now = new Date();
-    db.collection("attendance").add({
-        teacherId: uid, name: obj.name, campus: c, type: type,
-        time: firebase.firestore.Timestamp.fromDate(now),
-        dateOnly: now.toLocaleDateString('en-IN'),
-        late: checkLate(type, now)
-    }).then(() => alert("Attendance Recorded Successfully"));
+// STUDENT ATTENDANCE ARRAY PARSING
+async function checkClassAttendance() {
+    const c = document.getElementById('vCampus').value;
+    const cl = document.getElementById('vClass').value;
+    const d = document.getElementById('vDate').value;
+    const report = document.getElementById('classReport');
+    if(!d) return alert("Select Date");
+    const doc = await db.collection("attendance").doc(`${c}_${cl}_${d}`).get();
+    if(!doc.exists) return report.innerHTML = "No Records Found";
+    const recs = doc.data().records || [];
+    const pres = recs.filter(r => r.status === "Present");
+    let h = `<b>Total: ${recs.length} | Present: ${pres.length}</b><hr>`;
+    pres.forEach((p, i) => h += `${i+1}. ${p.studentName}<br>`);
+    report.innerHTML = h;
 }
 
-// --- PAYROLL ---
-function generateSalary() {
-    let s_val = document.getElementById("start").value;
-    let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Select start and end dates first");
-    let start = new Date(s_val); start.setHours(0,0,0,0);
-    let end = new Date(e_val); end.setHours(23,59,59,999);
-    
-    db.collection("attendance").get().then(snap => {
-        let map = {};
-        snap.forEach(doc => {
-            let d = doc.data(), dt = parseDate(d.time);
-            if(!dt || dt < start || dt > end) return;
-            let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
-            if(!map[name]) map[name] = { p: new Set(), l: 0 };
-            if(d.type == "IN") {
-                map[name].p.add(dt.toDateString());
-                if(checkLate("IN", dt)) map[name].l++;
-            }
-        });
-
-        let workingDays = 0;
-        let dayRange = [];
-        for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            let iso = d.toISOString().slice(0, 10);
-            let isHoliday = (d.getDay() == 0 || HOLIDAYS.includes(iso));
-            dayRange.push({ dateStr: d.toDateString(), isHoliday: isHoliday });
-            if(!isHoliday) workingDays++;
-        }
-
-        let out = "PAYROLL REPORT SUMMARY\n----------------------\n";
-        for(let n in map) {
-            let teacherObj = teachers.find(x => x.name == n);
-            let monthlySal = teacherObj?.salary || 0;
-            let rate = monthlySal / workingDays;
-            let present = map[n].p.size;
-            let lates = map[n].l;
-            let lateLoss = Math.floor(lates / 3);
-            
-            let holidayLoss = 0;
-            dayRange.forEach((day, i) => {
-                if(day.isHoliday && i > 0 && i < dayRange.length - 1) {
-                    if(!map[n].p.has(dayRange[i-1].dateStr) && !map[n].p.has(dayRange[i+1].dateStr)) holidayLoss++;
-                }
-            });
-
-            let finalPay = monthlySal - (( (workingDays - present) + lateLoss + holidayLoss ) * rate);
-            out += `${n}: ₹${Math.max(0, finalPay).toFixed(0)} (Lates: ${lates})\n`;
-        }
-        document.getElementById("output").innerText = out;
-    });
+// OTHER UTILITIES
+async function manualSave(type) {
+    const uid = document.getElementById("teacherSelect").value;
+    const camp = document.getElementById("campusSelect").value;
+    const t = teachers.find(x => x.uid === uid);
+    if(!t) return alert("Select Staff");
+    await db.collection("attendance").add({ teacherId: uid, name: t.name, campus: camp, type: type, time: firebase.firestore.Timestamp.now() });
+    alert("Saved"); loadAttendance();
 }
 
-// --- UTILITIES ---
 function exportCSV() {
     let csv = "Name,Campus,Type,Time\n";
-    document.querySelectorAll("#list tr").forEach(tr => {
-        if(tr.children.length > 1) csv += `"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
+    document.querySelectorAll("#attendanceList tr").forEach(tr => {
+        csv += `"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
     });
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "VGA_Attendance.csv"; a.click();
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = "Attendance.csv"; a.click();
 }
 
 function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(c => {
-        let a = document.createElement("a"); a.href = c.toDataURL();
-        a.download = "Payroll_Report.png"; a.click();
+        const a = document.createElement("a"); a.href = c.toDataURL();
+        a.download = "VGA_Payroll.png"; a.click();
     });
 }
 
 async function sendNotice() {
-    let msg = document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Enter a message to broadcast");
-    await db.collection("notifications").doc("latest").set({
-        text: msg, date: new Date().toLocaleDateString('en-IN'),
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Notice Broadcasted Successfully");
-    document.getElementById("noticeMsg").value = "";
+    const m = document.getElementById("noticeMsg").value;
+    if(!m) return alert("Enter Message");
+    await db.collection("notifications").doc("latest").set({ text: m, date: new Date().toLocaleDateString(), timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("Sent"); document.getElementById("noticeMsg").value = "";
 }
 
-async function checkClassAttendance() {
-    const campus = document.getElementById('viewCampus').value;
-    const className = document.getElementById('viewClass').value;
-    const dateInput = document.getElementById('viewDate').value;
-    const reportDiv = document.getElementById('classReport');
-    if(!dateInput) return alert("Please select a date.");
-    const docID = `${campus}_${className}_${dateInput}`;
-    reportDiv.innerHTML = "⌛ Fetching records...";
-    try {
-        const doc = await db.collection("attendance").doc(docID).get();
-        if (!doc.exists) {
-            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No records found for ${campus} Class ${className} on ${dateInput}</div>`;
-            return;
+async function viewMarks() {
+    const adm = document.getElementById("searchAdmNo").value.trim();
+    const ex = document.getElementById("searchExam").value;
+    const box = document.getElementById("marksOutput");
+    const snap = await db.collection("marks").get();
+    let res = ""; let total = 0; let count = 0;
+    snap.forEach(doc => {
+        const m = doc.data();
+        if(doc.id.startsWith(adm) && m.examType === ex) {
+            res += `${m.subject}: ${m.total}\n`;
+            total += parseFloat(m.total); count++;
         }
-        const data = doc.data();
-        const presentList = data.records.filter(r => r.status === "Present");
-        let html = `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd;"><p>Strength: ${data.records.length} | ✅ Present: ${presentList.length}</p><hr><table style="width:100%; font-size:12px;">`;
-        presentList.forEach((s, i) => {
-            html += `<tr><td>${i + 1}. ${s.studentName}</td><td style="text-align:right;">ID: ${s.admNo}</td></tr>`;
-        });
-        reportDiv.innerHTML = html + `</table></div>`;
-    } catch (e) { reportDiv.innerHTML = "Error loading data."; }
+    });
+    box.innerText = res ? res + `Total: ${total}` : "No Marks Found";
 }
 </script>
 </body>
