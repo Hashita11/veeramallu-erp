@@ -198,15 +198,22 @@ async function markAttendance(type) {
         const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
 
         await db.collection("attendance").add({
-            teacher: teacherEmail,
-            campus: campus,
-            type: type,
-            fullTimestamp: now.toLocaleString('en-IN'), 
-            dateOnly: todayStr, // Essential for duplicate check
-            timeOnly: timeStr,
-            autoLate: isLate,
-            method: "VGA-Teacher-App"
-        });
+    teacher: teacherEmail,
+    teacherEmail: teacherEmail, // ✅ compatibility
+    name: teacherEmail.split('@')[0], // ✅ for display
+    campus: campus,
+    type: type,
+
+    // 🔥 MOST IMPORTANT FIX
+    time: firebase.firestore.Timestamp.fromDate(now),
+
+    dateOnly: todayStr,
+    dateISO: now.toISOString(),
+
+    late: isLate, // ✅ match admin logic
+
+    method: "VGA-Teacher-App"
+});
 
         alert("Success! " + type + " recorded at " + timeStr + (isLate ? " (LATE ENTRY)" : ""));
         
