@@ -10,98 +10,95 @@
 <style>
 :root { --primary:#1a237e; --success:#28a745; --error:#d32f2f; }
 body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
-.container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:900px;text-align:center; }
-.logo { max-width:100px;margin-bottom:1rem; }
-.controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px; }
-input,select { padding:10px;border:1px solid #ddd;border-radius:8px;width:100%; }
-.table-container { width:100%;overflow-x:auto;margin-top:20px;border-radius:8px;border:1px solid #eee; }
-table { width:100%;border-collapse:collapse;min-width:600px; }
-th { background:var(--primary);color:white;padding:12px;text-align:left; }
-td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
-.late-tag { background:var(--error);color:white;font-size:0.7rem;padding:2px 5px;border-radius:4px;margin-left:5px;font-weight:bold; }
+.container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
+.logo { max-width:100px;margin-bottom:10px; }
+.controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
+input,select,textarea { padding:10px;border:1px solid #ddd;border-radius:8px;width:100%; }
+.table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
+table { width:100%;border-collapse:collapse; }
+th { background:var(--primary);color:white;padding:10px; }
+td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
 .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; }
 .btn-csv { background:#388e3c;color:white; }
 .btn-salary { background:var(--primary);color:white; }
 .btn-wa { background:#25d366;color:white; }
-.salary-box { background:#e3f2fd;padding:1.5rem;border-radius:12px;margin-top:2rem;text-align:left;border:1px solid #bbdefb; }
-#output { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); }
-.btn-secondary { display:block;padding:12px;border:2px solid var(--primary);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:bold;margin-top:10px; }
+.salary-box { background:#e3f2fd;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; }
+#output { white-space:pre-wrap;background:white;padding:10px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); }
 </style>
 </head>
 
 <body>
 
 <div class="container" id="capture">
-<img src="logo.png" class="logo">
-<h2>Admin Attendance Portal</h2>
 
-<!-- ✅ NEW TEACHER -->
-<div style="background:#fff3cd;padding:15px;border-radius:10px;margin-bottom:20px;">
-<h3>Add New Teacher</h3>
+<img src="logo.png" class="logo">
+<h1 style="color:#1a237e;">VEERAMALLU GLOBAL ACADEMY</h1>
+<h3>ADMIN DASHBOARD</h3>
+
+<!-- ADD TEACHER -->
+<div style="background:#fff3cd;padding:15px;border-radius:10px;">
+<h3>Add Teacher</h3>
 <div class="controls">
-<input id="t_name" placeholder="Teacher Name">
+<input id="t_name" placeholder="Name">
 <input id="t_email" placeholder="Email">
-<input id="t_password" placeholder="Password">
+<input id="t_password" type="password" placeholder="Password">
 <input id="t_subject" placeholder="Subject">
 <input id="t_salary" placeholder="Salary">
 </div>
-<button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Create Teacher</button>
+<button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Create</button>
 </div>
 
+<!-- FILTER -->
 <div class="controls">
-<input type="text" id="search" placeholder="Search Teacher..." onkeyup="load()">
+<input id="search" placeholder="Search" onkeyup="load()">
 <select id="filterCampus" onchange="load()">
-<option value="All">All Campuses</option>
-<option value="Relangi">Relangi</option>
-<option value="Velpur">Velpur</option>
-<option value="Undrajavaram">Undrajavaram</option>
+<option>All</option>
+<option>Relangi</option>
+<option>Velpur</option>
+<option>Undrajavaram</option>
 </select>
 <input type="date" id="start" onchange="load()">
 <input type="date" id="end" onchange="load()">
 </div>
 
-<div style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:20px;">
+<!-- MANUAL ENTRY -->
 <div class="controls">
 <select id="teacher"></select>
 <select id="campus">
-<option value="Relangi">Relangi</option>
-<option value="Velpur">Velpur</option>
-<option value="Undrajavaram">Undrajavaram</option>
+<option>Relangi</option>
+<option>Velpur</option>
+<option>Undrajavaram</option>
 </select>
 </div>
 
 <div style="display:flex;gap:10px;">
-<button class="btn" style="background:var(--success);color:white;" onclick="save('IN')">Manual IN</button>
-<button class="btn" style="background:var(--error);color:white;" onclick="save('OUT')">Manual OUT</button>
-</div>
+<button class="btn" style="background:green;color:white;" onclick="save('IN')">IN</button>
+<button class="btn" style="background:red;color:white;" onclick="save('OUT')">OUT</button>
 </div>
 
+<!-- TABLE -->
 <div class="table-container">
 <table>
-<thead><tr><th>Teacher</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-<tbody id="list"><tr><td colspan="4">Syncing...</td></tr></tbody>
+<thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
+<tbody id="list"></tbody>
 </table>
 </div>
 
-<button class="btn btn-csv" onclick="exportCSV()">Download Attendance CSV</button>
+<button class="btn btn-csv" onclick="exportCSV()">Download CSV</button>
 
+<!-- SALARY -->
 <div class="salary-box">
-<label>📅 JOINING DATE:</label>
+<h3>Salary</h3>
 <input type="date" id="joining">
-<button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
-<button class="btn btn-wa" onclick="saveWhatsAppImage()">Save WhatsApp Image</button>
-<div id="output">No report generated yet...</div>
+<button class="btn btn-salary" onclick="generateSalary()">Generate Salary</button>
+<button class="btn btn-wa" onclick="saveWhatsAppImage()">Save Image</button>
+<div id="output"></div>
 </div>
-<div class="section-title" style="background: #c62828; color: white; padding: 10px; font-weight: bold; margin-top: 20px;">📢 POST SCHOOL ANNOUNCEMENT</div>
-<div class="card" style="padding: 20px; background: #fffde7; border: 1px solid #ddd; border-radius: 8px;">
-    <label style="font-size: 12px; font-weight: bold; color: #333;">MESSAGE TO ALL PARENTS:</label>
-    <textarea id="noticeMsg" style="width: 100%; height: 80px; margin-top: 10px; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-family: sans-serif;"></textarea>
-    
-    <button onclick="sendNotice()" style="background: #1a237e !important; color: white !important; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; display: block; font-size: 16px; opacity: 1 !important;">
-        CLICK HERE TO SEND NOTIFICATION
-    </button>
-</div>
-  
+
+<!-- NOTICE -->
+<textarea id="noticeMsg" placeholder="Send notice to parents"></textarea>
+<button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Notification</button>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -110,7 +107,9 @@ td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
 
 <script>
 const LATE_TIME="08:30:00";
-let teachers=[];
+const HOLIDAYS=["2026-01-26","2026-08-15","2026-10-02"];
+
+let teachers=[],unsubscribe;
 
 firebase.initializeApp({
 apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
@@ -120,172 +119,196 @@ projectId:"veeramalluerp-6cac5"
 
 const db=firebase.firestore();
 
-window.onload=()=>{
-loadTeachers();
-load();
-};
+window.onload=()=>{loadTeachers();load();};
 
+// LOAD TEACHERS
 function loadTeachers(){
-const tSelect=document.getElementById("teacher");
-tSelect.innerHTML="<option value=''>-- Select Teacher --</option>";
-
-db.collection("teachers").get().then(snapshot=>{
+teacher.innerHTML="<option value=''>Select</option>";
+db.collection("teachers").get().then(s=>{
 teachers=[];
-snapshot.forEach(doc=>{
-const data=doc.data();
-teachers.push(data);
-tSelect.innerHTML+=`<option value="${data.email}">${data.name}</option>`;
+s.forEach(doc=>{
+let d=doc.data(); d.uid=doc.id;
+teachers.push(d);
+teacher.innerHTML+=`<option value="${doc.id}">${d.name}</option>`;
 });
 });
 }
 
+// CREATE TEACHER
 function createTeacher(){
-const name=t_name.value;
-const email=t_email.value;
-const password=t_password.value;
-const subject=t_subject.value;
-const salary=t_salary.value;
+let n=t_name.value,e=t_email.value,p=t_password.value,s=t_subject.value,sa=t_salary.value;
+if(!n||!e||!p) return alert("Fill fields");
 
-if(!name||!email||!password) return alert("Fill required");
-
-firebase.auth().createUserWithEmailAndPassword(email,password)
-.then(res=>{
-return db.collection("teachers").doc(res.user.uid).set({
-name,email,subject,salary:Number(salary)
-});
-})
-.then(()=>{
-alert("Teacher Created");
-firebase.auth().signOut();
-loadTeachers();
-})
-.catch(e=>alert(e.message));
+firebase.auth().createUserWithEmailAndPassword(e,p)
+.then(r=>db.collection("teachers").doc(r.user.uid).set({
+uid:r.user.uid,name:n,email:e,subject:s,salary:Number(sa||0)
+}))
+.then(()=>{alert("Created");loadTeachers();});
 }
 
-/* ===== YOUR ORIGINAL FUNCTIONS BELOW (UNCHANGED) ===== */
-function parseDate(timeField){ if(!timeField)return null; if(timeField.toDate)return timeField.toDate(); if(typeof timeField==='string'){let p=timeField.split(',');let d=p[0].split('/');let iso=`${d[2]}-${d[1]}-${d[0]}${p[1]||''}`;let x=new Date(iso);return isNaN(x)?null:x;} return null;}
-function resolveTeacherName(data){ if(data.name)return data.name; const m=teachers.find(t=>t.email===(data.teacher||data.email)); return m?m.name:(data.teacher||"Unknown"); }
-function checkIsLate(data,dt){ if(data.late===true)return true; if(data.type!=="IN")return false; return dt.toTimeString().slice(0,8)>LATE_TIME; }
+// HELPERS
+function parseDate(t){return t?.toDate?t.toDate():null;}
+function checkLate(d,dt){return d.type=="IN"&&dt.toTimeString().slice(0,8)>LATE_TIME;}
 
-function save(type){
-const email=teacher.value;
-const campus=document.getElementById("campus").value;
-const obj=teachers.find(t=>t.email===email);
-if(!obj) return alert("Teacher not found");
+function resolveName(d){
+if(d.name) return d.name;
+let t=teachers.find(x=>x.uid==d.teacherId);
+if(t) return t.name;
+let e=teachers.find(x=>x.email==d.teacherEmail);
+if(e) return e.name;
+return "Unknown";
+}
 
-const now=new Date();
-const todayStr=now.toLocaleDateString('en-IN');
+// DUPLICATE CHECK
+async function already(uid,email,type){
+let today=new Date().toLocaleDateString('en-IN');
+let q=db.collection("attendance").where("dateOnly","==",today).where("type","==",type);
+if(uid) q=q.where("teacherId","==",uid);
+else q=q.where("teacherEmail","==",email);
+let s=await q.get();
+return !s.empty;
+}
+
+// SAVE
+async function save(type){
+let uid=teacher.value;
+let c=campus.value;
+let obj=teachers.find(t=>t.uid==uid);
+if(!obj) return alert("Select");
+
+if(await already(uid,obj.email,type)) return alert("Already marked");
+
+let now=new Date();
 
 db.collection("attendance").add({
-teacher:email,
+teacherId:uid,
+teacherEmail:obj.email,
 name:obj.name,
-campus,
-type,
+campus:c,
+type:type,
 time:firebase.firestore.Timestamp.fromDate(now),
-dateOnly:todayStr,
-late:(type==="IN"&&now.toTimeString().slice(0,8)>LATE_TIME)
-}).then(()=>{alert("Saved!");load();});
+dateOnly:now.toLocaleDateString('en-IN'),
+dateISO:now.toISOString(),
+late:(type=="IN"&&now.toTimeString().slice(0,8)>LATE_TIME)
+}).then(()=>alert("Saved"));
 }
 
-let unsubscribe;
+// LOAD TABLE
 function load(){
 if(unsubscribe)unsubscribe();
-unsubscribe=db.collection("attendance").onSnapshot(snap=>{
-const list=document.getElementById("list");
-list.innerHTML="";
-let docs=[];
-snap.forEach(doc=>docs.push(doc.data()));
-docs.sort((a,b)=>(parseDate(b.time)||0)-(parseDate(a.time)||0));
 
-docs.forEach(d=>{
-let dt=parseDate(d.time); if(!dt)return;
-let name=resolveTeacherName(d);
-let late=checkIsLate(d,dt);
+unsubscribe=db.collection("attendance").orderBy("time","desc")
+.onSnapshot(s=>{
+list.innerHTML="";
+s.forEach(doc=>{
+let d=doc.data();
+let dt=parseDate(d.time);
+if(!dt)return;
+
+let late=checkLate(d,dt);
+let name=resolveName(d);
+
 list.innerHTML+=`<tr>
-<td><b>${name}</b></td>
-<td>${d.campus||'-'}</td>
-<td>${d.type} ${late?'<span class="late-tag">LATE</span>':''}</td>
-<td>${dt.toLocaleDateString('en-IN')}<br><small>${dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</small></td>
+<td>${name}</td>
+<td>${d.campus}</td>
+<td>${d.type}${late?'<div style="color:red;font-weight:bold;">⬇ LATE</div>':''}</td>
+<td>${dt.toLocaleString()}</td>
 </tr>`;
 });
 });
 }
 
+// SALARY
 function generateSalary(){
-const s=new Date(start.value);
-const e=new Date(end.value).setHours(23,59,59);
+if(!start.value||!end.value) return alert("Select dates");
+
+let s=new Date(start.value),e=new Date(end.value);
+s.setHours(0,0,0,0); e.setHours(23,59,59,999);
+
 db.collection("attendance").get().then(snap=>{
 let map={};
+
 snap.forEach(doc=>{
-let d=doc.data(); let dt=parseDate(d.time);
+let d=doc.data(),dt=parseDate(d.time);
 if(!dt||dt<s||dt>e)return;
-let name=resolveTeacherName(d);
-if(!map[name]) map[name]={p:new Set(),l:0};
-if(d.type==="IN"){map[name].p.add(dt.toDateString()); if(checkIsLate(d,dt))map[name].l++;}
+
+let name=resolveName(d);
+
+if(!map[name])map[name]={p:new Set(),l:0};
+
+if(d.type=="IN"){
+map[name].p.add(dt.toDateString());
+if(checkLate(d,dt))map[name].l++;
+}
 });
-let out="VGA SALARY SUMMARY\n";
-for(let n in map){out+=`${n}: ${map[n].p.size} Days | ${map[n].l} Late\n`;}
+
+let wd=0;
+for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1)){
+let iso=d.toISOString().slice(0,10);
+if(d.getDay()!=0&&!HOLIDAYS.includes(iso))wd++;
+}
+
+let out="VEERAMALLU GLOBAL ACADEMY\n\n";
+
+for(let n in map){
+let t=teachers.find(x=>x.name==n);
+let sal=t?.salary||0;
+
+let per=sal/wd;
+let p=map[n].p.size;
+let l=map[n].l;
+
+let abs=wd-p;
+
+let lateDed=l*(per*0.25);
+let absDed=abs*per;
+
+let final=sal-(lateDed+absDed);
+
+out+=`${n}\nPresent:${p} Absent:${abs} Late:${l}\nSalary:₹${final.toFixed(0)}\n\n`;
+}
+
 output.innerText=out;
 });
 }
 
+// CSV
 function exportCSV(){
-let csv="Teacher,Campus,Type,Time\n";
+let csv="Name,Campus,Type,Time\n";
 document.querySelectorAll("#list tr").forEach(tr=>{
-const c=tr.querySelectorAll("td");
-if(c.length>=4)csv+=`"${c[0].innerText}","${c[1].innerText}","${c[2].innerText}","${c[3].innerText.replace('\n',' ')}"\n`;
+let c=tr.children;
+csv+=`${c[0].innerText},${c[1].innerText},${c[2].innerText},${c[3].innerText}\n`;
 });
-const a=document.createElement("a");
+let a=document.createElement("a");
 a.href=URL.createObjectURL(new Blob([csv]));
-a.download="Attendance.csv"; a.click();
+a.download="Attendance.csv";
+a.click();
 }
 
+// IMAGE
 function saveWhatsAppImage(){
-html2canvas(document.getElementById("capture")).then(canvas=>{
-const a=document.createElement("a");
-a.href=canvas.toDataURL();
-a.download="Report.png"; a.click();
+html2canvas(capture).then(c=>{
+let a=document.createElement("a");
+a.href=c.toDataURL();
+a.download="Report.png";
+a.click();
 });
-    
-    async function sendNotice() {
-    const msg = document.getElementById('noticeMsg').value;
-    
-    if(!msg) {
-        alert("❌ Please type a message first!");
-        return;
-    }
-
-    // Checking if Firebase is actually loaded
-    if (typeof db === 'undefined') {
-        alert("❌ Error: Firebase Database (db) is not defined. Check your config at the top.");
-        return;
-    }
-
-    try {
-        console.log("Attempting to send:", msg);
-        
-        await db.collection("notifications").doc("latest").set({
-            text: msg,
-            date: new Date().toLocaleDateString('en-IN', { 
-                day: '2-digit', 
-                month: 'short', 
-                year: 'numeric' 
-            }),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        alert("✅ SUCCESS: Notification sent to Firebase!");
-        document.getElementById('noticeMsg').value = ""; // Clear box
-        
-    } catch (error) {
-        console.error("Firebase Send Error:", error);
-        alert("❌ FIREBASE ERROR: " + error.message);
-    }
 }
 
+// NOTICE
+async function sendNotice(){
+let msg=noticeMsg.value;
+if(!msg) return alert("Type message");
 
+await db.collection("notifications").doc("latest").set({
+text:msg,
+date:new Date().toLocaleDateString('en-IN'),
+timestamp:firebase.firestore.FieldValue.serverTimestamp()
+});
 
-    
+alert("Sent");
+noticeMsg.value="";
+}
 </script>
 
 </body>
