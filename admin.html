@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Dashboard | Veeramallu Global Academy</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <style>
 :root { --primary:#1a237e; --success:#28a745; --error:#d32f2f; }
 body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
@@ -85,16 +83,16 @@ td { padding:10px;border-bottom:1px solid #eee;font-size:0.9rem; }
         </div>
     </div>
 
-    <div class="section-header">SALARY CALCULATION</div>
+    <div class="section-header">SALARY CALCULATION (3 Lates = 1 Day Loss)</div>
     <div class="salary-box">
-        <p style="margin:0 0 10px 0; font-weight:bold;">Use the Filter dates above to select month range.</p>
-        <button class="btn btn-salary" onclick="generateSalary()">Calculate Staff Salary</button>
+        <p style="margin:0 0 10px 0; font-weight:bold;">Filter dates above first, then click generate.</p>
+        <button class="btn btn-salary" onclick="generateSalary()">Generate Salary Report</button>
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Download Report Image</button>
         <div id="output"></div>
     </div>
 
     <div class="section-header">ANNOUNCEMENTS</div>
-    <textarea id="noticeMsg" style="height:80px;" placeholder="Type notice for teachers & parents..."></textarea>
+    <textarea id="noticeMsg" style="height:80px;" placeholder="Type notice here..."></textarea>
     <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Broadcast Notification</button>
 </div>
 
@@ -137,7 +135,7 @@ function createTeacher(){
         return db.collection("teachers").doc(r.user.uid).set({
             uid:r.user.uid, name:n, email:e, subject:s, salary:Number(sa||0)
         });
-    }).then(()=>{ alert("Teacher Created Successfully"); t_name.value=''; t_email.value=''; t_password.value=''; loadTeachers(); });
+    }).then(()=>{ alert("Created!"); t_name.value=''; t_email.value=''; t_password.value=''; loadTeachers(); });
 }
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
@@ -145,7 +143,6 @@ function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) 
 
 function load(){
     if(unsubscribe) unsubscribe();
-
     let searchTerm = document.getElementById("search").value.toLowerCase();
     let selCampus = document.getElementById("filterCampus").value;
     let startDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
@@ -157,33 +154,18 @@ function load(){
     unsubscribe = db.collection("attendance").orderBy("time","desc").onSnapshot(snap => {
         let list = document.getElementById("list");
         list.innerHTML = "";
-
         snap.forEach(doc => {
             let d = doc.data();
             let dt = parseDate(d.time);
             if(!dt) return;
-
-            // Resolve Name
             let name = d.name || teachers.find(t=>t.uid==d.teacherId)?.name || d.teacher || "Unknown";
-
-            // Apply Filters
             if(searchTerm && !name.toLowerCase().includes(searchTerm)) return;
             if(selCampus !== "All" && d.campus !== selCampus) return;
             if(startDate && dt < startDate) return;
             if(endDate && dt > endDate) return;
-
             let late = checkLate(d.type, dt);
-
-            list.innerHTML += `
-                <tr>
-                    <td><b>${name}</b></td>
-                    <td>${d.campus || '-'}</td>
-                    <td>${d.type || '-'} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td>
-                    <td>${dt.toLocaleString()}</td>
-                </tr>`;
+            list.innerHTML += `<tr><td><b>${name}</b></td><td>${d.campus || '-'}</td><td>${d.type || '-'} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
         });
-
-        if(list.innerHTML === "") list.innerHTML = "<tr><td colspan='4'>No matching records found</td></tr>";
     });
 }
 
@@ -191,30 +173,29 @@ async function save(type){
     let uid = document.getElementById("teacher").value;
     let c = document.getElementById("campus").value;
     let obj = teachers.find(t=>t.uid==uid);
-    if(!obj) return alert("Please select a teacher first");
-
+    if(!obj) return alert("Select teacher");
     let now = new Date();
     db.collection("attendance").add({
         teacherId:uid, teacherEmail:obj.email, name:obj.name,
         campus:c, type:type, time:firebase.firestore.Timestamp.fromDate(now),
         dateOnly:now.toLocaleDateString('en-IN'),
         late: checkLate(type, now)
-    }).then(()=>alert("Manual Entry Saved"));
+    }).then(()=>alert("Saved"));
 }
 
 function generateSalary(){
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Select Date Range in the filters above");
+    if(!s_val || !e_val) return alert("Select Date Range");
 
-    let s=new Date(s_val), e=new Date(e_val);
-    s.setHours(0,0,0,0); e.setHours(23,59,59,999);
+    let start=new Date(s_val); start.setHours(0,0,0,0);
+    let end=new Date(e_val); end.setHours(23,59,59,999);
 
     db.collection("attendance").get().then(snap=>{
         let map={};
         snap.forEach(doc=>{
             let d=doc.data(), dt=parseDate(d.time);
-            if(!dt || dt < s || dt > e) return;
+            if(!dt || dt < start || dt > end) return;
             let name = d.name || teachers.find(t=>t.uid==d.teacherId)?.name || "Unknown";
             if(!map[name]) map[name]={p:new Set(), l:0};
             if(d.type=="IN"){
@@ -223,21 +204,42 @@ function generateSalary(){
             }
         });
 
-        let wd=0;
-        for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)){
+        let totalWorkingDays=0;
+        let dayRange = [];
+        for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
             let iso=d.toISOString().slice(0,10);
-            if(d.getDay()!=0 && !HOLIDAYS.includes(iso)) wd++;
+            let isHoliday = (d.getDay()==0 || HOLIDAYS.includes(iso));
+            dayRange.push({dateStr: d.toDateString(), isHoliday: isHoliday});
+            if(!isHoliday) totalWorkingDays++;
         }
 
-        let out="SALARY REPORT\n" + s.toLocaleDateString() + " to " + e.toLocaleDateString() + "\n\n";
+        let out="VEERAMALLU GLOBAL ACADEMY\nSALARY REPORT\n\n";
         for(let n in map){
-            let t=teachers.find(x=>x.name==n);
-            let sal=t?.salary||0;
-            let per=sal/wd;
-            let p=map[n].p.size;
-            let abs=wd-p;
-            let final=sal - (map[n].l*(per*0.25)) - (abs*per);
-            out+=`${n}\nPresent:${p} | Late:${map[n].l} | Absent:${abs}\nPayable: ₹${final.toFixed(0)}\n\n`;
+            let teacherObj=teachers.find(x=>x.name==n);
+            let monthlySal=teacherObj?.salary||0;
+            let perDayRate=monthlySal/totalWorkingDays;
+            
+            let presentDays=map[n].p.size;
+            let lateCount=map[n].l;
+            let lateLossDays = Math.floor(lateCount/3);
+            
+            // Sandwich Rule: Loss of Holiday if absent before AND after
+            let holidayLoss = 0;
+            dayRange.forEach((day, index) => {
+                if(day.isHoliday && index > 0 && index < dayRange.length - 1){
+                    let before = dayRange[index-1].dateStr;
+                    let after = dayRange[index+1].dateStr;
+                    if(!map[n].p.has(before) && !map[n].p.has(after)){
+                        holidayLoss++;
+                    }
+                }
+            });
+
+            let absents = (totalWorkingDays - presentDays);
+            let totalDeductionDays = absents + lateLossDays + holidayLoss;
+            let finalPay = monthlySal - (totalDeductionDays * perDayRate);
+
+            out+=`${n}\nPresent: ${presentDays} | Lates: ${lateCount}\nLate Loss: ${lateLossDays} day(s)\nHoliday Loss: ${holidayLoss} day(s)\nNet Payable: ₹${Math.max(0, finalPay).toFixed(0)}\n------------------\n`;
         }
         document.getElementById("output").innerText=out;
     });
@@ -250,7 +252,7 @@ function exportCSV(){
     });
     let a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download="Attendance_Report.csv";
+    a.download="Attendance.csv";
     a.click();
 }
 
@@ -258,7 +260,7 @@ function saveWhatsAppImage(){
     html2canvas(document.getElementById("capture")).then(c=>{
         let a=document.createElement("a");
         a.href=c.toDataURL();
-        a.download="Staff_Report.png";
+        a.download="Salary_Report.png";
         a.click();
     });
 }
@@ -270,7 +272,7 @@ async function sendNotice(){
         text:msg, date:new Date().toLocaleDateString('en-IN'),
         timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Notice Broadcasted");
+    alert("Broadcasted");
     document.getElementById("noticeMsg").value="";
 }
 </script>
