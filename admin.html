@@ -151,12 +151,24 @@ function parseDate(t){return t?.toDate?t.toDate():null;}
 function checkLate(d,dt){return d.type=="IN"&&dt.toTimeString().slice(0,8)>LATE_TIME;}
 
 function resolveName(d){
-if(d.name) return d.name;
-let t=teachers.find(x=>x.uid==d.teacherId);
-if(t) return t.name;
-let e=teachers.find(x=>x.email==d.teacherEmail);
-if(e) return e.name;
-return "Unknown";
+
+    // ✅ 1. If name already exists
+    if(d.name) return d.name;
+
+    // ✅ 2. UID based
+    let t = teachers.find(x => x.uid == d.teacherId);
+    if(t) return t.name;
+
+    // ✅ 3. Email based (new system)
+    let e = teachers.find(x => x.email == d.teacherEmail);
+    if(e) return e.name;
+
+    // ✅ 4. OLD teacher login support (IMPORTANT FIX)
+    let old = teachers.find(x => x.email == d.teacher);
+    if(old) return old.name;
+
+    // ✅ 5. fallback
+    return d.teacher || "Unknown";
 }
 
 // DUPLICATE CHECK
@@ -195,26 +207,49 @@ late:(type=="IN"&&now.toTimeString().slice(0,8)>LATE_TIME)
 
 // LOAD TABLE
 function load(){
-if(unsubscribe)unsubscribe();
+if(unsubscribe) unsubscribe();
 
-unsubscribe=db.collection("attendance").orderBy("time","desc")
-.onSnapshot(s=>{
-list.innerHTML="";
-s.forEach(doc=>{
-let d=doc.data();
-let dt=parseDate(d.time);
-if(!dt)return;
+unsubscribe = db.collection("attendance")
+.orderBy("time","desc")
+.onSnapshot(snap => {
 
-let late=checkLate(d,dt);
-let name=resolveName(d);
+let list = document.getElementById("list");
+list.innerHTML = "";
 
-list.innerHTML+=`<tr>
-<td>${name}</td>
-<td>${d.campus}</td>
-<td>${d.type}${late?'<div style="color:red;font-weight:bold;">⬇ LATE</div>':''}</td>
+snap.forEach(doc => {
+let d = doc.data();
+let dt = parseDate(d.time);
+if(!dt) return;
+
+// ✅ SAFE NAME RESOLUTION (FINAL FIX)
+let name = d.name 
+    || (teachers.find(t=>t.uid==d.teacherId)?.name)
+    || (teachers.find(t=>t.email==d.teacherEmail)?.name)
+    || (teachers.find(t=>t.email==d.teacher)?.name)
+    || d.teacher
+    || "Unknown";
+
+// ❗ DO NOT SKIP — show all data
+let late = checkLate(d,dt);
+
+list.innerHTML += `
+<tr>
+<td><b>${name}</b></td>
+<td>${d.campus || '-'}</td>
+<td>
+${d.type || '-'}
+${late ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>' : ''}
+</td>
 <td>${dt.toLocaleString()}</td>
-</tr>`;
+</tr>
+`;
 });
+
+// ✅ Empty fallback
+if(list.innerHTML===""){
+list.innerHTML = "<tr><td colspan='4'>No records found</td></tr>";
+}
+
 });
 }
 
