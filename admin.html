@@ -175,33 +175,28 @@ function createTeacher(){
 // Logic to view marks
 function viewMarks() {
     let admInput = document.getElementById("searchAdmNo").value.trim();
-    let ex = document.getElementById("searchExam").value;
+    let exSelection = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
     if (!admInput) return alert("Enter Admission Number");
     
-    // Create both Number and String versions to be 100% sure
-    let admNum = Number(admInput);
-    let admStr = admInput.toString();
+    box.innerText = "Searching records...";
 
-    // Clean up Exam Code (e.g., "FA 1" -> "FA1")
-    let dbExamCode = ex.split(' ')[0].replace('-', '').trim(); 
+    // ✅ FIX 1: Correctly extract "FA1", "FA2", etc. from "FA 1 (Formative)"
+    // This takes the first two letters and the number.
+    let dbExamCode = exSelection.substring(0, 2) + exSelection.split(' ')[1]; 
 
-    box.innerText = "Searching database...";
-
-    // We check for ALL variations of the Admission Number (Number or Text)
     db.collection("marks")
         .where("examType", "==", dbExamCode)
         .get().then(s => {
-            // Filter locally to catch both String and Number types and handle hidden spaces
+            // ✅ FIX 2: Match admissionNo as String (since your Firebase shows quotes around it)
             let docs = s.docs.filter(doc => {
                 let d = doc.data();
-                let dAdm = d.admissionNo?.toString().trim();
-                return dAdm == admStr; 
+                return d.admissionNo == admInput; 
             });
 
             if (docs.length === 0) {
-                box.innerText = `No records found.\nAdm No: ${admInput}\nExam: ${dbExamCode}\n\nTip: Check if the Admission No in Firebase has hidden spaces.`;
+                box.innerText = `No records found.\nAdm No: ${admInput}\nExam Code: ${dbExamCode}\n\nCheck if the database has this student and exam.`;
                 return;
             }
 
@@ -216,7 +211,8 @@ function viewMarks() {
 
             docs.forEach(doc => {
                 let d = doc.data();
-                let marks = parseInt(d.external || d.total || 0);
+                // ✅ FIX 3: Use the exact fields from your Firebase (external, subject, grade)
+                let marks = parseInt(d.external || 0);
                 let subName = (d.subject || "Subject").padEnd(12);
                 let subGrade = d.grade || "N/A";
 
@@ -226,30 +222,19 @@ function viewMarks() {
                 subjectCount++;
             });
 
+            // Summary (Assuming 50 max marks)
             let maxPossible = subjectCount * 50;
             let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
             
-            // Grading logic
-            let overallGrade = "F";
-            if (percentage >= 91) overallGrade = "A1";
-            else if (percentage >= 81) overallGrade = "A2";
-            else if (percentage >= 71) overallGrade = "B1";
-            else if (percentage >= 61) overallGrade = "B2";
-            else if (percentage >= 51) overallGrade = "C1";
-            else if (percentage >= 41) overallGrade = "C2";
-            else overallGrade = "D";
-
             out += `----------------------------------\n`;
             out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
             out += `PERCENTAGE   : ${percentage}%\n`;
-            out += `OVERALL GRADE: ${overallGrade}\n`;
             
             box.innerText = out;
         }).catch(err => {
             box.innerText = "Error: " + err.message;
         });
 }
-
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
 function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) > LATE_TIME; }
