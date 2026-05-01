@@ -173,16 +173,16 @@ function createTeacher(){
 }
 
 // Logic to view marks
-function viewMarks() {
+async function viewMarks() {
+async function viewMarks() {
     let admInput = document.getElementById("searchAdmNo").value.trim();
     let exSelection = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
     if (!admInput) return alert("Enter Admission Number");
-    
-    box.innerText = "Fetching report...";
 
-    // Direct mapping to match your Firebase codes
+    box.innerText = "Loading...";
+
     let examMap = {
         "FA 1 (Formative)": "FA1",
         "FA 2 (Formative)": "FA2",
@@ -192,59 +192,65 @@ function viewMarks() {
         "SA 2 (Summative)": "SA2"
     };
 
-    let dbExamCode = examMap[exSelection] || "FA1"; 
+    let dbExamCode = examMap[exSelection] || "FA1";
 
-    // ✅ NEW STRATEGY: Fetch by Admission No first (Simple Index)
-    // We check both Number and String versions of Admission No
-    db.collection("marks")
-        .get().then(s => {
-            // Locally filter to avoid Index errors and handle hidden spaces
-            let docs = s.docs.filter(doc => {
-                let d = doc.data();
-                let matchAdm = String(d.admissionNo).trim() === String(admInput).trim();
-                let matchEx = String(d.examType).trim() === dbExamCode;
-                return matchAdm && matchEx;
-            });
+    try {
 
-            if (docs.length === 0) {
-                box.innerText = `Record Not Found.\nAdm: ${admInput}\nExam: ${dbExamCode}\n\nHint: Verify that data exists for this specific student in the "marks" collection.`;
-                return;
-            }
+        // ✅ DIRECT FILTER (FAST + CORRECT)
+        const snapshot = await db.collection("marks")
+            .where("examType", "==", dbExamCode)
+            .where("admissionNo", "==", admInput)
+            .get();
 
-            let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-            out += `REPORT: ${admInput} | ${dbExamCode}\n`;
-            out += `----------------------------------\n`;
-            out += `SUBJECT      | MARKS | GRADE\n`;
-            out += `----------------------------------\n`;
+        if (snapshot.empty) {
+            box.innerText = `No records found for ${admInput} (${dbExamCode})`;
+            return;
+        }
 
-            let total = 0;
-            let count = 0;
+        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
+        out += `STUDENT ID: ${admInput} | EXAM: ${dbExamCode}\n`;
+        out += `----------------------------------\n`;
+        out += `SUBJECT      | MARKS | GRADE\n`;
+        out += `----------------------------------\n`;
 
-            docs.forEach(doc => {
-                let d = doc.data();
-                let m = parseInt(d.external || d.total || 0);
-                let sub = (d.subject || "Subject").padEnd(12);
-                let grd = d.grade || "N/A";
+        let total = 0;
+        let count = 0;
 
-                out += `${sub} | ${m.toString().padEnd(5)} | ${grd}\n`;
-                total += m;
-                count++;
-            });
+        snapshot.forEach(doc => {
+            let d = doc.data();
 
-            let maxPossible = count * 50;
-            let percent = ((total / maxPossible) * 100).toFixed(1);
+            let marks = parseInt(
+                d.marks ?? d.external ?? d.total ?? 0
+            );
 
-            out += `----------------------------------\n`;
-            out += `GRAND TOTAL  : ${total} / ${maxPossible}\n`;
-            out += `PERCENTAGE   : ${percent}%\n`;
-            
-            box.innerText = out;
-        }).catch(err => {
-            box.innerText = "Error: " + err.message;
+            let subject = (d.subject || "Subject").padEnd(12);
+            let grade = d.grade || "-";
+
+            out += `${subject} | ${marks.toString().padEnd(5)} | ${grade}\n`;
+
+            total += marks;
+            count++;
         });
+
+        let maxPerSub = 50; // change if needed
+        let maxTotal = count * maxPerSub;
+
+        let percent = maxTotal > 0 
+            ? ((total / maxTotal) * 100).toFixed(1)
+            : 0;
+
+        out += `----------------------------------\n`;
+        out += `TOTAL         : ${total} / ${maxTotal}\n`;
+        out += `PERCENTAGE    : ${percent}%\n`;
+
+        box.innerText = out;
+
+    } catch (err) {
+        console.error(err);
+        box.innerText = "Error: " + err.message;
+    }
 }
-
-
+    
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
 function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) > LATE_TIME; }
 
