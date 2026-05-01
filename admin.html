@@ -178,10 +178,10 @@ async function viewMarks() {
     let exSelection = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
-    if (!admInput) return alert("Enter Admission Number");
+    if (!admInput) return alert("Please enter the Admission Number");
+    box.innerText = "Generating Report...";
 
-    box.innerText = "🔍 Searching...";
-
+    // Map selection to Firebase codes
     let examMap = {
         "FA 1 (Formative)": "FA1",
         "FA 2 (Formative)": "FA2",
@@ -190,74 +190,66 @@ async function viewMarks() {
         "SA 1 (Summative)": "SA1",
         "SA 2 (Summative)": "SA2"
     };
-
     let dbExamCode = examMap[exSelection] || "FA1";
 
     try {
-        const snapshot = await db.collection("marks").get();
+        // ✅ STEP 1: Get ALL marks for this student across ALL exams
+        // This is the most reliable way to find the student
+        const snapshot = await db.collection("marks")
+            .get();
 
-        let found = false;
-        let out = `🏫 VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `ADM: ${admInput} | EXAM: ${dbExamCode}\n`;
+        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
+        out += `REPORT: ${admInput} | ${dbExamCode}\n`;
         out += `----------------------------------\n`;
-        out += `SUBJECT   | MARKS | GRADE\n`;
+        out += `SUBJECT      | MARKS | GRADE\n`;
         out += `----------------------------------\n`;
 
-        let total = 0;
-        let count = 0;
-        let studentName = "";
+        let grandTotal = 0;
+        let subjectCount = 0;
+        let foundAny = false;
 
         snapshot.forEach(doc => {
             let d = doc.data();
+            
+            // ✅ STEP 2: Strict matching of Admission No and Exam Code
+            // This handles String vs Number issues automatically
+            let matchAdm = String(d.admissionNo || "").trim() === String(admInput).trim();
+            let matchEx = String(d.examType || "").trim() === dbExamCode;
 
-            // 🔥 CLEAN BOTH SIDES
-            let dbAdm = String(d.admissionNo || "").trim();
-            let dbExam = String(d.examType || "").toUpperCase().replace(/\s/g,'');
+            if (matchAdm && matchEx) {
+                foundAny = true;
+                let marks = parseInt(d.external || d.total || d.marks || 0);
+                let subName = (d.subject || "Subject").padEnd(12);
+                let subGrade = d.grade || "N/A";
 
-            let inputExam = dbExamCode.toUpperCase().replace(/\s/g,'');
-
-            if (dbAdm === admInput && dbExam === inputExam) {
-
-                found = true;
-                studentName = d.studentName || studentName;
-
-                let marks = parseInt(d.total ?? 0);
-                let subject = (d.subject || "Sub").padEnd(10);
-                let grade = d.grade || "-";
-
-                out += `${subject} | ${marks.toString().padEnd(5)} | ${grade}\n`;
-
-                total += marks;
-                count++;
+                out += `${subName} | ${marks.toString().padEnd(5)} | ${subGrade}\n`;
+                
+                grandTotal += marks;
+                subjectCount++;
             }
         });
 
-        if (!found) {
-            box.innerText =
-`❌ No records found
-
-CHECK THIS:
-1. Admission No EXACT? → ${admInput}
-2. examType in Firebase → ${dbExamCode}
-3. Old data missing admissionNo?`;
+        if (!foundAny) {
+            box.innerText = `No records found for Adm No: ${admInput} (${dbExamCode})\n\nDouble check the Admission Number and try again.`;
             return;
         }
 
-        let max = (dbExamCode.startsWith("SA") ? 100 : 50) * count;
-        let percent = ((total / max) * 100).toFixed(1);
+        // Summary Calculation
+        let maxPossible = subjectCount * 50;
+        let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
 
         out += `----------------------------------\n`;
-        out += `NAME: ${studentName}\n`;
-        out += `TOTAL: ${total}/${max}\n`;
-        out += `PERCENT: ${percent}%`;
-
+        out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
+        out += `PERCENTAGE   : ${percentage}%\n`;
+        
         box.innerText = out;
 
     } catch (err) {
         console.error(err);
-        box.innerText = "Error: " + err.message;
+        box.innerText = "Connection Error. Please check your internet or Firebase settings.";
     }
 }
+
     
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
 function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) > LATE_TIME; }
