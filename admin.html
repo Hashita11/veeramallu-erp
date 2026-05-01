@@ -179,9 +179,9 @@ async function viewMarks() {
     let box = document.getElementById("marksOutput");
 
     if (!admInput) return alert("Please enter the Admission Number");
-    box.innerText = "Generating Report...";
+    box.innerText = "🔍 Fetching Report Card...";
 
-    // Map selection to Firebase codes
+    // ✅ STEP 1: Normalize Exam Codes to match Parent View (FA1, SA1, etc.)
     let examMap = {
         "FA 1 (Formative)": "FA1",
         "FA 2 (Formative)": "FA2",
@@ -190,65 +190,61 @@ async function viewMarks() {
         "SA 1 (Summative)": "SA1",
         "SA 2 (Summative)": "SA2"
     };
-    let dbExamCode = examMap[exSelection] || "FA1";
+    let targetExam = examMap[exSelection] || "FA1";
 
     try {
-        // ✅ STEP 1: Get ALL marks for this student across ALL exams
-        // This is the most reliable way to find the student
-        const snapshot = await db.collection("marks")
-            .get();
-
+        // ✅ STEP 2: Use the same "startsWith" logic used in your Parent View
+        // This is the "Secret Sauce" that makes it work.
+        const snapshot = await db.collection("marks").get();
+        
         let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `REPORT: ${admInput} | ${dbExamCode}\n`;
+        out += `REPORT: ${admInput} | ${targetExam}\n`;
         out += `----------------------------------\n`;
         out += `SUBJECT      | MARKS | GRADE\n`;
         out += `----------------------------------\n`;
 
         let grandTotal = 0;
-        let subjectCount = 0;
-        let foundAny = false;
+        let count = 0;
+        let found = false;
 
         snapshot.forEach(doc => {
-            let d = doc.data();
-            
-            // ✅ STEP 2: Strict matching of Admission No and Exam Code
-            // This handles String vs Number issues automatically
-            let matchAdm = String(d.admissionNo || "").trim() === String(admInput).trim();
-            let matchEx = String(d.examType || "").trim() === dbExamCode;
+            const m = doc.data();
+            // Match if Document ID starts with Admission No AND Exam Type matches
+            if (doc.id.startsWith(admInput) && m.examType === targetExam) {
+                found = true;
+                // UseparseFloat to handle numbers saved as strings (like in your Firebase)
+                const marksVal = parseFloat(m.total || m.external || 0);
+                const subName = (m.subject || "Subject").padEnd(12);
+                const subGrade = m.grade || "N/A";
 
-            if (matchAdm && matchEx) {
-                foundAny = true;
-                let marks = parseInt(d.external || d.total || d.marks || 0);
-                let subName = (d.subject || "Subject").padEnd(12);
-                let subGrade = d.grade || "N/A";
-
-                out += `${subName} | ${marks.toString().padEnd(5)} | ${subGrade}\n`;
-                
-                grandTotal += marks;
-                subjectCount++;
+                out += `${subName} | ${marksVal.toString().padEnd(5)} | ${subGrade}\n`;
+                grandTotal += marksVal;
+                count++;
             }
         });
 
-        if (!foundAny) {
-            box.innerText = `No records found for Adm No: ${admInput} (${dbExamCode})\n\nDouble check the Admission Number and try again.`;
+        if (!found) {
+            box.innerText = `❌ No marks found for ${admInput} in ${targetExam}.\n\nEnsure marks were entered for this specific exam.`;
             return;
         }
 
-        // Summary Calculation
-        let maxPossible = subjectCount * 50;
-        let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
+        // Calculation (Match Parent View Logic)
+        const subMax = targetExam.startsWith("SA") ? 100 : 50;
+        const maxPossible = count * subMax;
+        const per = ((grandTotal / maxPossible) * 100).toFixed(1);
 
         out += `----------------------------------\n`;
         out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
-        out += `PERCENTAGE   : ${percentage}%\n`;
+        out += `PERCENTAGE   : ${per}%\n`;
         
         box.innerText = out;
 
-    } catch (err) {
-        console.error(err);
-        box.innerText = "Connection Error. Please check your internet or Firebase settings.";
+    } catch (e) {
+        console.error(e);
+        box.innerText = "Error loading report. Check your Firebase connection.";
     }
 }
+
 
     
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
