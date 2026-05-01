@@ -175,34 +175,59 @@ function createTeacher(){
 // Logic to view marks
 function viewMarks(){
     let admNo = document.getElementById("searchAdmNo").value;
-    let exam = document.getElementById("searchExam").value;
-    let marksDiv = document.getElementById("marksOutput");
-    if(!admNo) return alert("Enter Admission Number");
+function viewMarks(){
+    let adm = document.getElementById("searchAdmNo").value.trim();
+    let ex = document.getElementById("searchExam").value;
+    let box = document.getElementById("marksOutput");
+    
+    if(!adm) return alert("Please enter the Admission Number");
+    box.innerText = "Searching records...";
 
+    // ✅ MAPPING LOGIC: This ensures the Admin search matches the Parent Portal names
+    let alternateEx = ex;
+    if(ex === "FA 1 (Formative)") alternateEx = "Formative Assessment 1 (FA1)";
+    if(ex === "FA 2 (Formative)") alternateEx = "Formative Assessment 2 (FA2)";
+    if(ex === "FA 3 (Formative)") alternateEx = "Formative Assessment 3 (FA3)";
+    if(ex === "FA 4 (Formative)") alternateEx = "Formative Assessment 4 (FA4)";
+    if(ex === "SA 1 (Summative)") alternateEx = "Summative Assessment 1 (SA1)";
+    if(ex === "SA 2 (Summative)") alternateEx = "Summative Assessment 2 (SA2)";
+
+    // We check both versions just in case
     db.collection("marks")
-      .where("admissionNo", "==", admNo)
-      .where("examType", "==", exam)
+      .where("admissionNo", "==", adm)
+      .where("examType", "in", [ex, alternateEx]) 
       .get().then(s => {
-          if(s.empty) {
-              marksDiv.innerText = "No marks found for this Admission No & Exam.";
-              return;
-          }
-          let out = "";
-          s.forEach(doc => {
-              let d = doc.data();
-              out += `Student: ${d.studentName} (${d.class})\nExam: ${d.examType}\n------------------\n`;
-              // Loop through subjects if they exist in your data structure
-              if(d.subjects) {
-                  for(let sub in d.subjects) {
-                      out += `${sub}: ${d.subjects[sub]}\n`;
-                  }
-              } else {
-                  out += `Total Marks: ${d.total || 'N/A'}\nPercentage: ${d.percentage || 'N/A'}%`;
-              }
-          });
-          marksDiv.innerText = out;
-      });
+        if(s.empty) {
+            box.innerText = "No records found for Adm No: " + adm + "\nExam: " + ex;
+            return;
+        }
+        
+        let out = "";
+        s.forEach(doc => {
+            let d = doc.data();
+            out += `STUDENT: ${d.studentName} | CLASS: ${d.class}\n`;
+            out += `EXAM: ${d.examType}\n`;
+            out += `----------------------------------\n`;
+            
+            // Handle subject list display
+            if(d.subjects) {
+                for(let sub in d.subjects) {
+                    out += `${sub.padEnd(12)} : ${d.subjects[sub]}\n`;
+                }
+            }
+            
+            out += `----------------------------------\n`;
+            out += `GRAND TOTAL  : ${d.total || d.grandTotal} / ${d.maxMarks || 450}\n`;
+            out += `PERCENTAGE   : ${d.percentage}%\n`;
+            out += `OVERALL GRADE: ${d.grade || d.overallGrade}\n\n`;
+        });
+        box.innerText = out;
+    }).catch(err => {
+        console.error(err);
+        box.innerText = "Error searching records. Check console.";
+    });
 }
+
 
 function parseDate(t){return t?.toDate ? t.toDate() : null;}
 function checkLate(type, dt){ return type=="IN" && dt.toTimeString().slice(0,8) > LATE_TIME; }
