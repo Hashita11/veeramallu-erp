@@ -180,33 +180,28 @@ function viewMarks() {
 
     if (!admInput) return alert("Please enter the Admission Number");
     
-    // ✅ FIX 1: Convert input to Number because your Firebase field is a Number
+    // 1. Convert Admission Number to a real Number
     let admNo = Number(admInput);
     
-    box.innerText = "Searching records for " + admNo + "...";
+    box.innerText = "Searching records...";
 
-    // ✅ FIX 2: Map dropdown to your exact Firebase codes (FA1, SA1, etc.)
-    let dbExamCode = "";
-    if (ex.includes("FA 1")) dbExamCode = "FA1";
-    else if (ex.includes("FA 2")) dbExamCode = "FA2";
-    else if (ex.includes("FA 3")) dbExamCode = "FA3";
-    else if (ex.includes("FA 4")) dbExamCode = "FA4";
-    else if (ex.includes("SA 1")) dbExamCode = "SA1";
-    else if (ex.includes("SA 2")) dbExamCode = "SA2";
-    else dbExamCode = ex;
+    // 2. CLEAN-UP LOGIC: Convert "FA 1 (Formative)" or "FA-1" into just "FA1"
+    // This removes spaces, dashes, and everything in brackets.
+    let dbExamCode = ex.split(' ')[0].replace('-', ''); 
+
+    console.log("Searching for Adm:", admNo, "ExamCode:", dbExamCode);
 
     db.collection("marks")
-        .where("admissionNo", "==", admNo) // Searching as Number
+        .where("admissionNo", "==", admNo)
         .where("examType", "==", dbExamCode)
         .get().then(s => {
             if (s.empty) {
-                box.innerText = "No records found for Adm No: " + admNo + " (" + dbExamCode + ")";
+                box.innerText = `No records found.\nTarget Adm No: ${admNo}\nTarget Exam: ${dbExamCode}\n\nCheck if the Admission Number in Firebase is exactly ${admNo}.`;
                 return;
             }
 
             let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-            out += `REPORT FOR ADM NO: ${admNo}\n`;
-            out += `EXAM: ${dbExamCode}\n`;
+            out += `ADM NO: ${admNo} | EXAM: ${dbExamCode}\n`;
             out += `----------------------------------\n`;
             out += `SUBJECT      | MARKS | GRADE\n`;
             out += `----------------------------------\n`;
@@ -216,7 +211,7 @@ function viewMarks() {
 
             s.forEach(doc => {
                 let d = doc.data();
-                // ✅ FIX 3: Pull 'external' marks and 'subject' name from your structure
+                // Match the 'external' field from your screenshot
                 let marks = parseInt(d.external || d.total || 0);
                 let subName = (d.subject || "Subject").padEnd(12);
                 let subGrade = d.grade || "N/A";
@@ -227,11 +222,9 @@ function viewMarks() {
                 subjectCount++;
             });
 
-            // Summary Calculation (Assuming 50 marks per subject)
             let maxPossible = subjectCount * 50;
             let percentage = ((grandTotal / maxPossible) * 100).toFixed(1);
             
-            // Auto-Grade Logic
             let overallGrade = "F";
             if (percentage >= 91) overallGrade = "A1";
             else if (percentage >= 81) overallGrade = "A2";
@@ -248,9 +241,10 @@ function viewMarks() {
             
             box.innerText = out;
         }).catch(err => {
-            box.innerText = "Connection Error: " + err.message;
+            box.innerText = "Error: " + err.message;
         });
 }
+
 
 
 
