@@ -180,7 +180,7 @@ async function viewMarks() {
 
     if (!admInput) return alert("Enter Admission Number");
 
-    box.innerText = "Loading...";
+    box.innerText = "🔍 Searching...";
 
     let examMap = {
         "FA 1 (Formative)": "FA1",
@@ -194,53 +194,64 @@ async function viewMarks() {
     let dbExamCode = examMap[exSelection] || "FA1";
 
     try {
-
-        // ✅ DIRECT FILTER (FAST + CORRECT)
         const snapshot = await db.collection("marks")
             .where("examType", "==", dbExamCode)
-            .where("admissionNo", "==", admInput)
             .get();
 
         if (snapshot.empty) {
-            box.innerText = `No records found for ${admInput} (${dbExamCode})`;
+            box.innerText = "No records found for this exam.";
             return;
         }
 
-        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `STUDENT ID: ${admInput} | EXAM: ${dbExamCode}\n`;
+        let out = `🏫 VEERAMALLU GLOBAL ACADEMY\n`;
+        out += `STUDENT ID: ${admInput}\nEXAM: ${dbExamCode}\n`;
         out += `----------------------------------\n`;
         out += `SUBJECT      | MARKS | GRADE\n`;
         out += `----------------------------------\n`;
 
         let total = 0;
         let count = 0;
+        let found = false;
+        let studentName = "";
 
         snapshot.forEach(doc => {
             let d = doc.data();
 
-            let marks = parseInt(
-                d.marks ?? d.external ?? d.total ?? 0
-            );
+            let dbAdm = String(d.admissionNo || "").trim();
 
-            let subject = (d.subject || "Subject").padEnd(12);
-            let grade = d.grade || "-";
+            if (dbAdm === admInput) {
+                found = true;
 
-            out += `${subject} | ${marks.toString().padEnd(5)} | ${grade}\n`;
+                studentName = d.studentName || studentName;
 
-            total += marks;
-            count++;
+                let marks = parseInt(d.total ?? (d.internal + d.external) ?? 0);
+
+                let sub = (d.subject || "Subject").padEnd(12);
+                let grade = d.grade || "-";
+
+                out += `${sub} | ${marks.toString().padEnd(5)} | ${grade}\n`;
+
+                total += marks;
+                count++;
+            }
         });
 
-        let maxPerSub = 50; // change if needed
+        if (!found) {
+            box.innerText = `❌ No records found for Admission No: ${admInput}`;
+            return;
+        }
+
+        // ✅ FIX: Dynamic max marks
+        let isSA = dbExamCode.startsWith("SA");
+        let maxPerSub = isSA ? 100 : 50;
         let maxTotal = count * maxPerSub;
 
-        let percent = maxTotal > 0 
-            ? ((total / maxTotal) * 100).toFixed(1)
-            : 0;
+        let percent = ((total / maxTotal) * 100).toFixed(1);
 
         out += `----------------------------------\n`;
-        out += `TOTAL         : ${total} / ${maxTotal}\n`;
-        out += `PERCENTAGE    : ${percent}%\n`;
+        out += `NAME         : ${studentName}\n`;
+        out += `TOTAL        : ${total} / ${maxTotal}\n`;
+        out += `PERCENTAGE   : ${percent}%\n`;
 
         box.innerText = out;
 
