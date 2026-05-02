@@ -242,38 +242,6 @@ async function save(type) {
     } catch(err) { alert(err.message); }
 }
 
-// --- 4. STAFF LOGS (POINTING TO teacher_attendance) ---
-function load() {
-    if (unsubscribe) unsubscribe();
-    let searchTerm = document.getElementById("search").value.toLowerCase();
-    let selCampus = document.getElementById("filterCampus").value;
-    let startDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    let endDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
-    
-    if (startDate) startDate.setHours(0,0,0,0);
-    if (endDate) endDate.setHours(23,59,59,999);
-
-    // Reading from the new separate collection
-    unsubscribe = db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
-        let list = document.getElementById("list");
-        list.innerHTML = "";
-        snap.forEach(doc => {
-            let d = doc.data();
-            let dt = d.time?.toDate();
-            if (!dt) return;
-            
-            let name = d.name || "Unknown";
-            if (searchTerm && !name.toLowerCase().includes(searchTerm)) return;
-            if (selCampus !== "All" && d.campus !== selCampus) return;
-            if (startDate && dt < startDate) return;
-            if (endDate && dt > endDate) return;
-
-            let late = d.type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME;
-            list.innerHTML += `<tr><td><b>${name}</b></td><td>${d.campus}</td><td>${d.type} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
-        });
-    });
-}
-
 // --- 5. ADMIN MANUAL ENTRY (SAVING TO teacher_attendance) ---
 async function save(type) {
     let uid = document.getElementById("teacherSelect").value;
