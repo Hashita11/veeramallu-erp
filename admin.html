@@ -137,122 +137,146 @@
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
+
 <script>
-// --- CONFIG & GLOBALS ---
+// --- CONFIG ---
 const LATE_TIME = "08:30:00";
-const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"]
-    
-// --- FIREBASE INITIALIZATION ---
+const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
+
+// --- FIREBASE INIT ---
 firebase.initializeApp({
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
-    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-    projectId: "veeramalluerp-6cac5"
-    storageBucket: “veeramalluerp-6cac5.appspot.com”,
-    messagingSenderId: “379339669496”,
-    appId: “1:379339669496:web:6c2becb98190b4e43a8d2d”
+    apiKey: 
+        "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
+    authDomain:
+        "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: 
+        "veeramalluerp-6cac5.appspot.com",
+    messagingSenderId: "379339669496",
+    appId:
+        "1:379339669496:web:6c2becb98190b4e43a8d2d"
 });
 
 const db = firebase.firestore();
-const LATE_TIME = "08:30:00";
-const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
+
 let teachers = [], unsubscribe;
 
-// Run these as soon as the page opens
-window.onload = () => { 
-    loadTeachers(); 
-    load(); 
+// --- ON LOAD ---
+window.onload = () => {
+    loadTeachers();
+    load();
 };
 
+// --- LOAD TEACHERS ---
 function loadTeachers() {
     let t_sel = document.getElementById("teacherSelect");
     if(!t_sel) return;
+
     t_sel.innerHTML = "<option value=''>Select Staff</option>";
+
     db.collection("teachers").get().then(s => {
         teachers = [];
-        s.forEach(doc => { 
-            let d = doc.data(); d.uid = doc.id; 
-            teachers.push(d); 
+        s.forEach(doc => {
+            let d = doc.data();
+            d.uid = doc.id;
+            teachers.push(d);
+
             t_sel.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
         });
     });
 }
 
+// --- CREATE TEACHER ---
+async function createTeacher() {
+    const name = document.getElementById("t_name").value;
+    const email = document.getElementById("t_email").value;
+    const pass = document.getElementById("t_password").value;
+    const subject = document.getElementById("t_subject").value;
+    const salary = parseFloat(document.getElementById("t_salary").value);
+
+    if(!name || !email || !pass) return alert("Fill all fields");
+
+    try {
+        const user = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+
+        await db.collection("teachers").doc(user.user.uid).set({
+            name, email, subject, salary
+        });
+
+        alert("Teacher created successfully");
+        loadTeachers();
+    } catch(e) {
+        alert(e.message);
+    }
+}
+
+// --- LOAD ATTENDANCE ---
 function load() {
     if (unsubscribe) unsubscribe();
-    
-    // Get filter elements safely
+
     const searchInput = document.getElementById("search");
     const campusFilter = document.getElementById("filterCampus");
 
-    unsubscribe = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
+    unsubscribe = db.collection("attendance")
+    .orderBy("time", "desc")
+    .onSnapshot(snap => {
+
         let list = document.getElementById("list");
-        if(!list) return;
         list.innerHTML = "";
-        
+
         snap.forEach(doc => {
             let d = doc.data();
             let dt = d.time?.toDate();
             if (!dt) return;
 
             let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
-            
-            // Apply filtering logic
+
             if (searchInput.value && !name.toLowerCase().includes(searchInput.value.toLowerCase())) return;
             if (campusFilter.value !== "All" && d.campus !== campusFilter.value) return;
 
-            let late = d.type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME;
-            
-            list.innerHTML += `<tr>
+            let late = d.type == "IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
+
+            list.innerHTML += `
+            <tr>
                 <td><b>${name}</b></td>
                 <td>${d.campus || '-'}</td>
-                <td>${d.type} ${late ? '<span style="color:red;font-weight:bold;"><br>⬇ LATE</span>' : ''}</td>
+                <td>${d.type} ${late ? '<span style="color:red;"><br>⬇ LATE</span>' : ''}</td>
                 <td>${dt.toLocaleString()}</td>
             </tr>`;
         });
     });
 }
 
-// Add this to your "Check Present Members" button
-async function checkClassAttendance() {
-    const campus = document.getElementById('viewCampus').value;
-    const className = document.getElementById('viewClass').value;
-    const dateInput = document.getElementById('viewDate').value;
-    const reportDiv = document.getElementById('classReport');
+// --- MANUAL ATTENDANCE ---
+async function saveAttendance(type) {
+    const teacherId = document.getElementById("teacherSelect").value;
+    const campus = document.getElementById("campusSelect").value;
 
-    if(!dateInput) return alert("Please select a date.");
-    const docID = `${campus}_${className}_${dateInput}`;
-    reportDiv.innerHTML = "⌛ Fetching data...";
+    if(!teacherId) return alert("Select staff");
 
-    try {
-        const doc = await db.collection("attendance").doc(docID).get();
-        if (!doc.exists) {
-            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No records for ${className} on ${dateInput}</div>`;
-            return;
-        }
-        const data = doc.data();
-        const presentList = data.records.filter(r => r.status === "Present");
-        
-        let html = `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:left;">
-            <p>✅ Present: ${presentList.length} / ${data.records.length}</p><hr>
-            <table style="width:100%; font-size:12px;">`;
-        presentList.forEach((s, i) => { 
-            html += `<tr><td>${i + 1}. ${s.studentName}</td><td style="text-align:right;">ID: ${s.admNo}</td></tr>`; 
-        });
-        reportDiv.innerHTML = html + `</table></div>`;
-    } catch (e) { reportDiv.innerHTML = "Error loading data."; }
+    const teacher = teachers.find(t => t.uid === teacherId);
+
+    await db.collection("attendance").add({
+        teacherId,
+        name: teacher?.name || "",
+        campus,
+        type,
+        time: new Date()
+    });
+
+    alert("Attendance saved");
 }
 
-
-// --- STUDENT MARKS, PERCENTAGE & GRADE (FIXED) ---
+// --- VIEW MARKS ---
 async function viewMarks() {
     let admInput = document.getElementById("searchAdmNo").value.trim();
     let exSelection = document.getElementById("searchExam").value;
     let box = document.getElementById("marksOutput");
 
-    if (!admInput) return alert("Please enter the Admission Number");
-    box.innerText = "🔍 Generating Report Card...";
+    if (!admInput) return alert("Enter Admission Number");
 
-    // Map selection to match Parent View codes (FA1, SA1)
+    box.innerText = "Loading...";
+
     let examMap = {
         "FA 1 (Formative)": "FA1",
         "FA 2 (Formative)": "FA2",
@@ -261,151 +285,153 @@ async function viewMarks() {
         "SA 1 (Summative)": "SA1",
         "SA 2 (Summative)": "SA2"
     };
-    let targetExam = examMap[exSelection] || "FA1";
 
-    try {
-        // Fetch ALL marks to perform local filtering (The Parent View Strategy)
-        const snapshot = await db.collection("marks").get();
-        
-        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
-        out += `REPORT: ${admInput} | ${targetExam}\n`;
-        out += `----------------------------------\n`;
-        out += `SUBJECT      | MARKS | GRADE\n`;
-        out += `----------------------------------\n`;
+    let targetExam = examMap[exSelection];
 
-        let grandTotal = 0;
-        let count = 0;
-        let found = false;
+    const snapshot = await db.collection("marks").get();
 
-        snapshot.forEach(doc => {
-            const m = doc.data();
-            // ✅ SUCCESS LOGIC: Match ID starts with AdmNo AND check ExamType
-            // This is exactly how your Parent View finds the data
-            if (doc.id.startsWith(admInput) && String(m.examType).trim() === targetExam) {
-                found = true;
-                const marksVal = parseFloat(m.total || m.external || 0);
-                const subName = (m.subject || "Subject").padEnd(12);
-                const subGrade = m.grade || "N/A";
+    let out = `REPORT: ${admInput} | ${targetExam}\n-------------------\n`;
 
-                out += `${subName} | ${marksVal.toString().padEnd(5)} | ${subGrade}\n`;
-                grandTotal += marksVal;
-                count++;
-            }
-        });
+    let total = 0, count = 0, found = false;
 
-        if (!found) {
-            box.innerText = `❌ No records found.\nAdm No: ${admInput}\nExam: ${targetExam}\n\nEnsure marks were entered for this specific student and exam.`;
-            return;
+    snapshot.forEach(doc => {
+        const m = doc.data();
+
+        if (doc.id.startsWith(admInput) && m.examType === targetExam) {
+            found = true;
+
+            const marks = parseFloat(m.total || 0);
+            out += `${m.subject} : ${marks}\n`;
+
+            total += marks;
+            count++;
         }
+    });
 
-        // Auto-calculate Max Marks (FA = 50, SA = 100)
-        const subMax = targetExam.startsWith("SA") ? 100 : 50;
-        const maxPossible = count * subMax;
-        const per = ((grandTotal / maxPossible) * 100).toFixed(1);
-
-        out += `----------------------------------\n`;
-        out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
-        out += `PERCENTAGE   : ${per}%\n`;
-        
-        box.innerText = out;
-
-    } catch (e) {
-        console.error(e);
-        box.innerText = "Connection Error. Check Firebase settings.";
+    if (!found) {
+        box.innerText = "No records found";
+        return;
     }
+
+    const max = count * (targetExam.startsWith("SA") ? 100 : 50);
+    const per = ((total/max)*100).toFixed(1);
+
+    out += `-------------------\nTotal: ${total}/${max}\n${per}%`;
+
+    box.innerText = out;
 }
 
-
-// --- PAYROLL, SANDWICH & 3-LATE RULES ---
+// --- PAYROLL ---
 async function generateSalary() {
-    const s = document.getElementById("startDate").value;
-    const e = document.getElementById("endDate").value;
-    if(!s || !e) return alert("Select Date Range first.");
+    const s = document.getElementById("start").value;
+    const e = document.getElementById("end").value;
+
+    if(!s || !e) return alert("Select dates");
+
     const snap = await db.collection("attendance").get();
-    let staffData = {};
+
+    let data = {};
+
     snap.forEach(doc => {
-        const d = doc.data(), dt = d.time?.toDate();
+        const d = doc.data();
+        const dt = d.time?.toDate();
         if(!dt) return;
+
         const ds = dt.toISOString().split('T')[0];
         if(ds < s || ds > e) return;
-        const name = d.name || teachersList.find(t => t.uid == d.teacherId)?.name;
-        if(!name) return;
-        if(!staffData[name]) staffData[name] = { days: new Set(), lates: 0 };
+
+        const name = d.name;
+
+        if(!data[name]) data[name] = { days: new Set(), lates: 0 };
+
         if(d.type === "IN") {
-            staffData[name].days.add(ds);
-            if(dt.toTimeString().slice(0,8) > LATE_TIME) staffData[name].lates++;
+            data[name].days.add(ds);
+            if(dt.toTimeString().slice(0,8) > LATE_TIME) data[name].lates++;
         }
     });
-    let wdCount = 0, calendar = [];
-    let cur = new Date(s);
-    while(cur <= new Date(e)) {
-        const iso = cur.toISOString().split('T')[0];
-        const isH = (cur.getDay() === 0 || HOLIDAYS.includes(iso));
-        calendar.push({ date: iso, isHoliday: isH });
-        if(!isH) wdCount++;
-        cur.setDate(cur.getDate() + 1);
-    }
-    let report = `PAYROLL: ${s} to ${e}\n------------------------------\n`;
-    teachersList.forEach(t => {
-        const m = staffData[t.name] || { days: new Set(), lates: 0 };
-        const rate = t.salary / wdCount;
-        const lateLoss = Math.floor(m.lates / 3);
-        let holidayLoss = 0;
-        calendar.forEach((day, i) => {
-            if(day.isHoliday && i > 0 && i < calendar.length - 1) {
-                if(!m.days.has(calendar[i-1].date) && !m.days.has(calendar[i+1].date)) holidayLoss++;
-            }
-        });
-        const totalLoss = (wdCount - m.days.size) + lateLoss + holidayLoss;
-        const final = t.salary - (totalLoss * rate);
-        report += `${t.name.padEnd(15)}: ₹${Math.max(0, final).toFixed(0)} (Lates: ${m.lates})\n`;
+
+    let report = `PAYROLL\n----------------\n`;
+
+    teachers.forEach(t => {
+        const m = data[t.name] || { days:new Set(), lates:0 };
+
+        const loss = Math.floor(m.lates / 3);
+        const final = t.salary - (loss * (t.salary/30));
+
+        report += `${t.name} : ₹${final}\n`;
     });
+
     document.getElementById("output").innerText = report;
 }
 
-// --- UTILITIES (CSV, WHATSAPP, NOTICES, STUDENT CLASS VIEW) ---
+// --- CSV ---
 function exportCSV() {
     let csv = "Name,Campus,Type,Time\n";
-    document.querySelectorAll("#attendanceList tr").forEach(tr => {
+
+    document.querySelectorAll("#list tr").forEach(tr => {
         csv += `"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
     });
+
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = "Attendance_Report.csv"; a.click();
+    a.href = URL.createObjectURL(new Blob([csv]));
+    a.download = "report.csv";
+    a.click();
 }
 
+// --- IMAGE ---
 function saveWhatsAppImage() {
     html2canvas(document.getElementById("capture")).then(canvas => {
-        const a = document.createElement("a"); a.href = canvas.toDataURL();
-        a.download = "VGA_Payroll_Summary.png"; a.click();
+        const a = document.createElement("a");
+        a.href = canvas.toDataURL();
+        a.download = "report.png";
+        a.click();
     });
 }
 
+// --- NOTICE ---
 async function sendNotice() {
     const msg = document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Enter message.");
+
+    if(!msg) return alert("Enter message");
+
     await db.collection("notifications").doc("latest").set({
-        text: msg, date: new Date().toLocaleDateString('en-IN'),
+        text: msg,
+        date: new Date().toLocaleDateString(),
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Notice Sent!");
-    document.getElementById("noticeMsg").value = "";
+
+    alert("Sent");
 }
 
+// --- CLASS ATTENDANCE ---
 async function checkClassAttendance() {
-    const c = document.getElementById('vCampus').value;
-    const cl = document.getElementById('vClass').value;
-    const d = document.getElementById('vDate').value;
-    const reportBox = document.getElementById('classReport');
-    if(!d) return alert("Select date");
-    const doc = await db.collection("attendance").doc(`${c}_${cl}_${d}`).get();
-    if(!doc.exists) return reportBox.innerHTML = "<p style='color:red;'>No records.</p>";
+    const campus = document.getElementById('viewCampus').value;
+    const cls = document.getElementById('viewClass').value;
+    const date = document.getElementById('viewDate').value;
+
+    if(!date) return alert("Select date");
+
+    const doc = await db.collection("attendance").doc(`${campus}_${cls}_${date}`).get();
+
+    const box = document.getElementById("classReport");
+
+    if(!doc.exists) {
+        box.innerHTML = "No records";
+        return;
+    }
+
     const recs = doc.data().records || [];
     const pres = recs.filter(r => r.status === "Present");
-    let h = `<b>Total: ${recs.length} | Present: ${pres.length}</b><hr><table style="width:100%;text-align:left;font-size:13px;">`;
-    pres.forEach((p, idx) => h += `<tr><td>${idx+1}. ${p.studentName}</td><td>ID: ${p.admNo}</td></tr>`);
-    reportBox.innerHTML = h + "</table></div>";
+
+    let html = `Present: ${pres.length}/${recs.length}<hr>`;
+
+    pres.forEach(p => {
+        html += `${p.studentName} (${p.admNo})<br>`;
+    });
+
+    box.innerHTML = html;
 }
+
 </script>
 </body>
 </html>
