@@ -145,23 +145,17 @@ const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
 // --- FIREBASE INIT ---
 firebase.initializeApp({
-    apiKey: 
-        "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
-    authDomain:
-        "veeramalluerp-6cac5.firebaseapp.com",
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
     projectId: "veeramalluerp-6cac5",
-    storageBucket: 
-        "veeramalluerp-6cac5.appspot.com",
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
     messagingSenderId: "379339669496",
-    appId:
-        "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
 });
 
 const db = firebase.firestore();
-
 let teachers = [], unsubscribe;
 
-// --- ON LOAD ---
 window.onload = () => {
     loadTeachers();
     load();
