@@ -3,94 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | VGA ERP</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --academic:#6a1b9a; }
-        body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:10px;display:flex;justify-content:center; }
-        .container { background:white;padding:1.5rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
-        .logo { max-width:80px;margin-bottom:10px; }
-        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1rem; font-weight: bold; }
-        .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:15px; }
-        input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
-        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; height: 300px; }
-        table { width:100%;border-collapse:collapse; background: white; }
-        th { background:var(--primary);color:white;padding:10px; font-size: 0.8rem; }
-        td { padding:10px;border-bottom:1px solid #eee;font-size:0.85rem; }
-        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; color: white; }
-        .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:10px;text-align:left; border: 1px solid #e1bee7; }
-        #output, #marksOutput, #classReport { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 13px; }
-    </style>
-</head>
-<body>
-
-<div class="container" id="capture">
-    <img src="logo.png" class="logo">
-    <h1 style="color:#1a237e; font-size: 1.4rem; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
-    <h3 style="margin-top:5px; color: #555; font-size: 0.9rem;">ERP CENTRAL ADMINISTRATION</h3>
-
-    <div class="section-header">ADMISSIONS & REGISTRATION</div>
-    <div class="controls" style="background:#fff4e5; padding:15px; border-radius:10px;">
-        <button class="btn" style="background:#ff9800;" onclick="location.href='admissions.html'">➕ Add Admission</button>
-        <button class="btn" style="background:#0288d1;" onclick="location.href='admissions.html#view'">📋 View List</button>
-    </div>
-
-    <div class="section-header">ACADEMIC MANAGEMENT</div>
-    <div class="marks-box">
-        <div class="controls">
-            <input id="searchAdmNo" placeholder="Admission Number">
-            <select id="searchExam">
-                <option value="FA1">FA 1 (Formative)</option>
-                <option value="FA2">FA 2 (Formative)</option>
-                <option value="SA1">SA 1 (Summative)</option>
-                <option value="SA2">SA 2 (Summative)</option>
-            </select>
-        </div>
-        <button class="btn" style="background:var(--academic);" onclick="viewMarks()">View Marks Report</button>
-        <div id="marksOutput">Results will appear here...</div>
-    </div>
-
-    <div class="section-header">STAFF ATTENDANCE LOGS</div>
-    <div class="controls">
-        <input id="searchName" placeholder="Search Name..." onkeyup="loadAttendance()">
-        <select id="filterCampus" onchange="loadAttendance()">
-            <option value="All">All Campuses</option>
-            <option value="Relangi">Relangi</option>
-            <option value="Velpur">Velpur</option>
-            <option value="Undrajavaram">Undrajavaram</option>
-        </select>
-        <input type="date" id="startDate" onchange="loadAttendance()">
-        <input type="date" id="endDate" onchange="loadAttendance()">
-    </div>
-    <div class="table-container">
-        <table>
-            <thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="attendanceList"></tbody>
-        </table>
-    </div>
-    <button class="btn" style="background:#28a745;" onclick="exportCSV()">Download CSV Report</button>
-
-    <div class="section-header">ADMIN MANUAL ENTRY</div>
-    <div class="controls" style="background:#f8f9fa; padding:15px; border-radius:10px;">
-        <select id="teacherSelect"></select>
-        <select id="campusSelect"><option>Relangi</option><option>Velpur</option><option>Undrajavaram</option></select>
-        <button class="btn" style="background:#2e7d32;" onclick="manualSave('IN')">FORCE IN</button>
-        <button class="btn" style="background:#c62828;" onclick="manualSave('OUT')">FORCE OUT</button>
-    </div>
-
-    <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
-    <div class="salary-box" style="background:#e3f2fd;">
-        <button class="btn" style="background:var(--secondary);" onclick="generateSalary()">Process Staff Payroll</button>
-        <button class="btn" style="background:#25d366;" onclick="saveWhatsAppImage()">Export Summary Image</button>
-        <div id="output">Salary results will appear here...</div>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | VGA ERP Central</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -371,4 +283,3 @@ async function checkClassAttendance() {
 </script>
 </body>
 </html>
-
