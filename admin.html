@@ -94,56 +94,103 @@
 const LATE_TIME = "08:30:00";
 const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
+// --- FIREBASE INITIALIZATION ---
 firebase.initializeApp({
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
     projectId: "veeramalluerp-6cac5"
 });
-const db = firebase.firestore();
-let teachersList = [];
 
-window.onload = async () => {
-    const snap = await db.collection("teachers").get();
-    snap.forEach(doc => teachersList.push({ ...doc.data(), uid: doc.id }));
-    loadAttendance(); 
+const db = firebase.firestore();
+const LATE_TIME = "08:30:00";
+const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
+let teachers = [], unsubscribe;
+
+// Run these as soon as the page opens
+window.onload = () => { 
+    loadTeachers(); 
+    load(); 
 };
 
-// --- LOGS & DATE FILTERS (FIXED) ---
-async function loadAttendance() {
-    const start = document.getElementById("startDate").value;
-    const end = document.getElementById("endDate").value;
-    const camp = document.getElementById("filterCampus").value;
-    const name = document.getElementById("searchName").value.toLowerCase();
-    const list = document.getElementById("attendanceList");
-
-    const snap = await db.collection("attendance").orderBy("time", "desc").get();
-    list.innerHTML = "";
-
-    snap.forEach(doc => {
-        const d = doc.data();
-        const dt = d.time?.toDate();
-        if (!dt) return;
-
-        const localDate = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000);
-        const ds = localDate.toISOString().split('T')[0];
-
-        if (start && ds < start) return;
-        if (end && ds > end) return;
-
-        const tName = d.name || teachersList.find(t => t.uid == d.teacherId)?.name || "Unknown";
-        if (camp !== "All" && d.campus !== camp) return;
-        if (name && !tName.toLowerCase().includes(name)) return;
-
-        const isLate = d.type === "IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
-
-        list.innerHTML += `<tr>
-            <td><b>${tName}</b></td>
-            <td>${d.campus}</td>
-            <td>${d.type} ${isLate ? '<br><span style="color:red;font-weight:bold;">LATE</span>' : ''}</td>
-            <td>${dt.toLocaleString()}</td>
-        </tr>`;
+function loadTeachers() {
+    let t_sel = document.getElementById("teacherSelect");
+    if(!t_sel) return;
+    t_sel.innerHTML = "<option value=''>Select Staff</option>";
+    db.collection("teachers").get().then(s => {
+        teachers = [];
+        s.forEach(doc => { 
+            let d = doc.data(); d.uid = doc.id; 
+            teachers.push(d); 
+            t_sel.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
+        });
     });
 }
+
+function load() {
+    if (unsubscribe) unsubscribe();
+    
+    // Get filter elements safely
+    const searchInput = document.getElementById("search");
+    const campusFilter = document.getElementById("filterCampus");
+
+    unsubscribe = db.collection("attendance").orderBy("time", "desc").onSnapshot(snap => {
+        let list = document.getElementById("list");
+        if(!list) return;
+        list.innerHTML = "";
+        
+        snap.forEach(doc => {
+            let d = doc.data();
+            let dt = d.time?.toDate();
+            if (!dt) return;
+
+            let name = d.name || teachers.find(t => t.uid == d.teacherId)?.name || "Unknown";
+            
+            // Apply filtering logic
+            if (searchInput.value && !name.toLowerCase().includes(searchInput.value.toLowerCase())) return;
+            if (campusFilter.value !== "All" && d.campus !== campusFilter.value) return;
+
+            let late = d.type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME;
+            
+            list.innerHTML += `<tr>
+                <td><b>${name}</b></td>
+                <td>${d.campus || '-'}</td>
+                <td>${d.type} ${late ? '<span style="color:red;font-weight:bold;"><br>⬇ LATE</span>' : ''}</td>
+                <td>${dt.toLocaleString()}</td>
+            </tr>`;
+        });
+    });
+}
+
+// Add this to your "Check Present Members" button
+async function checkClassAttendance() {
+    const campus = document.getElementById('viewCampus').value;
+    const className = document.getElementById('viewClass').value;
+    const dateInput = document.getElementById('viewDate').value;
+    const reportDiv = document.getElementById('classReport');
+
+    if(!dateInput) return alert("Please select a date.");
+    const docID = `${campus}_${className}_${dateInput}`;
+    reportDiv.innerHTML = "⌛ Fetching data...";
+
+    try {
+        const doc = await db.collection("attendance").doc(docID).get();
+        if (!doc.exists) {
+            reportDiv.innerHTML = `<div style="color:red; background:white; padding:10px; border-radius:8px;">❌ No records for ${className} on ${dateInput}</div>`;
+            return;
+        }
+        const data = doc.data();
+        const presentList = data.records.filter(r => r.status === "Present");
+        
+        let html = `<div style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; text-align:left;">
+            <p>✅ Present: ${presentList.length} / ${data.records.length}</p><hr>
+            <table style="width:100%; font-size:12px;">`;
+        presentList.forEach((s, i) => { 
+            html += `<tr><td>${i + 1}. ${s.studentName}</td><td style="text-align:right;">ID: ${s.admNo}</td></tr>`; 
+        });
+        reportDiv.innerHTML = html + `</table></div>`;
+    } catch (e) { reportDiv.innerHTML = "Error loading data."; }
+}
+
 
 // --- STUDENT MARKS, PERCENTAGE & GRADE (FIXED) ---
 async function viewMarks() {
