@@ -1,99 +1,148 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | VGA ERP Central</title>
+    <title>Admin Dashboard | Veeramallu Global Academy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --academic:#6a1b9a; }
+        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
         body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
         .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
-        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; }
+        .logo { max-width:100px;margin-bottom:10px; }
+        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
         input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
-        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; height: 350px; }
-        table { width:100%;border-collapse:collapse; background: white; }
-        th { background:var(--primary);color:white;padding:12px; position: sticky; top: 0; }
+        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
+        table { width:100%;border-collapse:collapse; }
+        th { background:var(--primary);color:white;padding:12px; }
         td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
-        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; color: white; transition: 0.3s; }
+        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
+        .btn:hover { opacity: 0.8; }
+        .btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
+        .btn-aca { background:var(--academic); color:white; font-size: 1rem; }
+        .btn-csv { background:#388e3c;color:white; }
+        .btn-salary { background:var(--secondary);color:white; }
+        .btn-wa { background:#25d366;color:white; }
         .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
-        #output, #marksOutput, #classReport { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; }
+        #output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; min-height: 50px; }
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-
 <div class="container" id="capture">
+    <img src="logo.png" class="logo">
     <h1 style="color:#1a237e; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
     <h3 style="margin-top:5px; color: #555;">ERP CENTRAL ADMINISTRATION</h3>
-
+    <div class="section-header">ADMISSIONS & REGISTRATION</div>
+    <div style="background:#fff4e5; padding:20px; border-radius:12px; border:1px solid #ffe0b2;">
+        <div class="nav-grid">
+            <button class="btn btn-adm" onclick="location.href='admissions.html'">➕ Add New Admission</button>
+            <button class="btn btn-adm" style="background:#0288d1; border-color:#01579b;" onclick="location.href='admissions.html#view'">📋 View Admission List</button>
+        </div>
+    </div>
     <div class="section-header">ACADEMIC MANAGEMENT</div>
     <div class="marks-box">
+        <button class="btn btn-aca" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
+        <p style="margin:15px 0 5px 0; font-weight:bold;">Search Student Results:</p>
         <div class="controls">
             <input id="searchAdmNo" placeholder="Admission Number">
             <select id="searchExam">
-                <option value="FA1">FA 1 (Formative)</option>
-                <option value="FA2">FA 2 (Formative)</option>
-                <option value="FA3">FA 3 (Formative)</option>
-                <option value="FA4">FA 4 (Formative)</option>
-                <option value="SA1">SA 1 (Summative)</option>
-                <option value="SA2">SA 2 (Summative)</option>
+                <option value="FA 1 (Formative)">FA 1 (Formative)</option>
+                <option value="FA 2 (Formative)">FA 2 (Formative)</option>
+                <option value="FA 3 (Formative)">FA 3 (Formative)</option>
+                <option value="FA 4 (Formative)">FA 4 (Formative)</option>
+                <option value="SA 1 (Summative)">SA 1 (Summative)</option>
+                <option value="SA 2 (Summative)">SA 2 (Summative)</option>
             </select>
         </div>
-        <button class="btn" style="background:var(--academic);" onclick="viewMarks()">View Marks & Grade Report</button>
+        <button class="btn" style="background:var(--academic); color:white;" onclick="viewMarks()">View Marks Report</button>
         <div id="marksOutput">Results will appear here...</div>
     </div>
-
+    <div class="section-header">STAFF RECRUITMENT</div>
+    <div style="background:#fff3cd;padding:15px;border-radius:10px; border: 1px solid #ffeeba;">
+        <div class="controls">
+            <input id="t_name" placeholder="Full Name">
+            <input id="t_email" placeholder="Email Address">
+            <input id="t_password" type="password" placeholder="Set Password">
+            <input id="t_subject" placeholder="Subject/Role">
+           <input id="t_salary" type="number" placeholder="Monthly Salary">
+        </div>
+       <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Register Staff Account</button>
+    </div>
     <div class="section-header">STAFF ATTENDANCE LOGS</div>
     <div class="controls">
-        <input id="searchName" placeholder="Search Name..." onkeyup="loadAttendance()">
-        <select id="filterCampus" onchange="loadAttendance()">
+        <input id="search" placeholder="Search Staff Name..." onkeyup="load()">
+        <select id="filterCampus" onchange="load()">
             <option value="All">All Campuses</option>
             <option value="Relangi">Relangi</option>
             <option value="Velpur">Velpur</option>
             <option value="Undrajavaram">Undrajavaram</option>
         </select>
-        <input type="date" id="startDate" onchange="loadAttendance()">
-        <input type="date" id="endDate" onchange="loadAttendance()">
+        <input type="date" id="start" onchange="load()">
+        <input type="date" id="end" onchange="load()">
     </div>
     <div class="table-container">
         <table>
             <thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="attendanceList"></tbody>
+            <tbody id="list"></tbody>
         </table>
     </div>
-    <button class="btn" style="background:var(--success);" onclick="exportCSV()">Download CSV Report</button>
-
-    <div class="section-header">PAYROLL (Lates & Sandwich Rules)</div>
-    <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
-        <button class="btn" style="background:var(--secondary);" onclick="generateSalary()">Generate Payroll Summary</button>
-        <button class="btn" style="background:#25d366;" onclick="saveWhatsAppImage()">Export Summary Image</button>
-        <div id="output">Payroll results...</div>
-    </div>
-
-    <div class="section-header">CLASS-WISE STUDENT ATTENDANCE</div>
-    <div class="salary-box" style="background: #f1f8e9; border-color:#c5e1a5;">
+    <button class="btn btn-csv" onclick="exportCSV()">Download CSV Report</button>
+    <div class="section-header">ADMIN MANUAL ENTRY</div>
+    <div style="background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #ddd;">
         <div class="controls">
-            <select id="vCampus"><option>Relangi</option><option>Velpur</option><option>Undrajavaram</option></select>
-            <select id="vClass"><option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option><option value="4">Class 4</option><option value="5">Class 5</option></select>
-            <input type="date" id="vDate">
+            <select id="teacherSelect"></select>
+            <select id="campusSelect">
+                <option>Relangi</option>
+                <option>Velpur</option>
+                <option>Undrajavaram</option>
+        </select>
         </div>
-        <button class="btn" style="background: #388e3c;" onclick="checkClassAttendance()">View Present Students</button>
-        <div id="classReport"></div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn" style="background:#2e7d32;color:white;" onclick="saveAttendance('IN')">FORCE IN</button>
+            <button class="btn" style="background:#c62828;color:white;" onclick="saveAttendance('OUT')">FORCE OUT</button>
+        </div>
     </div>
-
+    <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
+    <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
+        <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
+        <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
+        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
+        <div id="output">Salary results will appear here...</div>
+    </div>
+    <div class="section-header">Class-Wise Attendance Overview</div>
+    <div class="salary-box" style="background: #f1f8e9; border-color: #c5e1a5;">
+        <div class="controls">
+            <select id="viewCampus">
+                <option value="Relangi">Relangi</option>
+                <option value="Velpur">Velpur</option>
+               <option value="Undrajavaram">Undrajavaram</option>
+            </select>
+            <select id="viewClass">
+                <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option>
+                <option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option>
+                <option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option>
+                <option value="10">Class 10</option>
+            </select>
+            <input type="date" id="viewDate">
+        </div>
+        <button class="btn" style="background: #388e3c; color: white;" onclick="checkClassAttendance()">Check Present Members</button>
+        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">Results will appear here...</div>
+    </div>
     <div class="section-header">NOTICE BOARD BROADCAST</div>
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
-    <button class="btn" onclick="sendNotice()" style="background:var(--primary);">Send Push Notification</button>
+   <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
-
 <script>
+// --- CONFIG & GLOBALS ---
 const LATE_TIME = "08:30:00";
-const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
-
+const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"]
+    
 // --- FIREBASE INITIALIZATION ---
 firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
