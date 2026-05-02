@@ -243,48 +243,76 @@ async function checkClassAttendance() {
 
 // --- STUDENT MARKS, PERCENTAGE & GRADE (FIXED) ---
 async function viewMarks() {
-    const adm = document.getElementById("searchAdmNo").value.trim();
-    const code = document.getElementById("searchExam").value;
-    const box = document.getElementById("marksOutput");
+    let admInput = document.getElementById("searchAdmNo").value.trim();
+    let exSelection = document.getElementById("searchExam").value;
+    let box = document.getElementById("marksOutput");
 
-    if (!adm) return alert("Enter Admission Number");
-    box.innerText = "🔍 Fetching Record Card...";
+    if (!admInput) return alert("Please enter the Admission Number");
+    box.innerText = "🔍 Generating Report Card...";
+
+    // Map selection to match Parent View codes (FA1, SA1)
+    let examMap = {
+        "FA 1 (Formative)": "FA1",
+        "FA 2 (Formative)": "FA2",
+        "FA 3 (Formative)": "FA3",
+        "FA 4 (Formative)": "FA4",
+        "SA 1 (Summative)": "SA1",
+        "SA 2 (Summative)": "SA2"
+    };
+    let targetExam = examMap[exSelection] || "FA1";
 
     try {
-        const snap = await db.collection("marks").get();
-        let out = `VEERAMALLU GLOBAL ACADEMY\nREPORT: ${adm} | ${code}\n------------------------------\nSUBJECT      | MARKS | GRADE\n------------------------------\n`;
-        let total = 0, count = 0, found = false;
+        // Fetch ALL marks to perform local filtering (The Parent View Strategy)
+        const snapshot = await db.collection("marks").get();
+        
+        let out = `VEERAMALLU GLOBAL ACADEMY\n`;
+        out += `REPORT: ${admInput} | ${targetExam}\n`;
+        out += `----------------------------------\n`;
+        out += `SUBJECT      | MARKS | GRADE\n`;
+        out += `----------------------------------\n`;
 
-        snap.forEach(doc => {
+        let grandTotal = 0;
+        let count = 0;
+        let found = false;
+
+        snapshot.forEach(doc => {
             const m = doc.data();
-            if (doc.id.startsWith(adm) && m.examType === code) {
+            // ✅ SUCCESS LOGIC: Match ID starts with AdmNo AND check ExamType
+            // This is exactly how your Parent View finds the data
+            if (doc.id.startsWith(admInput) && String(m.examType).trim() === targetExam) {
                 found = true;
                 const marksVal = parseFloat(m.total || m.external || 0);
-                out += `${(m.subject || "Sub").padEnd(12)} | ${marksVal.toString().padEnd(5)} | ${m.grade || "N/A"}\n`;
-                total += marksVal; count++;
+                const subName = (m.subject || "Subject").padEnd(12);
+                const subGrade = m.grade || "N/A";
+
+                out += `${subName} | ${marksVal.toString().padEnd(5)} | ${subGrade}\n`;
+                grandTotal += marksVal;
+                count++;
             }
         });
 
-        if (!found) return box.innerText = "❌ No records found.";
+        if (!found) {
+            box.innerText = `❌ No records found.\nAdm No: ${admInput}\nExam: ${targetExam}\n\nEnsure marks were entered for this specific student and exam.`;
+            return;
+        }
 
-        const maxPerSub = code.startsWith("SA") ? 100 : 50;
-        const maxPossible = count * maxPerSub;
-        const per = ((total / maxPossible) * 100).toFixed(1);
+        // Auto-calculate Max Marks (FA = 50, SA = 100)
+        const subMax = targetExam.startsWith("SA") ? 100 : 50;
+        const maxPossible = count * subMax;
+        const per = ((grandTotal / maxPossible) * 100).toFixed(1);
 
-        // Grade Calculation Logic
-        let finalG = "F";
-        if (per >= 91) finalG = "A1"; else if (per >= 81) finalG = "A2";
-        else if (per >= 71) finalG = "B1"; else if (per >= 61) finalG = "B2";
-        else if (per >= 51) finalG = "C1"; else if (per >= 41) finalG = "C2";
-        else finalG = "D";
-
-        out += `------------------------------\n`;
-        out += `GRAND TOTAL : ${total} / ${maxPossible}\n`;
-        out += `PERCENTAGE  : ${per}%\n`;
-        out += `FINAL GRADE : ${finalG}\n`;
+        out += `----------------------------------\n`;
+        out += `GRAND TOTAL  : ${grandTotal} / ${maxPossible}\n`;
+        out += `PERCENTAGE   : ${per}%\n`;
+        
         box.innerText = out;
-    } catch (e) { box.innerText = "Error: " + e.message; }
+
+    } catch (e) {
+        console.error(e);
+        box.innerText = "Connection Error. Check Firebase settings.";
+    }
 }
+
 
 // --- PAYROLL, SANDWICH & 3-LATE RULES ---
 async function generateSalary() {
