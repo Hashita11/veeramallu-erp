@@ -108,8 +108,8 @@
             </select>
         </div>
         <div style="display:flex;gap:10px;">
-            <button class="btn" style="background:#2e7d32;color:white;" onclick="save('IN')">FORCE IN</button>
-            <button class="btn" style="background:#c62828;color:white;" onclick="save('OUT')">FORCE OUT</button>
+            <button class="btn" style="background:#2e7d32;color:white;" onclick="saveAttendance('IN')">FORCE IN</button>
+            <button class="btn" style="background:#c62828;color:white;" onclick="saveAttendance('OUT')">FORCE OUT</button>
         </div>
     </div>
 
@@ -147,31 +147,49 @@
 </div>
 
 <script>
-// --- VERIFIED CONFIG ---
+const LATE_TIME="08:30:00";
+const HOLIDAYS=["2026-01-26","2026-08-15","2026-10-02"];
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
+    messagingSenderId: "379339669496",
+    appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+};
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
-            authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-            projectId: "veeramalluerp-6cac5",
-            storageBucket: "veeramalluerp-6cac5.appspot.com",
-            messagingSenderId: "379339669496",
-            appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
-        };
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+const db = firebase.firestore();
+const auth = firebase.auth();
+let teachers = []; // Variable to store loaded staff
+let unsubscribe;
 
-// 1. CREATE TEACHER (AUTH + FIRESTORE)
+window.onload = () => { loadTeachers(); load(); };
+
+// Helpers for Payroll/Late logic
+function parseDate(t) { return t?.toDate ? t.toDate() : null; }
+function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME; }
+
+// Load Staff into Dropdown
+function loadTeachers() {
+    const ts = document.getElementById("teacherSelect");
+    db.collection("teachers").get().then(snap => {
+        teachers = [];
+        ts.innerHTML = "<option value=''>Select Staff</option>";
+        snap.forEach(doc => {
+            let d = doc.data(); d.uid = doc.id;
+            teachers.push(d);
+            ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
+        });
+    });
+}
+
+// Register Staff
 async function createTeacher() {
     const n = document.getElementById("t_name").value;
     const e = document.getElementById("t_email").value;
@@ -193,85 +211,59 @@ async function createTeacher() {
     }
 }
 
-// 2. LOAD DROPDOWN
-function loadTeachers() {
-    const ts = document.getElementById("teacherSelect");
-    db.collection("teachers").get().then(snap => {
-        teachers = [];
-        ts.innerHTML = "<option value=''>Select Staff</option>";
-        snap.forEach(doc => {
-            let d = doc.data(); d.uid = doc.id;
-            teachers.push(d);
-            ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
-        });
-    });
-}
-
-// 3. LOAD LOGS (TEACHER_ATTENDANCE COLLECTION)
+// Load Teacher Logs (Listener)
 function load() {
-    const s = document.getElementById("start").value;
-    const e = document.getElementById("end").value;
-    const search = document.getElementById("search").value.toLowerCase();
+    if (unsubscribe) unsubscribe();
+    let searchTerm = document.getElementById("search").value.toLowerCase();
+    let selCampus = document.getElementById("filterCampus").value;
+    let startDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
+    let endDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
     
-    db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
+    if(startDate) startDate.setHours(0,0,0,0);
+    if(endDate) endDate.setHours(23,59,59,999);
+
+    unsubscribe = db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
         const list = document.getElementById("list");
         list.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = d.time?.toDate();
+            const dt = parseDate(d.time);
             if(!dt) return;
             const ds = dt.toISOString().split('T')[0];
 
-            if(s && ds < s) return;
-            if(e && ds > e) return;
-            if(search && !d.name.toLowerCase().includes(search)) return;
+            if(startDate && dt < startDate) return;
+            if(endDate && dt > endDate) return;
+            if(selCampus !== "All" && d.campus !== selCampus) return;
+            if(searchTerm && !d.name.toLowerCase().includes(searchTerm)) return;
 
-            list.innerHTML += `<tr><td>${d.name}</td><td>${d.campus}</td><td>${d.type}</td><td>${dt.toLocaleString()}</td></tr>`;
+            let late = checkLate(d.type, dt);
+            list.innerHTML += `<tr><td><b>${d.name}</b></td><td>${d.campus}</td><td>${d.type} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
         });
     });
 }
 
-// 4. MANUAL SAVE (SAVE TO TEACHER_ATTENDANCE)
-async function save(type) {
+// Manual Save to teacher_attendance
+async function saveAttendance(type) {
     const uid = document.getElementById("teacherSelect").value;
     const campus = document.getElementById("campusSelect").value;
     const obj = teachers.find(t => t.uid == uid);
     
-    if(!obj) return alert("Select staff first");
+    if(!obj) return alert("Select staff member first");
 
     try {
         await db.collection("teacher_attendance").add({
-            teacherId: uid, name: obj.name, campus: campus, type: type,
-            time: firebase.firestore.Timestamp.now()
+            teacherId: uid,
+            name: obj.name,
+            campus: campus,
+            type: type,
+            time: firebase.firestore.Timestamp.now(),
+            dateOnly: new Date().toLocaleDateString('en-IN')
         });
         alert("Attendance Logged");
     } catch(err) { alert(err.message); }
 }
 
-// --- 5. ADMIN MANUAL ENTRY (SAVING TO teacher_attendance) ---
-async function save(type) {
-    let uid = document.getElementById("teacherSelect").value;
-    let c = document.getElementById("campusSelect").value;
-    let obj = teachers.find(t => t.uid == uid);
-    
-    if (!obj) return alert("Select a staff member first");
-    
-    let now = new Date();
-    try {
-        await db.collection("teacher_attendance").add({
-            teacherId: uid,
-            name: obj.name,
-            campus: c,
-            type: type,
-            time: firebase.firestore.Timestamp.fromDate(now),
-            dateOnly: now.toLocaleDateString('en-IN')
-        });
-        alert(`Attendance ${type} logged in teacher_attendance collection`);
-    } catch (e) {
-        alert("Error: " + e.message);
-    }
-}
-
+// Payroll Logic
 function generateSalary(){
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
@@ -280,12 +272,12 @@ function generateSalary(){
     let start=new Date(s_val); start.setHours(0,0,0,0);
     let end=new Date(e_val); end.setHours(23,59,59,999);
 
-    db.collection("attendance").get().then(snap=>{
+    db.collection("teacher_attendance").get().then(snap=>{
         let map={};
         snap.forEach(doc=>{
             let d=doc.data(), dt=parseDate(d.time);
             if(!dt || dt < start || dt > end) return;
-            let name = d.name || teachers.find(t=>t.uid==d.teacherId)?.name || "Unknown";
+            let name = d.name;
             if(!map[name]) map[name]={p:new Set(), l:0};
             if(d.type=="IN"){
                 map[name].p.add(dt.toDateString());
@@ -302,11 +294,11 @@ function generateSalary(){
             if(!isHoliday) totalWorkingDays++;
         }
 
-        let out="VEERAMALLU GLOBAL ACADEMY - PAYROLL\n" + start.toLocaleDateString() + " to " + end.toLocaleDateString() + "\n\n";
+        let out="PAYROLL REPORT\n" + start.toLocaleDateString() + " to " + end.toLocaleDateString() + "\n\n";
         for(let n in map){
             let teacherObj=teachers.find(x=>x.name==n);
             let monthlySal=teacherObj?.salary||0;
-            let perDayRate=monthlySal/totalWorkingDays;
+            let perDayRate = totalWorkingDays > 0 ? monthlySal/totalWorkingDays : 0;
             
             let presentDays=map[n].p.size;
             let lateCount=map[n].l;
@@ -325,12 +317,13 @@ function generateSalary(){
             let totalDeductionDays = absents + lateLossDays + holidayLoss;
             let finalPay = monthlySal - (totalDeductionDays * perDayRate);
 
-            out+=`${n.toUpperCase()}\nStatus: P:${presentDays} | L:${lateCount} | Abs:${absents}\nDeductions: Late Loss(${lateLossDays}) + Holiday Loss(${holidayLoss})\nNet Salary: ₹${Math.max(0, finalPay).toFixed(0)}\n--------------------------\n`;
+            out+=`${n.toUpperCase()}\nStatus: P:${presentDays} | L:${lateCount} | Absents:${absents}\nNet Salary: ₹${Math.max(0, finalPay).toFixed(0)}\n--------------------------\n`;
         }
         document.getElementById("output").innerText=out;
     });
 }
 
+// Student Marks
 async function viewMarks() {
     let admInput = document.getElementById("searchAdmNo").value.trim();
     let exSelection = document.getElementById("searchExam").value;
@@ -341,12 +334,8 @@ async function viewMarks() {
     box.innerText = "Loading...";
 
     let examMap = {
-        "FA 1 (Formative)": "FA1",
-        "FA 2 (Formative)": "FA2",
-        "FA 3 (Formative)": "FA3",
-        "FA 4 (Formative)": "FA4",
-        "SA 1 (Summative)": "SA1",
-        "SA 2 (Summative)": "SA2"
+        "FA 1 (Formative)": "FA1", "FA 2 (Formative)": "FA2", "FA 3 (Formative)": "FA3",
+        "FA 4 (Formative)": "FA4", "SA 1 (Summative)": "SA1", "SA 2 (Summative)": "SA2"
     };
 
     let targetExam = examMap[exSelection];
@@ -375,6 +364,7 @@ async function viewMarks() {
     box.innerText = out;
 }
 
+// Student Attendance
 async function checkClassAttendance() {
     const campus = document.getElementById('viewCampus').value;
     const cls = document.getElementById('viewClass').value;
