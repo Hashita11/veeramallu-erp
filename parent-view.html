@@ -146,9 +146,95 @@
         appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
     };
 
-    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+let teachersList = [];
 
+window.onload = async () => {
+    const snap = await db.collection("teachers").get();
+    snap.forEach(doc => teachersList.push({ ...doc.data(), uid: doc.id }));
+    loadAttendance(); 
+};
+    async function loadAttendance() {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    const c = document.getElementById("filterCampus").value;
+    const n = document.getElementById("searchName").value.toLowerCase();
+    const snap = await db.collection("attendance").orderBy("time", "desc").get();
+    const list = document.getElementById("attendanceList");
+    list.innerHTML = "";
+    snap.forEach(doc => {
+        const d = doc.data(); const dt = d.time?.toDate(); if(!dt) return;
+        const ds = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().split('T')[0];
+        if(s && ds < s) return; if(e && ds > e) return;
+        const tN = d.name || teachersList.find(t => t.uid == d.teacherId)?.name || "Unknown";
+        if(c !== "All" && d.campus !== c) return;
+        if(n && !tN.toLowerCase().includes(n)) return;
+        const late = d.type === "IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
+        list.innerHTML += `<tr><td><b>${tN}</b></td><td>${d.campus}</td><td>${d.type}${late?'<br><b style="color:red">LATE</b>':''}</td><td>${dt.toLocaleString()}</td></tr>`;
+    });
+    }
+async function generateSalary() {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    if(!s || !e) return alert("Select date range");
+    const snap = await db.collection("attendance").get();
+    let staff = {};
+    snap.forEach(doc => {
+        const d = doc.data(), dt = d.time?.toDate(); if(!dt) return;
+        const ds = dt.toISOString().split('T')[0]; if(ds < s || ds > e) return;
+        const n = d.name || teachersList.find(t => t.uid == d.teacherId)?.name; if(!n) return;
+        if(!staff[n]) staff[n] = { days: new Set(), lates: 0 };
+        if(d.type === "IN"){ staff[n].days.add(ds); if(dt.toTimeString().slice(0,8) > LATE_TIME) staff[n].lates++; }
+    });
+    let wd = 0, cal = []; let cur = new Date(s);
+    while(cur <= new Date(e)){
+        const iso = cur.toISOString().split('T')[0]; const isH = (cur.getDay()==0 || HOLIDAYS.includes(iso));
+        cal.push({ iso, isH }); if(!isH) wd++; cur.setDate(cur.getDate()+1);
+    }
+    let res = "PAYROLL SUMMARY\n";
+    teachersList.forEach(t => {
+        const m = staff[t.name] || { days: new Set(), lates: 0 };
+        const rate = t.salary / wd; const lateLoss = Math.floor(m.lates/3);
+        let sLoss = 0; cal.forEach((day, i) => {
+            if(day.isH && i > 0 && i < cal.length-1) if(!m.days.has(cal[i-1].iso) && !m.days.has(cal[i+1].iso)) sLoss++;
+        });
+        const final = t.salary - ((wd - m.days.size + lateLoss + sLoss) * rate);
+        res += `${t.name}: ₹${Math.max(0, final).toFixed(0)} (Lates: ${m.lates})\n`;
+    });
+    document.getElementById("output").innerText = res;
+}
+
+function exportCSV() {
+    let csv = "Name,Campus,Type,Time\n";
+    document.querySelectorAll("#attendanceList tr").forEach(tr => {
+        csv += `"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
+    });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    a.download = "Attendance.csv"; a.click();
+}
+
+function saveWhatsAppImage() {
+    html2canvas(document.getElementById("capture")).then(c => {
+        const a = document.createElement("a"); a.href = c.toDataURL();
+        a.download = "Payroll.png"; a.click();
+    });
+}
+
+async function sendNotice() {
+    const msg = document.getElementById("noticeMsg").value; if(!msg) return;
+    await db.collection("notifications").doc("latest").set({ text: msg, date: new Date().toLocaleDateString('en-IN'), timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("Sent!"); document.getElementById("noticeMsg").value = "";
+}
+
+async function checkClassAttendance() {
+    const docID = `${document.getElementById('vCampus').value}_${document.getElementById('vClass').value}_${document.getElementById('vDate').value}`;
+    const doc = await db.collection("attendance").doc(docID).get();
+    const box = document.getElementById('classReport');
+    if(!doc.exists) return box.innerHTML = "No records.";
+    const recs = doc.data().records || []; const pres = recs.filter(r => r.status === "Present");
+    let h = `<b>Total: ${recs.length} | Present: ${pres.length}</b><hr>`;
+    pres.forEach(p => h += `${p.studentName}<br>`); box.innerHTML = h;
+}
     async function checkStudent() {
         const adm = document.getElementById('loginAdmNo').value;
         const mob = document.getElementById('loginMobile').value;
