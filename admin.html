@@ -142,7 +142,6 @@
 // --- CONFIG ---
 const LATE_TIME = "08:30:00";
 const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
-
 // --- FIREBASE INIT ---
 firebase.initializeApp({
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
@@ -155,7 +154,6 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 let teachers = [], unsubscribe;
-
 window.onload = () => {
     loadTeachers();
     load();
