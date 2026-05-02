@@ -145,15 +145,96 @@
         messagingSenderId: "379339669496",
         appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
     }; 
-firebase.initializeApp(firebaseConfig); 
-    const db = firebase.firestore();
-let teachersList = [];
+firebase.initializeApp(firebaseConfig);
 
+const db = firebase.firestore();
+const auth = firebase.auth();
+let teachersList = [];
+    
 window.onload = async () => {
-    const snap = await db.collection("teachers").get();
-    snap.forEach(doc => teachersList.push({ ...doc.data(), uid: doc.id }));
-    loadAttendance(); 
+    try {
+        const snap = await db.collection("teachers").get();
+        teachersList = [];
+        snap.forEach(doc => teachersList.push({ ...doc.data(), uid: doc.id }));
+        loadAttendance(); // Load logs
+    } catch (e) {
+        console.error("Connection Error: ", e.message);
+    }
 };
+    async function createTeacher() {
+    const name = document.getElementById("t_name").value;
+    const email = document.getElementById("t_email").value;
+    const pass = document.getElementById("t_password").value;
+    const subject = document.getElementById("t_subject").value;
+    const salary = document.getElementById("t_salary").value;
+
+    if(!name || !email || !pass) return alert("Please fill Name, Email, and Password.");
+
+    try {
+        // A. Create the Login Account in Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, pass);
+        const uid = userCredential.user.uid;
+
+        // B. Store Teacher Details in Firestore "teachers" collection
+        // The Teacher App uses this data to show their profile/salary
+        await db.collection("teachers").doc(uid).set({
+            uid: uid,
+            name: name,
+            email: email,
+            subject: subject,
+            salary: Number(salary),
+            role: "Teacher",
+            joinedDate: new Date().toLocaleDateString('en-IN')
+        });
+
+        alert("Staff Registered! They can now log into the Teacher App using: " + email);
+        
+        // Clear inputs
+        document.getElementById("t_name").value = "";
+        document.getElementById("t_email").value = "";
+        document.getElementById("t_password").value = "";
+        
+    } catch (error) {
+        alert("Recruitment Error: " + error.message);
+    }
+}
+
+// --- 5. ATTENDANCE LOGS ---
+async function loadAttendance() {
+    const s = document.getElementById("startDate").value;
+    const e = document.getElementById("endDate").value;
+    const camp = document.getElementById("filterCampus").value;
+    const nameSearch = document.getElementById("searchName").value.toLowerCase();
+    const list = document.getElementById("attendanceList");
+
+    const snap = await db.collection("attendance").orderBy("time", "desc").get();
+    list.innerHTML = "";
+
+    snap.forEach(doc => {
+        const d = doc.data();
+        const dt = d.time?.toDate();
+        if(!dt) return;
+
+        const ds = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
+        if(s && ds < s) return;
+        if(e && ds > e) return;
+        if(camp !== "All" && d.campus !== camp) return;
+        
+        const tN = d.name || teachersList.find(t => t.uid == d.teacherId)?.name || "Unknown Staff";
+        if(nameSearch && !tN.toLowerCase().includes(nameSearch)) return;
+
+        const isLate = d.type === "IN" && dt.toTimeString().slice(0,8) > "08:30:00";
+
+        list.innerHTML += `<tr>
+            <td><b>${tN}</b></td>
+            <td>${d.campus}</td>
+            <td>${d.type} ${isLate ? '<br><b style="color:red">⬇ LATE</b>' : ''}</td>
+            <td>${dt.toLocaleString()}</td>
+        </tr>`;
+    });
+}
+
     async function loadAttendance() {
     const s = document.getElementById("startDate").value;
     const e = document.getElementById("endDate").value;
