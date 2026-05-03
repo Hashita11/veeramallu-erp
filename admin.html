@@ -255,33 +255,44 @@ function load(){
 
 // =====================
 // ✅ ADMIN ENTRY
-// =====================
-async function saveAttendance(type){
+// ====================
+    
+async function createTeacher() {
+    const n = document.getElementById("t_name").value.trim();
+    const e = document.getElementById("t_email").value.trim();
+    const s = document.getElementById("t_subject").value.trim();
+    const sa = document.getElementById("t_salary").value;
 
-    const uid = document.getElementById("teacherSelect").value;
-    const campus = document.getElementById("campusSelect").value;
+    if (!n || !e) {
+        alert("Enter Name and Email");
+        return;
+    }
 
-    let t = teachers.find(x=>x.uid==uid);
-    if(!t) return alert("Select teacher");
+    try {
+        // Save ONLY to Firestore (No Auth here)
+        await db.collection("teachers").add({
+            name: n,
+            email: e,
+            subject: s,
+            salary: Number(sa || 0),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-    let now = new Date();
+        alert("✅ Teacher Saved Successfully");
 
-    await db.collection("attendance").add({
-        teacherId: uid,
-        teacherEmail: t.email,
-        name: t.name,
-        campus: campus,
-        type: type,
-        dateOnly: now.toLocaleDateString('en-IN'),
-        fullTimestamp: now.toLocaleString('en-IN'),
-        autoLate: false,
-        method:"ADMIN"
-    });
+        // Clear form
+        document.getElementById("t_name").value = "";
+        document.getElementById("t_email").value = "";
+        document.getElementById("t_subject").value = "";
+        document.getElementById("t_salary").value = "";
 
-    alert("Saved");
+        loadTeachers();
+
+    } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+    }
 }
-
-
 
 // =====================
 // ✅ LATE CHECK (FIXED)
@@ -289,8 +300,6 @@ async function saveAttendance(type){
 function checkLate(type, dt){
     return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
 }
-
-
 
 // =====================
 // ✅ SALARY (WORKING)
