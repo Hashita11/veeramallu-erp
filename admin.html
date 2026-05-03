@@ -148,262 +148,334 @@
 
 <script>
 
-<script>
-// --- VERIFIED CONFIGURATION ---
+
+// ✅ FIREBASE INIT
 const firebaseConfig = {
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-    projectId: "veeramalluerp-6cac5",
-    storageBucket: "veeramalluerp-6cac5.appspot.com",
-    messagingSenderId: "379339669496",
-    appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
+    projectId: "veeramalluerp-6cac5"
 };
 
-// Initialize Firebase correctly - prevents "duplicate app" errors
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-} else {
-    firebase.app(); 
-}
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let teachers = []; 
-const LATE_TIME = "08:30:00";
-const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
+let teachers = [];
+let unsubscribe = null;
 
-window.onload = () => { 
-    loadTeachers(); 
-    load(); 
+const LATE_TIME = "08:30:00";
+const HOLIDAYS = ["2026-01-26","2026-08-15","2026-10-02"];
+
+window.onload = () => {
+    loadTeachers();
+    load(); // attendance load
 };
 
-// --- 1. STAFF RECRUITMENT (TEACHER CREATION) ---
-async function createTeacher() {
-    const n = document.getElementById("t_name").value;
-    const e = document.getElementById("t_email").value;
-    const p = document.getElementById("t_password").value;
-    const s = document.getElementById("t_subject").value;
-    const sa = document.getElementById("t_salary").value;
 
-    if (!n || !e || !p) return alert("Fill Name, Email, and Password");
 
-    try {
-        // This is the line that triggers the API Key check
-        const res = await auth.createUserWithEmailAndPassword(e.trim(), p);
-        
-        await db.collection("teachers").doc(res.user.uid).set({
-            uid: res.user.uid,
-            name: n,
-            email: e.trim(),
-            subject: s,
-            salary: Number(sa)
-        });
-
-        alert("Staff Registered Successfully!");
-        location.reload(); 
-    } catch (err) {
-        alert("Registration Error: " + err.message);
-    }
-}
-
-// --- 2. LOAD TEACHERS FOR DROPDOWN ---
-function loadTeachers() {
+// =====================
+// ✅ TEACHERS
+// =====================
+function loadTeachers(){
     const ts = document.getElementById("teacherSelect");
-    db.collection("teachers").get().then(snap => {
-        teachers = [];
-        ts.innerHTML = "<option value=''>Select Staff</option>";
-        snap.forEach(doc => {
-            let d = doc.data(); d.uid = doc.id;
+
+    db.collection("teachers").get().then(snap=>{
+        teachers=[];
+        ts.innerHTML="<option value=''>Select Staff</option>";
+
+        snap.forEach(doc=>{
+            let d=doc.data();
+            d.uid=doc.id;
             teachers.push(d);
+
             ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
         });
     });
 }
 
-// --- 3. ATTENDANCE LOGS (TEACHER_ATTENDANCE) ---
-function load() {
-    const start = document.getElementById("start").value;
-    const end = document.getElementById("end").value;
-    const search = document.getElementById("search").value.toLowerCase();
-    
-    db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
-        const list = document.getElementById("list");
+
+
+// =====================
+// ✅ NAME FIX (IMPORTANT)
+// =====================
+function resolveName(d){
+    return d.name
+        || teachers.find(t=>t.uid==d.teacherId)?.name
+        || teachers.find(t=>t.email==d.teacherEmail)?.name
+        || teachers.find(t=>t.email==d.teacher)?.name
+        || d.teacher
+        || "Unknown";
+}
+
+
+
+// =====================
+// ✅ ATTENDANCE LOAD (FINAL FIX)
+// =====================
+function load(){
+
+    if(unsubscribe) unsubscribe();
+
+    unsubscribe = db.collection("attendance")
+    .orderBy("dateOnly","desc")
+    .onSnapshot(snap=>{
+
+        let list = document.getElementById("list");
         list.innerHTML = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            const dt = d.time?.toDate();
-            if(!dt) return;
-            const ds = dt.toISOString().split('T')[0];
 
-            if(start && ds < start) return;
-            if(end && ds > end) return;
-            if(search && !d.name.toLowerCase().includes(search)) return;
+        snap.forEach(doc=>{
+            let d = doc.data();
 
-            list.innerHTML += `<tr><td><b>${d.name}</b></td><td>${d.campus}</td><td>${d.type}</td><td>${dt.toLocaleString()}</td></tr>`;
+            let name = resolveName(d);
+
+            let dt = new Date(d.fullTimestamp || new Date());
+
+            let late = d.autoLate === true;
+
+            list.innerHTML += `
+            <tr>
+            <td><b>${name}</b></td>
+            <td>${d.campus || '-'}</td>
+            <td>
+            ${d.type || '-'}
+            ${late ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>' : ''}
+            </td>
+            <td>${dt.toLocaleString()}</td>
+            </tr>`;
         });
+
+        if(list.innerHTML===""){
+            list.innerHTML="<tr><td colspan='4'>No records found</td></tr>";
+        }
     });
 }
 
-// --- 4. ADMIN MANUAL ENTRY ---
-async function saveAttendance(type) {
+
+
+// =====================
+// ✅ ADMIN ENTRY
+// =====================
+async function saveAttendance(type){
+
     const uid = document.getElementById("teacherSelect").value;
     const campus = document.getElementById("campusSelect").value;
-    const obj = teachers.find(t => t.uid === uid);
-    
-    if(!obj) return alert("Select staff first");
 
-    try {
-        await db.collection("teacher_attendance").add({
-            teacherId: uid,
-            name: obj.name,
-            campus: campus,
-            type: type,
-            time: firebase.firestore.Timestamp.now(),
-            dateOnly: new Date().toLocaleDateString('en-IN')
-        });
-        alert("Attendance Recorded");
-    } catch(err) { alert(err.message); }
+    let t = teachers.find(x=>x.uid==uid);
+    if(!t) return alert("Select teacher");
+
+    let now = new Date();
+
+    await db.collection("attendance").add({
+        teacherId: uid,
+        teacherEmail: t.email,
+        name: t.name,
+        campus: campus,
+        type: type,
+        dateOnly: now.toLocaleDateString('en-IN'),
+        fullTimestamp: now.toLocaleString('en-IN'),
+        autoLate: false,
+        method:"ADMIN"
+    });
+
+    alert("Saved");
 }
 
-// Helper functions for Payroll/Marks
-function parseDate(t) { return t?.toDate ? t.toDate() : null; }
-function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME
-// Payroll Logic
+
+
+// =====================
+// ✅ LATE CHECK (FIXED)
+// =====================
+function checkLate(type, dt){
+    return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
+}
+
+
+
+// =====================
+// ✅ SALARY (WORKING)
+// =====================
 function generateSalary(){
+
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
-    if(!s_val || !e_val) return alert("Please select the Month Date Range in the filters first.");
 
-    let start=new Date(s_val); start.setHours(0,0,0,0);
-    let end=new Date(e_val); end.setHours(23,59,59,999);
+    if(!s_val || !e_val) return alert("Select date range");
 
-    db.collection("teacher_attendance").get().then(snap=>{
+    let start=new Date(s_val);
+    let end=new Date(e_val);
+
+    db.collection("attendance").get().then(snap=>{
+
         let map={};
+
         snap.forEach(doc=>{
-            let d=doc.data(), dt=parseDate(d.time);
-            if(!dt || dt < start || dt > end) return;
-            let name = d.name;
+            let d=doc.data();
+            let dt=new Date(d.fullTimestamp);
+
+            if(dt < start || dt > end) return;
+
+            let name = resolveName(d);
+
             if(!map[name]) map[name]={p:new Set(), l:0};
+
             if(d.type=="IN"){
                 map[name].p.add(dt.toDateString());
-                if(checkLate("IN", dt)) map[name].l++;
+                if(d.autoLate) map[name].l++;
             }
         });
 
-        let totalWorkingDays=0;
-        let dayRange = [];
-        for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
-            let iso=d.toISOString().slice(0,10);
-            let isHoliday = (d.getDay()==0 || HOLIDAYS.includes(iso));
-            dayRange.push({dateStr: d.toDateString(), isHoliday: isHoliday});
-            if(!isHoliday) totalWorkingDays++;
-        }
+        let out="PAYROLL REPORT\n\n";
 
-        let out="PAYROLL REPORT\n" + start.toLocaleDateString() + " to " + end.toLocaleDateString() + "\n\n";
         for(let n in map){
-            let teacherObj=teachers.find(x=>x.name==n);
-            let monthlySal=teacherObj?.salary||0;
-            let perDayRate = totalWorkingDays > 0 ? monthlySal/totalWorkingDays : 0;
-            
-            let presentDays=map[n].p.size;
-            let lateCount=map[n].l;
-            let lateLossDays = Math.floor(lateCount/3);
-            
-            let holidayLoss = 0;
-            dayRange.forEach((day, index) => {
-                if(day.isHoliday && index > 0 && index < dayRange.length - 1){
-                    let before = dayRange[index-1].dateStr;
-                    let after = dayRange[index+1].dateStr;
-                    if(!map[n].p.has(before) && !map[n].p.has(after)) holidayLoss++;
-                }
-            });
 
-            let absents = (totalWorkingDays - presentDays);
-            let totalDeductionDays = absents + lateLossDays + holidayLoss;
-            let finalPay = monthlySal - (totalDeductionDays * perDayRate);
+            let teacher=teachers.find(x=>x.name==n);
+            let salary=teacher?.salary||0;
 
-            out+=`${n.toUpperCase()}\nStatus: P:${presentDays} | L:${lateCount} | Absents:${absents}\nNet Salary: ₹${Math.max(0, finalPay).toFixed(0)}\n--------------------------\n`;
+            let present=map[n].p.size;
+            let late=map[n].l;
+
+            let lateCut=Math.floor(late/3);
+            let final=salary - (lateCut*(salary/30));
+
+            out+=`${n}\nPresent:${present} Late:${late}\nSalary: ₹${final.toFixed(0)}\n\n`;
         }
+
         document.getElementById("output").innerText=out;
     });
 }
 
-// Student Marks
-async function viewMarks() {
-    let admInput = document.getElementById("searchAdmNo").value.trim();
-    let exSelection = document.getElementById("searchExam").value;
-    let box = document.getElementById("marksOutput");
 
-    if (!admInput) return alert("Enter Admission Number");
 
-    box.innerText = "Loading...";
+// =====================
+// ✅ MARKS (FINAL)
+// =====================
+async function viewMarks(){
 
-    let examMap = {
-        "FA 1 (Formative)": "FA1", "FA 2 (Formative)": "FA2", "FA 3 (Formative)": "FA3",
-        "FA 4 (Formative)": "FA4", "SA 1 (Summative)": "SA1", "SA 2 (Summative)": "SA2"
+    let adm=document.getElementById("searchAdmNo").value.trim();
+    let ex=document.getElementById("searchExam").value;
+    let box=document.getElementById("marksOutput");
+
+    if(!adm) return alert("Enter ID");
+
+    let map={
+        "FA 1 (Formative)":"FA1",
+        "FA 2 (Formative)":"FA2",
+        "FA 3 (Formative)":"FA3",
+        "FA 4 (Formative)":"FA4",
+        "SA 1 (Summative)":"SA1",
+        "SA 2 (Summative)":"SA2"
     };
 
-    let targetExam = examMap[exSelection];
-    const snapshot = await db.collection("marks").get();
-    let out = `REPORT: ${admInput} | ${targetExam}\n-------------------\n`;
-    let total = 0, count = 0, found = false;
+    let exam=map[ex];
 
-    snapshot.forEach(doc => {
-        const m = doc.data();
-        if (doc.id.startsWith(admInput) && m.examType === targetExam) {
-            found = true;
-            const marks = parseFloat(m.total || 0);
-            out += `${m.subject} : ${marks}\n`;
-            total += marks;
+    let snap=await db.collection("marks").get();
+
+    let out=`VGA REPORT\n${adm} - ${exam}\n----------------\n`;
+
+    let total=0,count=0,found=false;
+
+    snap.forEach(doc=>{
+        let d=doc.data();
+
+        if(doc.id.startsWith(adm) && d.examType==exam){
+
+            found=true;
+
+            let m=parseInt(d.total||0);
+
+            out+=`${d.subject} : ${m}\n`;
+
+            total+=m;
             count++;
         }
     });
 
-    if (!found) {
-        box.innerText = "No records found";
+    if(!found){
+        box.innerText="No records found";
         return;
     }
-    const max = count * (targetExam.startsWith("SA") ? 100 : 50);
-    const per = ((total/max)*100).toFixed(1);
-    out += `-------------------\nTotal: ${total}/${max}\n${per}%`;
-    box.innerText = out;
+
+    let max=count*(exam.startsWith("SA")?100:50);
+    let per=((total/max)*100).toFixed(1);
+
+    out+=`----------------\nTotal:${total}/${max}\n${per}%`;
+
+    box.innerText=out;
 }
 
-// Student Attendance
-async function checkClassAttendance() {
-    const campus = document.getElementById('viewCampus').value;
-    const cls = document.getElementById('viewClass').value;
-    const date = document.getElementById('viewDate').value;
-    const reportBox = document.getElementById('classReport');
-    
+
+
+// =====================
+// ✅ CLASS ATTENDANCE
+// =====================
+async function checkClassAttendance(){
+
+    const campus=document.getElementById('viewCampus').value;
+    const cls=document.getElementById('viewClass').value;
+    const date=document.getElementById('viewDate').value;
+
     if(!date) return alert("Select date");
-    reportBox.innerHTML = "Fetching...";
 
-    const docID = `${campus}_${cls}_${date}`;
-    db.collection("attendance").doc(docID).get().then(doc => {
-        if (!doc.exists) {
-            reportBox.innerHTML = "No attendance marked for this class on this date.";
-            return;
-        }
-        const data = doc.data();
-        const presentList = data.records.filter(r => r.status === "Present");
-        let html = `<p>✅ Present: ${presentList.length} / ${data.records.length}</p><hr>`;
-        presentList.forEach((s, i) => {
-            html += `${i+1}. ${s.studentName} (${s.admNo})<br>`;
-        });
-        reportBox.innerHTML = html;
-    }).catch(e => reportBox.innerHTML = "Error loading data.");
+    const docID=`${campus}_${cls}_${date}`;
+
+    let doc=await db.collection("attendance").doc(docID).get();
+
+    let box=document.getElementById("classReport");
+
+    if(!doc.exists){
+        box.innerHTML="No data";
+        return;
+    }
+
+    let data=doc.data();
+    let present=data.records.filter(r=>r.status==="Present");
+
+    let html=`Present: ${present.length}/${data.records.length}<br><hr>`;
+
+    present.forEach((s,i)=>{
+        html+=`${i+1}. ${s.studentName}<br>`;
+    });
+
+    box.innerHTML=html;
 }
 
+
+
+// =====================
+// ✅ NOTICE
+// =====================
+async function sendNotice(){
+
+    let msg=document.getElementById("noticeMsg").value;
+
+    if(!msg) return alert("Enter message");
+
+    await db.collection("notifications").doc("latest").set({
+        text:msg,
+        date:new Date().toLocaleDateString('en-IN')
+    });
+
+    alert("Sent");
+}
+
+
+
+// =====================
+// ✅ CSV + IMAGE
+// =====================
 function exportCSV(){
     let csv="Name,Campus,Type,Time\n";
+
     document.querySelectorAll("#list tr").forEach(tr=>{
-        if(tr.children.length > 1) csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
+        if(tr.children.length>1){
+            csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
+        }
     });
+
     let a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
-    a.download="Staff_Attendance.csv";
+    a.href=URL.createObjectURL(new Blob([csv]));
+    a.download="attendance.csv";
     a.click();
 }
 
@@ -411,21 +483,13 @@ function saveWhatsAppImage(){
     html2canvas(document.getElementById("capture")).then(c=>{
         let a=document.createElement("a");
         a.href=c.toDataURL();
-        a.download="ERP_Summary_Report.png";
+        a.download="report.png";
         a.click();
     });
 }
 
-async function sendNotice(){
-    let msg=document.getElementById("noticeMsg").value;
-    if(!msg) return alert("Enter message text");
-    await db.collection("notifications").doc("latest").set({
-        text:msg, date:new Date().toLocaleDateString('en-IN'),
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    alert("Notification Broadcasted");
-    document.getElementById("noticeMsg").value="";
-}
+</script>
+
 </script>
 </body>
 </html>
