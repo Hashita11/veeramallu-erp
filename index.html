@@ -57,6 +57,7 @@
             <input type="password" id="password" placeholder="••••••••">
         </div>
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
+        <button class="btn-secondary" onclick="registerTeacher()">Create Account</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
         <a href="admissions.html" class="btn-secondary">New Admission Portal</a>
     </div>
@@ -223,6 +224,38 @@ async function markAttendance(type) {
         document.getElementById(type === 'IN' ? 'btnIn' : 'btnOut').disabled = false;
     }
 }
+    async function registerTeacher() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password) {
+        alert("Enter email & password first");
+        return;
+    }
+
+    try {
+        const snap = await db.collection("teachers")
+            .where("email", "==", email)
+            .get();
+
+        if (snap.empty) {
+            alert("❌ You are not registered by admin");
+            return;
+        }
+
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+
+        const docId = snap.docs[0].id;
+        await db.collection("teachers").doc(docId).update({
+            uid: userCred.user.uid
+        });
+
+        alert("✅ Account Created! Now login");
+
+    } catch (err) {
+        alert("Error: " + err.message);
+    }
+    }
 </script>
 </body>
 </html>
