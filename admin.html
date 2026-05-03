@@ -147,9 +147,9 @@
 </div>
 
 <script>
-const LATE_TIME="08:30:00";
-const HOLIDAYS=["2026-01-26","2026-08-15","2026-10-02"];
 
+<script>
+// --- VERIFIED CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -159,23 +159,55 @@ const firebaseConfig = {
     appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
 };
 
-// Initialize Firebase
+// Initialize Firebase correctly - prevents "duplicate app" errors
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); 
 }
 
 const db = firebase.firestore();
 const auth = firebase.auth();
-let teachers = []; // Variable to store loaded staff
-let unsubscribe;
 
-window.onload = () => { loadTeachers(); load(); };
+let teachers = []; 
+const LATE_TIME = "08:30:00";
+const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
 
-// Helpers for Payroll/Late logic
-function parseDate(t) { return t?.toDate ? t.toDate() : null; }
-function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME; }
+window.onload = () => { 
+    loadTeachers(); 
+    load(); 
+};
 
-// Load Staff into Dropdown
+// --- 1. STAFF RECRUITMENT (TEACHER CREATION) ---
+async function createTeacher() {
+    const n = document.getElementById("t_name").value;
+    const e = document.getElementById("t_email").value;
+    const p = document.getElementById("t_password").value;
+    const s = document.getElementById("t_subject").value;
+    const sa = document.getElementById("t_salary").value;
+
+    if (!n || !e || !p) return alert("Fill Name, Email, and Password");
+
+    try {
+        // This is the line that triggers the API Key check
+        const res = await auth.createUserWithEmailAndPassword(e.trim(), p);
+        
+        await db.collection("teachers").doc(res.user.uid).set({
+            uid: res.user.uid,
+            name: n,
+            email: e.trim(),
+            subject: s,
+            salary: Number(sa)
+        });
+
+        alert("Staff Registered Successfully!");
+        location.reload(); 
+    } catch (err) {
+        alert("Registration Error: " + err.message);
+    }
+}
+
+// --- 2. LOAD TEACHERS FOR DROPDOWN ---
 function loadTeachers() {
     const ts = document.getElementById("teacherSelect");
     db.collection("teachers").get().then(snap => {
@@ -189,66 +221,37 @@ function loadTeachers() {
     });
 }
 
-// Register Staff
-async function createTeacher() {
-    const n = document.getElementById("t_name").value;
-    const e = document.getElementById("t_email").value;
-    const p = document.getElementById("t_password").value;
-    const s = document.getElementById("t_subject").value;
-    const sa = document.getElementById("t_salary").value;
-
-    if(!n || !e || !p) return alert("Please fill Name, Email, and Password");
-
-    try {
-        const res = await auth.createUserWithEmailAndPassword(e, p);
-        await db.collection("teachers").doc(res.user.uid).set({
-            uid: res.user.uid, name: n, email: e, subject: s, salary: Number(sa)
-        });
-        alert("Staff Registered Successfully");
-        location.reload();
-    } catch (err) {
-        alert("Error: " + err.message);
-    }
-}
-
-// Load Teacher Logs (Listener)
+// --- 3. ATTENDANCE LOGS (TEACHER_ATTENDANCE) ---
 function load() {
-    if (unsubscribe) unsubscribe();
-    let searchTerm = document.getElementById("search").value.toLowerCase();
-    let selCampus = document.getElementById("filterCampus").value;
-    let startDate = document.getElementById("start").value ? new Date(document.getElementById("start").value) : null;
-    let endDate = document.getElementById("end").value ? new Date(document.getElementById("end").value) : null;
+    const start = document.getElementById("start").value;
+    const end = document.getElementById("end").value;
+    const search = document.getElementById("search").value.toLowerCase();
     
-    if(startDate) startDate.setHours(0,0,0,0);
-    if(endDate) endDate.setHours(23,59,59,999);
-
-    unsubscribe = db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
+    db.collection("teacher_attendance").orderBy("time", "desc").onSnapshot(snap => {
         const list = document.getElementById("list");
         list.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
-            const dt = parseDate(d.time);
+            const dt = d.time?.toDate();
             if(!dt) return;
             const ds = dt.toISOString().split('T')[0];
 
-            if(startDate && dt < startDate) return;
-            if(endDate && dt > endDate) return;
-            if(selCampus !== "All" && d.campus !== selCampus) return;
-            if(searchTerm && !d.name.toLowerCase().includes(searchTerm)) return;
+            if(start && ds < start) return;
+            if(end && ds > end) return;
+            if(search && !d.name.toLowerCase().includes(search)) return;
 
-            let late = checkLate(d.type, dt);
-            list.innerHTML += `<tr><td><b>${d.name}</b></td><td>${d.campus}</td><td>${d.type} ${late ? '<div style="color:red;font-weight:bold;">⬇ LATE</div>' : ''}</td><td>${dt.toLocaleString()}</td></tr>`;
+            list.innerHTML += `<tr><td><b>${d.name}</b></td><td>${d.campus}</td><td>${d.type}</td><td>${dt.toLocaleString()}</td></tr>`;
         });
     });
 }
 
-// Manual Save to teacher_attendance
+// --- 4. ADMIN MANUAL ENTRY ---
 async function saveAttendance(type) {
     const uid = document.getElementById("teacherSelect").value;
     const campus = document.getElementById("campusSelect").value;
-    const obj = teachers.find(t => t.uid == uid);
+    const obj = teachers.find(t => t.uid === uid);
     
-    if(!obj) return alert("Select staff member first");
+    if(!obj) return alert("Select staff first");
 
     try {
         await db.collection("teacher_attendance").add({
@@ -259,10 +262,13 @@ async function saveAttendance(type) {
             time: firebase.firestore.Timestamp.now(),
             dateOnly: new Date().toLocaleDateString('en-IN')
         });
-        alert("Attendance Logged");
+        alert("Attendance Recorded");
     } catch(err) { alert(err.message); }
 }
 
+// Helper functions for Payroll/Marks
+function parseDate(t) { return t?.toDate ? t.toDate() : null; }
+function checkLate(type, dt) { return type == "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME
 // Payroll Logic
 function generateSalary(){
     let s_val = document.getElementById("start").value;
