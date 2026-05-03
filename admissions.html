@@ -144,99 +144,128 @@
         <button class="btn-save no-print" onclick="save()">SAVE TO DATABASE & PRINT RECEIPT</button>
     </div>
 </div>
-
 <script>
 
-// ✅ PASTE HERE (TOP OF SCRIPT)
+// ✅ LOGIN CHECK (TOP)
 const teacher = sessionStorage.getItem("teacherEmail");
 
 if (!teacher) {
     alert("Access Denied. Please login first.");
     window.location.href = "index.html";
 }
-    
-    // Automated Calculation logic
-    function calc() {
-        let totalDue = 0;
-        document.querySelectorAll('#feeTable tbody tr').forEach(row => {
-            const total = parseFloat(row.querySelector('.f-total').value) || 0;
-            let paid = 0;
-            row.querySelectorAll('.f-term').forEach(t => {
-                const parts = t.value.split('/');
-                const amt = parseFloat(parts[parts.length - 1]) || parseFloat(t.value) || 0;
-                paid += amt;
-            });
-            const bal = total - paid;
-            row.querySelector('.f-bal').value = bal;
-            totalDue += bal;
-        });
-        document.getElementById('grandBal').innerText = totalDue;
+
+// ✅ SHOW LOGGED IN TEACHER
+document.addEventListener("DOMContentLoaded", () => {
+    if (teacher) {
+        document.body.insertAdjacentHTML("afterbegin",
+            `<div style="background:#1a237e;color:white;padding:8px;text-align:center;font-size:12px;">
+                Logged in as: ${teacher}
+            </div>`
+        );
     }
+});
 
-    // Firebase Connection
-    const firebaseConfig = { 
-        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE" 
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com", 
-        projectId: "veeramalluerp-6cac5" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+// ✅ CALCULATION FUNCTION
+function calc() {
+    let totalDue = 0;
 
-    async function save() {
-        const fees = {};
-        document.querySelectorAll('#feeTable tbody tr').forEach(row => {
-            const pName = row.cells[0].innerText;
-            fees[pName] = { 
-                total: row.querySelector('.f-total').value, 
-                term1: row.querySelectorAll('.f-term')[0].value,
-                term2: row.querySelectorAll('.f-term')[1].value,
-                term3: row.querySelectorAll('.f-term')[2].value,
-                balance: row.querySelector('.f-bal').value 
-            };
+    document.querySelectorAll('#feeTable tbody tr').forEach(row => {
+        const total = parseFloat(row.querySelector('.f-total').value) || 0;
+        let paid = 0;
+
+        row.querySelectorAll('.f-term').forEach(t => {
+            const parts = t.value.split('/');
+            const amt = parseFloat(parts[parts.length - 1]) || parseFloat(t.value) || 0;
+            paid += amt;
         });
 
-        const data = {
-            id: document.getElementById('admNo').value,
-            name: document.getElementById('stuName').value,
-            fatherName: document.getElementById('fName').value,
-            motherName: document.getElementById('mName').value,
-            campus: document.getElementById('campus').value,
-            class: document.getElementById('joinClass').value,
-            section: document.getElementById('section').value,
-            mobile: document.getElementById('mobile').value,
-            // Additional Student Data
-            dob: document.getElementById('dob').value,
-            caste: document.getElementById('caste').value,
-            aadhaar: document.getElementById('stuAadhaar').value,
-            prevSchool: document.getElementById('prevSchool').value,
-            prevClass: document.getElementById('prevClass').value,
-            tcNo: document.getElementById('tcNo').value,
-            moles: [document.getElementById('mole1').value, document.getElementById('mole2').value],
-            // Govt Data
-            fAadhaar: document.getElementById('fAadhaar').value,
-            mAadhaar: document.getElementById('mAadhaar').value,
-            ration: document.getElementById('ration').value,
-            bankAcc: document.getElementById('accNo').value,
-            ifsc: document.getElementById('ifsc').value,
-            // Fee Summary
-            feeDetails: fees,
-            totalBalance: document.getElementById('grandBal').innerText,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        const bal = total - paid;
+        row.querySelector('.f-bal').value = bal;
+        totalDue += bal;
+    });
+
+    document.getElementById('grandBal').innerText = totalDue;
+}
+
+// ✅ FIREBASE CONFIG (FIXED)
+const firebaseConfig = { 
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com", 
+    projectId: "veeramalluerp-6cac5" 
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ✅ SAVE FUNCTION (FULL FIXED)
+async function save() {
+
+    const fees = {};
+    document.querySelectorAll('#feeTable tbody tr').forEach(row => {
+        const pName = row.cells[0].innerText;
+
+        fees[pName] = { 
+            total: row.querySelector('.f-total').value, 
+            term1: row.querySelectorAll('.f-term')[0].value,
+            term2: row.querySelectorAll('.f-term')[1].value,
+            term3: row.querySelectorAll('.f-term')[2].value,
+            balance: row.querySelector('.f-bal').value 
         };
+    });
 
-        if(!data.id || !data.name) { 
-            alert("Error: Student ID and Name are required!"); 
-            return; 
-        }
+    // ✅ FINAL DATA OBJECT (NO DUPLICATES)
+    const data = {
+        id: document.getElementById('admNo').value,
+        name: document.getElementById('stuName').value,
+        campus: document.getElementById('campus').value,
+        class: document.getElementById('joinClass').value,
+        mobile: document.getElementById('mobile').value,
 
-        try {
-            await db.collection("admissions").doc(data.id).set(data);
-            alert("Record Secured for " + data.name + " (" + data.campus + ")");
-            window.print();
-        } catch(e) { 
-            alert("Firebase Connection Error: " + e.message); 
-        }
+        // 🔥 TRACK TEACHER
+        createdBy: teacher,
+
+        // Additional Student Data
+        dob: document.getElementById('dob').value,
+        caste: document.getElementById('caste').value,
+        aadhaar: document.getElementById('stuAadhaar').value,
+        prevSchool: document.getElementById('prevSchool').value,
+        prevClass: document.getElementById('prevClass').value,
+        tcNo: document.getElementById('tcNo').value,
+        moles: [
+            document.getElementById('mole1').value,
+            document.getElementById('mole2').value
+        ],
+
+        // Govt Data
+        fAadhaar: document.getElementById('fAadhaar').value,
+        mAadhaar: document.getElementById('mAadhaar').value,
+        ration: document.getElementById('ration').value,
+        bankAcc: document.getElementById('accNo').value,
+        ifsc: document.getElementById('ifsc').value,
+
+        // Fee Data
+        feeDetails: fees,
+        totalBalance: document.getElementById('grandBal').innerText,
+
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // ✅ VALIDATION
+    if (!data.id || !data.name) {
+        alert("Error: Student ID and Name are required!");
+        return;
     }
+
+    try {
+        await db.collection("admissions").doc(data.id).set(data);
+
+        alert("✅ Record Saved for " + data.name + " (" + data.campus + ")");
+        window.print();
+
+    } catch (e) {
+        alert("❌ Firebase Error: " + e.message);
+    }
+}
 </script>
 </body>
 </html>
