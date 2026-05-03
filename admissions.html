@@ -108,9 +108,59 @@
         <div class="form-group"><label>Mother Name</label><input type="text" id="mName" placeholder="Mother Name"></div>
         <div class="form-group"><label>Parent Mobile No</label><input type="text" id="parentMobile" placeholder="Mobile"></div>
     </div>
+    
+<div class="section-header">2. ADDITIONAL STUDENT DETAILS</div>
+
+<div class="input-group"> <label>DATE OF BIRTH</label> <input type="date" id="dob" required>
+</div>
+
+<div class="input-group">
+    <label>GENDER</label>
+    <select id="gender">
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+    </select>
+</div>
+
+<div class="input-group">
+    <label>CASTE</label> <input type="text" id="caste" placeholder="e.g. BC-B, OC">
+</div>
+
+<div class="input-group">
+    <label>NATIONALITY</label> <input type="text" id="nationality" value="Indian">
+</div>
+
+<div class="input-group">
+    <label>STUDENT AADHAAR NO</label><input type="number" id="studentAadhaar" placeholder="12 Digit Number">
+</div>
+
+<div class="input-group">
+    <label>PREVIOUS SCHOOL NAME</label><input type="text" id="prevSchool">
+</div>
+
+<div class="input-group">
+    <label>PREVIOUS CLASS</label><input type="text" id="prevClass">
+</div>
+
+<div class="input-group">
+    <label>TC / RC NUMBER</label> <input type="text" id="tcNumber">
+</div>
+
+<div class="input-group">
+    <label>MOLE OF IDENTIFICATION 1</label> <input type="text" id="mole1">
+</div>
+
+<div class="input-group">
+    <label>MOLE OF IDENTIFICATION 2</label>  <input type="text" id="mole2">
+</div>
+
+<div class="input-group">
+    <label>DATE OF JOINING</label><input type="date" id="doj">
+</div>
 
     <div class="government-only">
-        <div class="section-title govt-title">2. INTERNAL GOVT DATA (Talliki Vandanam)</div>
+        <div class="section-title govt-title">3. INTERNAL GOVT DATA (Talliki Vandanam)</div>
         <div class="grid">
             <div class="form-group"><label>Father Aadhaar</label><input type="text" id="fAadhaar"></div>
             <div class="form-group"><label>Mother Aadhaar</label><input type="text" id="mAadhaar"></div>
@@ -121,7 +171,7 @@
         </div>
     </div>
 
-    <div class="section-title">3. DETAILED FEE SETTLEMENT (Supports Part Payments)</div>
+    <div class="section-title">4. DETAILED FEE SETTLEMENT (Supports Part Payments)</div>
     <div class="table-container">
         <table id="feeTable">
             <thead>
