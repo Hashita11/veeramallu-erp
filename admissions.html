@@ -145,8 +145,9 @@
     </div>
 </div>
 <script>
+<script>
 
-// ✅ LOGIN CHECK (TOP)
+// ✅ LOGIN CHECK
 const teacher = sessionStorage.getItem("teacherEmail");
 
 if (!teacher) {
@@ -187,9 +188,9 @@ function calc() {
     document.getElementById('grandBal').innerText = totalDue;
 }
 
-// ✅ FIREBASE CONFIG (FIXED)
+// ✅ FIREBASE CONFIG
 const firebaseConfig = { 
-    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    apiKey: "YOUR_API_KEY",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com", 
     projectId: "veeramalluerp-6cac5" 
 };
@@ -197,75 +198,111 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ✅ SAVE FUNCTION (FULL FIXED)
+// ✅ WHATSAPP FUNCTION
+function sendWhatsAppReceipt(data) {
+
+    let message = `🎓 *VEERAMALLU GLOBAL ACADEMY*\n\n`;
+    message += `📄 *Fee Receipt*\n\n`;
+    message += `👤 Student: ${data.name}\n`;
+    message += `🏫 Campus: ${data.campus}\n`;
+    message += `🎯 Class: ${data.class}\n\n`;
+
+    message += `💰 *Fee Details:*\n`;
+
+    Object.keys(data.feeDetails).forEach(key => {
+        const f = data.feeDetails[key];
+        if (f.total > 0) {
+            message += `- ${key}: ₹${f.total} | Bal: ₹${f.balance}\n`;
+        }
+    });
+
+    message += `\n📊 *Total Balance:* ₹${data.totalBalance}\n\n`;
+    message += `🙏 Thank you!`;
+
+    const phone = "91" + data.mobile; // India code
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+    window.open(url, "_blank");
+}
+
+// ✅ SAVE FUNCTION
 async function save() {
+
+    const mobile = document.getElementById('mobile').value;
+
+    // ✅ VALIDATIONS
+    if (mobile.length !== 10) {
+        alert("Enter valid 10-digit mobile number");
+        return;
+    }
 
     const fees = {};
     document.querySelectorAll('#feeTable tbody tr').forEach(row => {
         const pName = row.cells[0].innerText;
 
         fees[pName] = { 
-            total: row.querySelector('.f-total').value, 
+            total: row.querySelector('.f-total').value || 0, 
             term1: row.querySelectorAll('.f-term')[0].value,
             term2: row.querySelectorAll('.f-term')[1].value,
             term3: row.querySelectorAll('.f-term')[2].value,
-            balance: row.querySelector('.f-bal').value 
+            balance: row.querySelector('.f-bal').value || 0
         };
     });
 
-    // ✅ FINAL DATA OBJECT (NO DUPLICATES)
     const data = {
         id: document.getElementById('admNo').value,
         name: document.getElementById('stuName').value,
         campus: document.getElementById('campus').value,
         class: document.getElementById('joinClass').value,
-        mobile: document.getElementById('mobile').value,
+        mobile: mobile,
 
-        // 🔥 TRACK TEACHER
         createdBy: teacher,
 
-        // Additional Student Data
         dob: document.getElementById('dob').value,
         caste: document.getElementById('caste').value,
         aadhaar: document.getElementById('stuAadhaar').value,
         prevSchool: document.getElementById('prevSchool').value,
         prevClass: document.getElementById('prevClass').value,
         tcNo: document.getElementById('tcNo').value,
+
         moles: [
             document.getElementById('mole1').value,
             document.getElementById('mole2').value
         ],
 
-        // Govt Data
         fAadhaar: document.getElementById('fAadhaar').value,
         mAadhaar: document.getElementById('mAadhaar').value,
         ration: document.getElementById('ration').value,
         bankAcc: document.getElementById('accNo').value,
         ifsc: document.getElementById('ifsc').value,
 
-        // Fee Data
         feeDetails: fees,
         totalBalance: document.getElementById('grandBal').innerText,
 
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // ✅ VALIDATION
     if (!data.id || !data.name) {
-        alert("Error: Student ID and Name are required!");
+        alert("Student ID & Name required");
         return;
     }
 
     try {
         await db.collection("admissions").doc(data.id).set(data);
 
-        alert("✅ Record Saved for " + data.name + " (" + data.campus + ")");
+        alert("✅ Saved Successfully");
+
+        // 🔥 WHATSAPP AUTO OPEN
+        sendWhatsAppReceipt(data);
+
+        // 🖨 PRINT
         window.print();
 
     } catch (e) {
-        alert("❌ Firebase Error: " + e.message);
+        alert("❌ Error: " + e.message);
     }
 }
+
 </script>
 </body>
 </html>
