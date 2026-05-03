@@ -59,7 +59,6 @@
         <button class="btn-login" onclick="handleLogin()">Sign In</button>
         <button class="btn-secondary" onclick="registerTeacher()">Create Account</button>
         <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
-        <a href="admissions.html" class="btn-secondary">New Admission Portal</a>
     </div>
 
     <div id="attendanceSection">
@@ -73,6 +72,7 @@
         <div class="btn-container">
             <button id="btnIn" class="btn-in" onclick="markAttendance('IN')" disabled>Check IN</button>
             <button id="btnOut" class="btn-out" onclick="markAttendance('OUT')" disabled>Check OUT</button>
+            <a href="admissions.html" class="btn-secondary">New Admission Portal</a>
         </div>
         <button onclick="location.reload()" style="background:#6c757d; width:100%; margin-top:20px; padding: 10px; font-size: 0.8rem;">Logout / Reset</button>
     </div>
