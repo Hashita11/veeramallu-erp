@@ -3,329 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admission Portal | 2026-27</title>
+    <title>VGA Admission & Fee Portal | 2026-27</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --primary-color: #1a237e;
-            --secondary-color: #c62828;
-            --success-color: #2e7d32;
-            --border-color: #e0e0e0;
-        }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #ffffff; color: #333; }
-        
-        /* Navigation Menu */
-        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; }
+        :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; --border-color: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
+        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 100; }
         .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
-
-        .container { width: 100%; max-width: 1100px; margin: auto; padding: 15px; box-sizing: border-box; }
-        
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
-        .header h1 { color: var(--primary-color); margin: 0; font-size: 22px; font-weight: 800; }
-        .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-
-        .section-title { background: var(--primary-color); color: white; padding: 10px 15px; border-radius: 4px; margin: 20px 0 12px 0; font-size: 12px; font-weight: bold; text-transform: uppercase; }
+        .container { width: 100%; max-width: 1100px; margin: 20px auto; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: var(--primary-color); font-size: 24px; }
+        .section-title { background: var(--primary-color); color: white; padding: 10px; border-radius: 4px; margin: 20px 0 15px 0; font-size: 13px; font-weight: bold; text-transform: uppercase; }
         .govt-title { background: var(--success-color); }
-
-        .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-        @media (min-width: 768px) { .grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
-        label { font-size: 10px; font-weight: 800; color: #777; margin-bottom: 4px; text-transform: uppercase; }
-        input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; background: #fff; }
-
-        /* Table Optimization */
+        label { font-size: 10px; font-weight: bold; color: #666; margin-bottom: 4px; text-transform: uppercase; }
+        input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 13px; }
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; border: 1px solid #eee; }
-        th, td { padding: 8px; text-align: left; font-size: 13px; border: 1px solid #eee; }
-        th { background: #f8f9fa; color: #555; text-transform: uppercase; font-size: 11px; }
-        
-        .p-field { width: 90%; padding: 5px; font-size: 12px; border: 1px solid #ddd; border-radius: 4px; }
-        .total-in, .bal-in { width: 80px; padding: 5px; font-weight: bold; border: 1px solid #eee; }
-        .balance { color: var(--secondary-color); font-weight: bold; }
-        .total-row { font-weight: bold; background: #fdfdfd; }
-
-        @media print {
-            .no-print, .nav-menu { display: none !important; }
-            .container { padding: 0; }
-            input { border: none !important; font-weight: bold; padding: 0 !important; background: transparent !important; }
-            .section-title { border: 1px solid #000; color: #000 !important; background: #eee !important; -webkit-print-color-adjust: exact; }
-            table, th, td { border: 1px solid #000 !important; }
-        }
-
-        .btn-print { background: var(--secondary-color); color: white; padding: 16px; border: none; border-radius: 8px; width: 100%; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 25px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 10px; border: 1px solid #eee; text-align: left; }
+        th { background: #f8f9fa; font-size: 11px; color: #555; }
+        .f-total, .f-bal { width: 80px; font-weight: bold; border: 1px solid #ddd; }
+        .f-term { width: 100px; border: 1px solid #ddd; }
+        .grand-total-box { text-align: right; margin-top: 20px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; }
+        .btn-save { background: var(--success-color); color: white; padding: 15px; border: none; border-radius: 6px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        @media print { .no-print { display: none !important; } .container { box-shadow: none; width: 100%; } input { border: none !important; } }
     </style>
 </head>
 <body>
-
 <div class="nav-menu no-print">
     <a href="admissions.html">+ New Admission</a>
-    <a href="attendance.html">✓ Daily Attendance</a>
-    <a href="parent-view.html">👤 Parent Portal</a>
+    <a href="admin.html">Admin Portal</a>
 </div>
-
 <div class="container">
     <div class="header">
-        <img src="logo.png" alt="VGA Logo" class="logo-img">
         <h1>VEERAMALLU GLOBAL ACADEMY</h1>
-        <p>Student Admission Receipt | 2026-2027</p>
+        <p>Admission & Fee Receipt | 2026-2027</p>
     </div>
 
-    <div class="section-title">1. ADMISSION & STUDENT INFO</div>
+    <div class="section-title">1. Basic Info (Excel Filtering)</div>
     <div class="grid">
-        <div class="form-group"><label>Admission No</label><input type="text" id="admNo" value="23456"></div>
-        <div class="form-group"><label>Student Name</label><input type="text" id="stuName" value="Sudeep"></div>
-        <div class="form-group">
-            <label>Campus Location</label>
+        <div class="form-group"><label>Student ID</label><input type="text" id="admNo" placeholder="VGA-001"></div>
+        <div class="form-group"><label>Student Name</label><input type="text" id="stuName"></div>
+        <div class="form-group"><label>Campus</label>
             <select id="campus">
-                <option value="Velpur Campus">Velpur Campus</option>
-                <option value="Relangi Campus">Relangi Campus</option>
-                <option value="Undrajavaram Campus">Undrajavaram Campus</option>
+                <option value="Velpur">Velpur Campus</option>
+                <option value="Relangi">Relangi Campus</option>
+                <option value="Undrajavaram">Undrajavaram Campus</option>
             </select>
         </div>
-        <div class="form-group"><label>Join Class</label>
+        <div class="form-group"><label>Class</label>
             <select id="joinClass">
-                <option value="PKG">PKG</option>
-                <option value="LKG">LKG</option>
-                <option value="UKG">UKG</option>
-                <option value="1">1st Class</option>
-                <option value="2">2nd Class</option>
-                <option value="3">3rd Class</option>
-                <option value="4">4th Class</option>
-                <option value="5">5th Class</option>
-                <option value="6">6th Class</option>
-                <option value="7">7th Class</option>
-                <option value="8">8th Class</option>
-                <option value="9">9th Class</option>
-                <option value="10">10th Class</option>
+                <option value="PKG">PKG</option><option value="LKG">LKG</option><option value="UKG">UKG</option>
+                <option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option>
+                <option value="4">4th</option><option value="5">5th</option><option value="6">6th</option>
+                <option value="7">7th</option><option value="8">8th</option><option value="9">9th</option><option value="10">10th</option>
             </select>
         </div>
-        <div class="form-group"><label>Section</label><input type="text" id="section" value="A"></div>
-        <div class="form-group"><label>Village / City</label><input type="text" id="city" value="Velpur"></div>
-        <div class="form-group"><label>Father Name</label><input type="text" id="fName" value="Naresh"></div>
-        <div class="form-group"><label>Mother Name</label><input type="text" id="mName" placeholder="Mother Name"></div>
-        <div class="form-group"><label>Parent Mobile No</label><input type="text" id="parentMobile" placeholder="Mobile"></div>
-    </div>
-    
-<div class="section-header">2. ADDITIONAL STUDENT DETAILS</div>
-
-<div class="input-group"> <label>DATE OF BIRTH</label> <input type="date" id="dob" required>
-</div>
-
-<div class="input-group">
-    <label>GENDER</label>
-    <select id="gender">
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-    </select>
-</div>
-
-<div class="input-group">
-    <label>CASTE</label> <input type="text" id="caste" placeholder="e.g. BC-B, OC">
-</div>
-
-<div class="input-group">
-    <label>NATIONALITY</label> <input type="text" id="nationality" value="Indian">
-</div>
-
-<div class="input-group">
-    <label>STUDENT AADHAAR NO</label><input type="number" id="studentAadhaar" placeholder="12 Digit Number">
-</div>
-
-<div class="input-group">
-    <label>PREVIOUS SCHOOL NAME</label><input type="text" id="prevSchool">
-</div>
-
-<div class="input-group">
-    <label>PREVIOUS CLASS</label><input type="text" id="prevClass">
-</div>
-
-<div class="input-group">
-    <label>TC / RC NUMBER</label> <input type="text" id="tcNumber">
-</div>
-
-<div class="input-group">
-    <label>MOLE OF IDENTIFICATION 1</label> <input type="text" id="mole1">
-</div>
-
-<div class="input-group">
-    <label>MOLE OF IDENTIFICATION 2</label>  <input type="text" id="mole2">
-</div>
-
-<div class="input-group">
-    <label>DATE OF JOINING</label><input type="date" id="doj">
-</div>
-
-    <div class="government-only">
-        <div class="section-title govt-title">3. INTERNAL GOVT DATA (Talliki Vandanam)</div>
-        <div class="grid">
-            <div class="form-group"><label>Father Aadhaar</label><input type="text" id="fAadhaar"></div>
-            <div class="form-group"><label>Mother Aadhaar</label><input type="text" id="mAadhaar"></div>
-            <div class="form-group"><label>Ration Card No</label><input type="text" id="rationCard"></div>
-            <div class="form-group"><label>Mother Account No</label><input type="text" id="accNo"></div>
-            <div class="form-group"><label>IFSC Code</label><input type="text" id="ifsc"></div>
-            <div class="form-group"><label>Previous School</label><input type="text" id="prevSchool"></div>
-        </div>
+        <div class="form-group"><label>Mobile</label><input type="text" id="mobile"></div>
     </div>
 
-    <div class="section-title">4. DETAILED FEE SETTLEMENT (Supports Part Payments)</div>
+    <div class="section-title">2. Additional Student Details</div>
+    <div class="grid">
+        <div class="form-group"><label>DOB</label><input type="date" id="dob"></div>
+        <div class="form-group"><label>Gender</label><select id="gender"><option>Male</option><option>Female</option></select></div>
+        <div class="form-group"><label>Caste</label><input type="text" id="caste" placeholder="e.g. BC-B"></div>
+        <div class="form-group"><label>Nationality</label><input type="text" id="nationality" value="Indian"></div>
+        <div class="form-group"><label>Student Aadhaar</label><input type="text" id="stuAadhaar"></div>
+        <div class="form-group"><label>Prev School</label><input type="text" id="prevSchool"></div>
+        <div class="form-group"><label>TC/RC No</label><input type="text" id="tcNo"></div>
+        <div class="form-group"><label>Mole 1</label><input type="text" id="mole1"></div>
+        <div class="form-group"><label>Mole 2</label><input type="text" id="mole2"></div>
+    </div>
+
+    <div class="section-title govt-title">3. Internal Govt Data (Talliki Vandanam)</div>
+    <div class="grid">
+        <div class="form-group"><label>Father Aadhaar</label><input type="text" id="fAadhaar"></div>
+        <div class="form-group"><label>Mother Aadhaar</label><input type="text" id="mAadhaar"></div>
+        <div class="form-group"><label>Ration Card</label><input type="text" id="ration"></div>
+        <div class="form-group"><label>Acc No</label><input type="text" id="accNo"></div>
+        <div class="form-group"><label>IFSC</label><input type="text" id="ifsc"></div>
+    </div>
+
+    <div class="section-title">4. Fee Structure (T1, T2, T3 Logic)</div>
     <div class="table-container">
         <table id="feeTable">
             <thead>
                 <tr>
-                    <th>PARTICULARS</th>
-                    <th>TOTAL (₹)</th>
-                    <th>PMT 1 (Date/₹)</th>
-                    <th>PMT 2 (Date/₹)</th>
-                    <th>PMT 3 (Date/₹)</th>
-                    <th>PMT 4 (Date/₹)</th>
-                    <th>BALANCE (₹)</th>
+                    <th>Particulars</th>
+                    <th>Total (₹)</th>
+                    <th>Term 1 (Date/Amt)</th>
+                    <th>Term 2 (Date/Amt)</th>
+                    <th>Term 3 (Date/Amt)</th>
+                    <th>Balance (₹)</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td><b>Admission Fee</b></td>
-                    <td><input type="number" class="total-in" value="1000"></td>
-                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
-                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
-                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
-                    <td><input type="text" placeholder="Date/Amt" class="p-field"></td>
-                    <td><input type="number" class="bal-in" value="0"></td>
-                </tr>
-                <tr>
-                    <td><b>Tuition Fee</b></td>
-                    <td><input type="number" class="total-in" value="15000"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in" value="10000"></td>
-                </tr>
-                <tr>
-                    <td><b>Books Fee</b></td>
-                    <td><input type="number" class="total-in" value="4000"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in"></td>
-                </tr>
-                <tr>
-                    <td><b>Exam Fee</b></td>
-                    <td><input type="number" class="total-in" value="2000"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in"></td>
-                </tr>
-                <tr>
-                    <td><b>Uniform Fee</b></td>
-                    <td><input type="number" class="total-in" value="4000"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in"></td>
-                </tr>
-                <tr>
-                    <td><b>Transport Fee</b></td>
-                    <td><input type="number" class="total-in" value="8000"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in"></td>
-                </tr>
-                <tr>
-                    <td><b>Miscellaneous</b></td>
-                    <td><input type="number" class="total-in" value="0"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="text" class="p-field"></td>
-                    <td><input type="number" class="bal-in"></td>
-                </tr>
-                <tr class="total-row">
-                    <td colspan="6" style="text-align: right;">GRAND TOTAL BALANCE DUE:</td>
-                    <td class="balance"><input type="number" id="grandBalance" style="color:red; font-weight:bold; border:none; width:80px;" value="24000"></td>
-                </tr>
+                <tr><td>Admission Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()" placeholder="Date/Amt"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
+                <tr><td>Books Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
+                <tr><td>Uniform Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
+                <tr><td>Exam Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
+                <tr><td>Transport Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
+                <tr><td>Tuition Fee</td><td><input type="number" class="f-total" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="text" class="f-term" oninput="calc()"></td><td><input type="number" class="f-bal" readonly></td></tr>
             </tbody>
         </table>
     </div>
-<button class="btn-print no-print" onclick="saveAndPrint()">SAVE TO FIREBASE & PRINT RECEIPT</button>
+
+    <div class="grand-total-box">
+        <h3>Total Balance Due: ₹ <span id="grandBal">0</span></h3>
+        <button class="btn-save no-print" onclick="save()">SAVE TO DATABASE & PRINT</button>
+    </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-        projectId: "veeramalluerp-6cac5",
-        storageBucket: "veeramalluerp-6cac5.appspot.com",
-        messagingSenderId: "379339669496",
-        appId: "1:379339669496:web:6c2becb98190b4e43a8d2d"
-    };
+    function calc() {
+        let totalDue = 0;
+        document.querySelectorAll('#feeTable tbody tr').forEach(row => {
+            const total = parseFloat(row.querySelector('.f-total').value) || 0;
+            let paid = 0;
+            row.querySelectorAll('.f-term').forEach(t => {
+                // Extracts number even if typed as "Date/Amount"
+                const val = t.value.split('/').pop();
+                paid += parseFloat(val) || 0;
+            });
+            const bal = total - paid;
+            row.querySelector('.f-bal').value = bal;
+            totalDue += bal;
+        });
+        document.getElementById('grandBal').innerText = totalDue;
+    }
 
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3", 
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com", 
+        projectId: "veeramalluerp-6cac5" 
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    async function saveAndPrint() {
-        // Collect detailed fee data
-        const feeRecords = {};
-        const rows = document.querySelectorAll("#feeTable tbody tr:not(.total-row)");
-        
-        rows.forEach(row => {
-            const category = row.cells[0].innerText;
-            feeRecords[category] = {
-                total: row.cells[1].querySelector('input').value,
-                payments: [
-                    row.cells[2].querySelector('input').value,
-                    row.cells[3].querySelector('input').value,
-                    row.cells[4].querySelector('input').value,
-                    row.cells[5].querySelector('input').value
-                ],
-                balance: row.cells[6].querySelector('input').value
+    async function save() {
+        const fees = {};
+        document.querySelectorAll('#feeTable tbody tr').forEach(row => {
+            const pName = row.cells[0].innerText;
+            fees[pName] = { 
+                total: row.querySelector('.f-total').value, 
+                t1: row.querySelectorAll('.f-term')[0].value,
+                t2: row.querySelectorAll('.f-term')[1].value,
+                t3: row.querySelectorAll('.f-term')[2].value,
+                balance: row.querySelector('.f-bal').value 
             };
         });
 
         const data = {
-            admissionNo: document.getElementById('admNo').value,
-            studentName: document.getElementById('stuName').value,
+            id: document.getElementById('admNo').value,
+            name: document.getElementById('stuName').value,
             campus: document.getElementById('campus').value,
-            joinClass: document.getElementById('joinClass').value,
-            section: document.getElementById('section').value,
-            city: document.getElementById('city').value,
-            fatherName: document.getElementById('fName').value,
-            motherName: document.getElementById('mName').value,
-            parentMobile: document.getElementById('parentMobile').value,
-            // Internal Govt Data
-            fatherAadhaar: document.getElementById('fAadhaar').value,
-            motherAadhaar: document.getElementById('mAadhaar').value,
-            rationCard: document.getElementById('rationCard').value,
-            accountNo: document.getElementById('accNo').value,
-            ifsc: document.getElementById('ifsc').value,
-            prevSchool: document.getElementById('prevSchool').value,
+            class: document.getElementById('joinClass').value,
+            mobile: document.getElementById('mobile').value,
+            // Additional Details
+            dob: document.getElementById('dob').value,
+            caste: document.getElementById('caste').value,
+            aadhaar: document.getElementById('stuAadhaar').value,
             // Fee Data
-            feeSettlement: feeRecords,
-            grandBalance: document.getElementById('grandBalance').value,
+            fees: fees,
+            totalDue: document.getElementById('grandBal').innerText,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        if(!data.joinClass || !data.parentMobile) {
-            alert("Error: Class and Parent Mobile are required!");
-            return;
-        }
+        if(!data.id || !data.name) { alert("Please enter ID and Name"); return; }
 
         try {
-            await db.collection("admissions").doc(data.admissionNo).set(data);
-            alert("Success: Saved to VGA Database!");
+            await db.collection("admissions").doc(data.id).set(data);
+            alert("Data saved for " + data.campus + " campus.");
             window.print();
-        } catch (e) {
-            alert("Error: " + e.message);
-        }
+        } catch(e) { alert("Error: " + e.message); }
     }
 </script>
 </body>
