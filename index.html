@@ -72,7 +72,7 @@
         <div class="btn-container">
             <button id="btnIn" class="btn-in" onclick="markAttendance('IN')" disabled>Check IN</button>
             <button id="btnOut" class="btn-out" onclick="markAttendance('OUT')" disabled>Check OUT</button>
-            <a href="admissions.html" class="btn-secondary">New Admission Portal</a>
+            <button class="btn-secondary" onclick="goToAdmission()">New Admission Portal</button>
         </div>
         <button onclick="location.reload()" style="background:#6c757d; width:100%; margin-top:20px; padding: 10px; font-size: 0.8rem;">Logout / Reset</button>
     </div>
@@ -256,6 +256,20 @@ async function markAttendance(type) {
         alert("Error: " + err.message);
     }
     }
+function goToAdmission() {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Please login first");
+        return;
+    }
+
+    // Pass teacher email to next page
+    sessionStorage.setItem("teacherEmail", user.email);
+
+    window.location.href = "admissions.html";
+}
+    
 </script>
 </body>
 </html>
