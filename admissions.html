@@ -145,7 +145,6 @@
     </div>
 </div>
 <script>
-<script>
 
 // ✅ LOGIN CHECK
 const teacher = sessionStorage.getItem("teacherEmail");
@@ -190,7 +189,7 @@ function calc() {
 
 // ✅ FIREBASE CONFIG
 const firebaseConfig = { 
-    apiKey: "YOUR_API_KEY",
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com", 
     projectId: "veeramalluerp-6cac5" 
 };
@@ -219,7 +218,7 @@ function sendWhatsAppReceipt(data) {
     message += `\n📊 *Total Balance:* ₹${data.totalBalance}\n\n`;
     message += `🙏 Thank you!`;
 
-    const phone = "91" + data.mobile; // India code
+    const phone = "91" + data.mobile;; // India code
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
     window.open(url, "_blank");
@@ -296,8 +295,10 @@ async function save() {
         sendWhatsAppReceipt(data);
 
         // 🖨 PRINT
-        window.print();
-
+        
+setTimeout(() => {
+            window.print();
+        }, 1000);
     } catch (e) {
         alert("❌ Error: " + e.message);
     }
