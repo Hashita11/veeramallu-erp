@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Super Admin</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; }
+.header { background:#1a237e; color:white; text-align:center; padding:15px; }
+.header img { height:60px; }
+.container { padding:20px; }
+table { width:100%; border-collapse:collapse; background:white; }
+th,td { padding:10px; border:1px solid #ddd; }
+button { padding:5px 10px; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<img src="logo.png">
+<h2>VEERAMALLU GLOBAL ACADEMY</h2>
+<p>Super Admin Panel</p>
+</div>
+
+<div class="container">
+
+<input type="text" id="search" placeholder="Search student">
+<button onclick="search()">Search</button>
+
+<table id="table">
+<tr><th>ID</th><th>Name</th><th>Campus</th><th>Action</th></tr>
+</table>
+
+</div>
+
+<script>
+const firebaseConfig = {
+ apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+ authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+ projectId: "veeramalluerp-6cac5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function loadData() {
+
+ const snapshot = await db.collection("admissions").get();
+
+ document.getElementById("table").innerHTML =
+ "<tr><th>ID</th><th>Name</th><th>Campus</th><th>Action</th></tr>";
+
+ snapshot.forEach(doc => {
+   const d = doc.data();
+
+   document.getElementById("table").innerHTML += `
+   <tr>
+   <td>${d.id}</td>
+   <td>${d.name}</td>
+   <td>${d.campus}</td>
+   <td>
+   <button onclick="deleteData('${d.id}')">Delete</button>
+   </td>
+   </tr>`;
+ });
+}
+
+async function deleteData(id) {
+ if(confirm("Delete student?")) {
+   await db.collection("admissions").doc(id).delete();
+   alert("Deleted");
+   loadData();
+ }
+}
+
+function search() {
+ const value = document.getElementById("search").value.toLowerCase();
+ document.querySelectorAll("#table tr").forEach(row => {
+   row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+ });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
