@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: Arial; background:#f5f5f5; text-align:center; }
+.header { background:#1a237e; color:white; padding:15px; }
+.header img { height:60px; }
+.card { background:white; margin:20px auto; padding:20px; width:300px; box-shadow:0 2px 10px #ccc; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<img src="logo.png">
+<h2>VEERAMALLU GLOBAL ACADEMY</h2>
+<p>ERP Dashboard</p>
+</div>
+
+<div class="card">
+<h3>Total Students</h3>
+<h1 id="students">0</h1>
+</div>
+
+<div class="card">
+<h3>Total Balance</h3>
+<h1>₹ <span id="balance">0</span></h1>
+</div>
+
+<script>
+const firebaseConfig = {
+ apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+ authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+ projectId: "veeramalluerp-6cac5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+async function loadDashboard() {
+
+ const snapshot = await db.collection("admissions").get();
+
+ let totalStudents = 0;
+ let totalBalance = 0;
+
+ snapshot.forEach(doc => {
+   totalStudents++;
+   totalBalance += Number(doc.data().totalBalance || 0);
+ });
+
+ document.getElementById("students").innerText = totalStudents;
+ document.getElementById("balance").innerText = totalBalance;
+}
+
+loadDashboard();
+</script>
+
+</body>
+</html>
