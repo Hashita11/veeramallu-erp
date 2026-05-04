@@ -6,6 +6,7 @@
     <title>VGA Admission & Fee Portal | 2026-27</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; --border-color: #e0e0e0; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
@@ -165,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ✅ CALCULATION FUNCTION
+// ✅ CALCULATION
 function calc() {
     let totalDue = 0;
 
@@ -179,14 +180,20 @@ function calc() {
             paid += amt;
         });
 
-        const bal = total - paid;
+        let bal = total - paid;
+
+        // ❌ Prevent negative balance
+        if (bal < 0) {
+            alert("⚠️ Paid amount exceeds total fee!");
+            bal = 0;
+        }
+
         row.querySelector('.f-bal').value = bal;
         totalDue += bal;
     });
 
     document.getElementById('grandBal').innerText = totalDue;
 }
-
 // ✅ FIREBASE CONFIG
 const firebaseConfig = { 
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
@@ -219,9 +226,13 @@ function sendWhatsAppReceipt(data) {
     message += `🙏 Thank you!`;
 
     const phone = "91" + data.mobile;; // India code
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const adminPhone = "919059988802";
 
-    window.open(url, "_blank");
+    window.open(`https://wa.me/${parentPhone}?text=${encodeURIComponent(message)}`, "_blank");
+
+    setTimeout(() => {
+        window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`, "_blank");
+    }, 1500);
 }
 
 // ✅ SAVE FUNCTION
@@ -293,7 +304,8 @@ async function save() {
 
         // 🔥 WHATSAPP AUTO OPEN
         sendWhatsAppReceipt(data);
-
+// Download PDF
+        downloadPDF()
         // 🖨 PRINT
         
 setTimeout(() => {
@@ -303,7 +315,19 @@ setTimeout(() => {
         alert("❌ Error: " + e.message);
     }
 }
+function downloadPDF() {
+    const element = document.querySelector('.container');
 
+    const opt = {
+        margin:       5,
+        filename:     'Fee_Receipt.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save();
+}
 </script>
 </body>
 </html>
