@@ -1,88 +1,248 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Super Admin</title>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Super Admin ERP | Veeramallu Global Academy</title>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { font-family: Arial; background:#f5f5f5; }
-.header { background:#1a237e; color:white; text-align:center; padding:15px; }
-.header img { height:60px; }
-.container { padding:20px; }
-table { width:100%; border-collapse:collapse; background:white; }
-th,td { padding:10px; border:1px solid #ddd; }
-button { padding:5px 10px; }
+:root{
+ --primary:#1a237e;
+ --success:#2e7d32;
+ --danger:#c62828;
+}
+body{margin:0;font-family:Segoe UI;background:#f4f6f9;}
+.header{background:var(--primary);color:white;text-align:center;padding:15px;}
+.header img{height:60px;}
+.container{padding:20px;}
+.login{max-width:300px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
+input,select{padding:10px;margin:5px;width:100%;border-radius:8px;border:1px solid #ccc;}
+button{padding:10px;border:none;border-radius:8px;cursor:pointer;}
+.card{background:white;padding:15px;border-radius:10px;margin:10px 0;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
+table{width:100%;border-collapse:collapse;background:white;}
+th{background:var(--primary);color:white;padding:10px;}
+td{padding:10px;border-bottom:1px solid #eee;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;justify-content:center;align-items:center;}
+.modal-content{background:white;padding:20px;border-radius:10px;width:300px;}
 </style>
 </head>
 
 <body>
 
+<!-- 🔐 LOGIN -->
+<div id="loginBox" class="login">
+<img src="logo.png" height="70"><br>
+<h3>Super Admin Login</h3>
+<input type="password" id="pass" placeholder="Enter Password">
+<button onclick="login()">Login</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+
 <div class="header">
 <img src="logo.png">
 <h2>VEERAMALLU GLOBAL ACADEMY</h2>
-<p>Super Admin Panel</p>
+<p>SUPER ADMIN ERP</p>
 </div>
 
 <div class="container">
 
-<input type="text" id="search" placeholder="Search student">
-<button onclick="search()">Search</button>
+<!-- 📊 STATS -->
+<div class="grid">
+<div class="card"><h3 id="total">0</h3>Total Students</div>
+<div class="card"><h3 id="incomeDay">0</h3>Today Income</div>
+<div class="card"><h3 id="incomeMonth">0</h3>Monthly Income</div>
+<div class="card"><h3 id="incomeYear">0</h3>Yearly Income</div>
+</div>
 
-<table id="table">
-<tr><th>ID</th><th>Name</th><th>Campus</th><th>Action</th></tr>
+<!-- 📈 CHARTS -->
+<canvas id="chart1"></canvas>
+<canvas id="chart2"></canvas>
+
+<!-- 🔔 NOTICE -->
+<div class="card">
+<textarea id="notice" placeholder="Send Notice"></textarea>
+<button onclick="sendNotice()">Send</button>
+</div>
+
+<!-- ➕ ADD STUDENT -->
+<div class="card">
+<h3>Add Student</h3>
+<input id="name" placeholder="Name">
+<select id="campus">
+<option>Relangi</option>
+<option>Velpur</option>
+<option>Undrajavaram</option>
+</select>
+<input id="fee" type="number" placeholder="Fees Paid">
+<button onclick="addStudent()">Add</button>
+</div>
+
+<!-- TABLE -->
+<table>
+<thead>
+<tr><th>ID</th><th>Name</th><th>Campus</th><th>Fee</th><th>Action</th></tr>
+</thead>
+<tbody id="table"></tbody>
 </table>
 
+<button onclick="exportCSV()">Export CSV</button>
+
+</div>
+</div>
+
+<!-- 👁️ MODAL -->
+<div id="modal" class="modal">
+<div class="modal-content">
+<h3>Student Details</h3>
+<div id="details"></div>
+<button onclick="closeModal()">Close</button>
+</div>
 </div>
 
 <script>
-const firebaseConfig = {
- apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
- authDomain: "veeramalluerp-6cac5.firebaseapp.com",
- projectId: "veeramalluerp-6cac5"
-};
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// FIREBASE
+firebase.initializeApp({
+ apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx",
+ authDomain:"veeramalluerp-6cac5.firebaseapp.com",
+ projectId:"veeramalluerp-6cac5"
+});
+const db=firebase.firestore();
 
-async function loadData() {
+// 🔐 LOGIN
+function login(){
+ if(document.getElementById("pass").value==="admin@123"){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("app").style.display="block";
+ }
+ else alert("Wrong Password");
+}
 
- const snapshot = await db.collection("admissions").get();
+// 🧾 AUTO ID
+function generateID(){
+ return "VGA"+Date.now();
+}
 
- document.getElementById("table").innerHTML =
- "<tr><th>ID</th><th>Name</th><th>Campus</th><th>Action</th></tr>";
+// ➕ ADD
+async function addStudent(){
+ const id=generateID();
+ const name=document.getElementById("name").value;
+ const campus=document.getElementById("campus").value;
+ const fee=parseInt(document.getElementById("fee").value||0);
 
- snapshot.forEach(doc => {
-   const d = doc.data();
+ await db.collection("admissions").doc(id).set({
+  id,name,campus,fee,
+  date:new Date()
+ });
 
-   document.getElementById("table").innerHTML += `
-   <tr>
-   <td>${d.id}</td>
-   <td>${d.name}</td>
-   <td>${d.campus}</td>
-   <td>
-   <button onclick="deleteData('${d.id}')">Delete</button>
-   </td>
-   </tr>`;
+ alert("Added");
+}
+
+// 🔄 LIVE DATA
+db.collection("admissions").onSnapshot(snap=>{
+ let html="";
+ let total=0,day=0,month=0,year=0;
+
+ let today=new Date().toDateString();
+ let m=new Date().getMonth();
+ let y=new Date().getFullYear();
+
+ snap.forEach(doc=>{
+  let d=doc.data();
+  total++;
+
+  let dt=d.date?.toDate();
+  if(!dt) return;
+
+  if(dt.toDateString()==today) day+=d.fee||0;
+  if(dt.getMonth()==m) month+=d.fee||0;
+  if(dt.getFullYear()==y) year+=d.fee||0;
+
+  html+=`
+  <tr>
+  <td>${d.id}</td>
+  <td>${d.name}</td>
+  <td>${d.campus}</td>
+  <td>${d.fee}</td>
+  <td>
+  <button onclick="view('${doc.id}')">View</button>
+  <button onclick="del('${doc.id}')">Delete</button>
+  </td>
+  </tr>`;
+ });
+
+ document.getElementById("table").innerHTML=html;
+ document.getElementById("total").innerText=total;
+ document.getElementById("incomeDay").innerText="₹"+day;
+ document.getElementById("incomeMonth").innerText="₹"+month;
+ document.getElementById("incomeYear").innerText="₹"+year;
+
+ drawCharts(total,day,month,year);
+});
+
+// 📊 CHARTS
+let c1,c2;
+function drawCharts(t,d,m,y){
+ if(c1) c1.destroy();
+ if(c2) c2.destroy();
+
+ c1=new Chart(document.getElementById("chart1"),{
+  type:"bar",
+  data:{labels:["Students"],datasets:[{data:[t]}]}
+ });
+
+ c2=new Chart(document.getElementById("chart2"),{
+  type:"line",
+  data:{labels:["Day","Month","Year"],datasets:[{data:[d,m,y]}]}
  });
 }
 
-async function deleteData(id) {
- if(confirm("Delete student?")) {
-   await db.collection("admissions").doc(id).delete();
-   alert("Deleted");
-   loadData();
+// 👁️ VIEW
+async function view(id){
+ let doc=await db.collection("admissions").doc(id).get();
+ let d=doc.data();
+ document.getElementById("details").innerHTML=
+ `ID:${d.id}<br>Name:${d.name}<br>Campus:${d.campus}<br>Fee:${d.fee}`;
+ document.getElementById("modal").style.display="flex";
+}
+function closeModal(){document.getElementById("modal").style.display="none";}
+
+// ❌ DELETE
+async function del(id){
+ if(confirm("Delete?")){
+  await db.collection("admissions").doc(id).delete();
  }
 }
 
-function search() {
- const value = document.getElementById("search").value.toLowerCase();
- document.querySelectorAll("#table tr").forEach(row => {
-   row.style.display = row.innerText.toLowerCase().includes(value) ? "" : "none";
+// 📁 CSV
+function exportCSV(){
+ let csv="ID,Name,Campus,Fee\n";
+ document.querySelectorAll("#table tr").forEach(r=>{
+  csv+=`${r.children[0].innerText},${r.children[1].innerText},${r.children[2].innerText},${r.children[3].innerText}\n`;
  });
+ let a=document.createElement("a");
+ a.href=URL.createObjectURL(new Blob([csv]));
+ a.download="students.csv";
+ a.click();
 }
 
-loadData();
+// 🔔 NOTICE
+async function sendNotice(){
+ let msg=document.getElementById("notice").value;
+ await db.collection("notifications").doc("latest").set({
+  text:msg,
+  time:new Date()
+ });
+ alert("Sent");
+}
+
 </script>
 
 </body>
