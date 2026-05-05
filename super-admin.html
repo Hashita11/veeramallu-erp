@@ -1,88 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Super Admin ERP | Veeramallu Global Academy</title>
+<title>Super Admin | Veeramallu Global Academy</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<!-- Charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{
- --primary:#1a237e;
- --success:#2e7d32;
- --danger:#c62828;
+body { font-family: Arial; background:#f5f5f5; margin:0; }
+.header { background:#1a237e; color:white; text-align:center; padding:15px; }
+.header img { height:60px; }
+.container { padding:20px; }
+.card { background:white; padding:15px; margin-bottom:15px; border-radius:10px; }
+table { width:100%; border-collapse:collapse; background:white; }
+th,td { padding:10px; border:1px solid #ddd; text-align:center; }
+button { padding:6px 10px; cursor:pointer; }
+input { padding:8px; margin:5px; }
+
+#loginBox { text-align:center; margin-top:100px; }
+#app { display:none; }
+
+/* Modal */
+#modal {
+ display:none;
+ position:fixed;
+ top:0; left:0;
+ width:100%; height:100%;
+ background:rgba(0,0,0,0.5);
+ justify-content:center;
+ align-items:center;
 }
-body{margin:0;font-family:Segoe UI;background:#f4f6f9;}
-.header{background:var(--primary);color:white;text-align:center;padding:15px;}
-.header img{height:60px;}
-.container{padding:20px;}
-.login{max-width:300px;margin:100px auto;background:white;padding:20px;border-radius:10px;text-align:center;}
-input,select{padding:10px;margin:5px;width:100%;border-radius:8px;border:1px solid #ccc;}
-button{padding:10px;border:none;border-radius:8px;cursor:pointer;}
-.card{background:white;padding:15px;border-radius:10px;margin:10px 0;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
-table{width:100%;border-collapse:collapse;background:white;}
-th{background:var(--primary);color:white;padding:10px;}
-td{padding:10px;border-bottom:1px solid #eee;}
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#0008;justify-content:center;align-items:center;}
-.modal-content{background:white;padding:20px;border-radius:10px;width:300px;}
+#modalBox {
+ background:white;
+ padding:20px;
+ border-radius:10px;
+}
 </style>
 </head>
 
 <body>
 
 <!-- 🔐 LOGIN -->
-<div id="loginBox" class="login">
-<img src="logo.png" height="70"><br>
-<h3>Super Admin Login</h3>
-<input type="password" id="pass" placeholder="Enter Password">
+<div id="loginBox">
+<h2>Super Admin Login</h2>
+<input id="email" placeholder="Email"><br>
+<input id="password" type="password" placeholder="Password"><br>
 <button onclick="login()">Login</button>
 </div>
 
-<!-- MAIN APP -->
-<div id="app" style="display:none;">
+<!-- 🔥 MAIN APP -->
+<div id="app">
 
 <div class="header">
 <img src="logo.png">
 <h2>VEERAMALLU GLOBAL ACADEMY</h2>
-<p>SUPER ADMIN ERP</p>
+<p>Super Admin Panel</p>
+<button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
 
 <!-- 📊 STATS -->
-<div class="grid">
-<div class="card"><h3 id="total">0</h3>Total Students</div>
-<div class="card"><h3 id="incomeDay">0</h3>Today Income</div>
-<div class="card"><h3 id="incomeMonth">0</h3>Monthly Income</div>
-<div class="card"><h3 id="incomeYear">0</h3>Yearly Income</div>
-</div>
-
-<!-- 📈 CHARTS -->
-<canvas id="chart1"></canvas>
-<canvas id="chart2"></canvas>
-
-<!-- 🔔 NOTICE -->
 <div class="card">
-<textarea id="notice" placeholder="Send Notice"></textarea>
-<button onclick="sendNotice()">Send</button>
+<h3>Dashboard</h3>
+Total Students: <span id="total">0</span><br>
+Daily Income: <span id="incomeDay">0</span><br>
+Monthly Income: <span id="incomeMonth">0</span><br>
+Yearly Income: <span id="incomeYear">0</span>
 </div>
 
-<!-- ➕ ADD STUDENT -->
+<!-- ➕ ADD -->
 <div class="card">
 <h3>Add Student</h3>
 <input id="name" placeholder="Name">
-<select id="campus">
-<option>Relangi</option>
-<option>Velpur</option>
-<option>Undrajavaram</option>
-</select>
-<input id="fee" type="number" placeholder="Fees Paid">
-<button onclick="addStudent()">Add</button>
+<input id="campus" placeholder="Campus">
+<input id="fee" placeholder="Fee">
+<button onclick="add()">Add</button>
 </div>
+
+<!-- 🔍 SEARCH -->
+<input id="search" placeholder="Search..." onkeyup="filter()">
+<button onclick="exportCSV()">Export CSV</button>
+
+<!-- 📊 CHARTS -->
+<canvas id="chart1"></canvas>
+<canvas id="chart2"></canvas>
 
 <!-- TABLE -->
 <table>
@@ -92,60 +99,89 @@ td{padding:10px;border-bottom:1px solid #eee;}
 <tbody id="table"></tbody>
 </table>
 
-<button onclick="exportCSV()">Export CSV</button>
+<!-- 🔔 NOTICE -->
+<div class="card">
+<h3>Send Notification</h3>
+<input id="notice" placeholder="Message">
+<button onclick="sendNotice()">Send</button>
+</div>
 
 </div>
 </div>
 
 <!-- 👁️ MODAL -->
-<div id="modal" class="modal">
-<div class="modal-content">
-<h3>Student Details</h3>
+<div id="modal">
+<div id="modalBox">
 <div id="details"></div>
+<br>
 <button onclick="closeModal()">Close</button>
 </div>
 </div>
 
 <script>
-
-// FIREBASE
+// 🔥 Firebase
 firebase.initializeApp({
- apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx",
+ apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx64969815ddd251fe3",
  authDomain:"veeramalluerp-6cac5.firebaseapp.com",
  projectId:"veeramalluerp-6cac5"
 });
-const db=firebase.firestore();
+
+const db = firebase.firestore();
+const auth = firebase.auth();
 
 // 🔐 LOGIN
-function login(){
- if(document.getElementById("pass").value==="admin@123"){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("app").style.display="block";
+async function login(){
+ let email=email.value;
+ let pass=password.value;
+
+ try{
+  let user=await auth.signInWithEmailAndPassword(email,pass);
+
+  let doc=await db.collection("admins").doc(email).get();
+
+  if(!doc.exists || doc.data().role!="superadmin"){
+    alert("Access Denied");
+    auth.signOut();
+    return;
+  }
+
+  loginBox.style.display="none";
+  app.style.display="block";
+
+ }catch(e){ alert(e.message); }
+}
+
+// AUTO LOGIN
+auth.onAuthStateChanged(async user=>{
+ if(user){
+  let doc=await db.collection("admins").doc(user.email).get();
+  if(doc.exists && doc.data().role=="superadmin"){
+    loginBox.style.display="none";
+    app.style.display="block";
+  }
  }
- else alert("Wrong Password");
+});
+
+// LOGOUT
+function logout(){
+ auth.signOut();
+ location.reload();
 }
 
-// 🧾 AUTO ID
-function generateID(){
- return "VGA"+Date.now();
-}
-
-// ➕ ADD
-async function addStudent(){
- const id=generateID();
- const name=document.getElementById("name").value;
- const campus=document.getElementById("campus").value;
- const fee=parseInt(document.getElementById("fee").value||0);
-
- await db.collection("admissions").doc(id).set({
-  id,name,campus,fee,
+// 🧾 AUTO ID + ADD
+function add(){
+ let id="VGA"+Date.now();
+ db.collection("admissions").doc(id).set({
+  id:id,
+  name:name.value,
+  campus:campus.value,
+  fee:Number(fee.value),
   date:new Date()
  });
-
  alert("Added");
 }
 
-// 🔄 LIVE DATA
+// 🔄 LIVE DATA + INCOME
 db.collection("admissions").onSnapshot(snap=>{
  let html="";
  let total=0,day=0,month=0,year=0;
@@ -178,11 +214,12 @@ db.collection("admissions").onSnapshot(snap=>{
   </tr>`;
  });
 
- document.getElementById("table").innerHTML=html;
- document.getElementById("total").innerText=total;
- document.getElementById("incomeDay").innerText="₹"+day;
- document.getElementById("incomeMonth").innerText="₹"+month;
- document.getElementById("incomeYear").innerText="₹"+year;
+ table.innerHTML=html;
+
+ total.innerText=total;
+ incomeDay.innerText="₹"+day;
+ incomeMonth.innerText="₹"+month;
+ incomeYear.innerText="₹"+year;
 
  drawCharts(total,day,month,year);
 });
@@ -193,32 +230,32 @@ function drawCharts(t,d,m,y){
  if(c1) c1.destroy();
  if(c2) c2.destroy();
 
- c1=new Chart(document.getElementById("chart1"),{
-  type:"bar",
-  data:{labels:["Students"],datasets:[{data:[t]}]}
- });
-
- c2=new Chart(document.getElementById("chart2"),{
-  type:"line",
-  data:{labels:["Day","Month","Year"],datasets:[{data:[d,m,y]}]}
- });
+ c1=new Chart(chart1,{type:"bar",data:{labels:["Students"],datasets:[{data:[t]}]}});
+ c2=new Chart(chart2,{type:"line",data:{labels:["Day","Month","Year"],datasets:[{data:[d,m,y]}]}});
 }
 
 // 👁️ VIEW
 async function view(id){
  let doc=await db.collection("admissions").doc(id).get();
  let d=doc.data();
- document.getElementById("details").innerHTML=
- `ID:${d.id}<br>Name:${d.name}<br>Campus:${d.campus}<br>Fee:${d.fee}`;
- document.getElementById("modal").style.display="flex";
+ details.innerHTML=`ID:${d.id}<br>Name:${d.name}<br>Campus:${d.campus}<br>Fee:${d.fee}`;
+ modal.style.display="flex";
 }
-function closeModal(){document.getElementById("modal").style.display="none";}
+function closeModal(){ modal.style.display="none"; }
 
 // ❌ DELETE
 async function del(id){
  if(confirm("Delete?")){
   await db.collection("admissions").doc(id).delete();
  }
+}
+
+// 🔍 FILTER
+function filter(){
+ let v=search.value.toLowerCase();
+ document.querySelectorAll("#table tr").forEach(r=>{
+  r.style.display=r.innerText.toLowerCase().includes(v)?"":"none";
+ });
 }
 
 // 📁 CSV
@@ -235,14 +272,13 @@ function exportCSV(){
 
 // 🔔 NOTICE
 async function sendNotice(){
- let msg=document.getElementById("notice").value;
+ let msg=notice.value;
  await db.collection("notifications").doc("latest").set({
   text:msg,
   time:new Date()
  });
- alert("Sent");
+ alert("Notification Sent");
 }
-
 </script>
 
 </body>
