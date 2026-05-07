@@ -148,9 +148,9 @@ const firebaseConfig = {
 
 // --- 2. INITIALIZATION ---
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
 const auth = firebase.auth();
-
 let teachersList = [];
 const LATE_TIME = "08:30:00";
 const HOLIDAYS = ["2026-01-26", "2026-08-15", "2026-10-02"];
