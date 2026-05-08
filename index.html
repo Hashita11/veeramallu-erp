@@ -262,23 +262,21 @@ style="color:red;margin-top:10px;font-size:13px;display:none;">
 </div>
 
 <!-- ATTENDANCE -->
-<div id="attendanceSection">
-
 <div class="teacher-info">
     <div style="position: relative; display: inline-block;">
         <img id="profilePic" src="https://via.placeholder.com/100?text=User" 
              style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
         
-        <label for="photoUpload" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;">
+        <label for="photoUpload" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">
             📷
         </label>
+        
         <input type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
     </div>
     
     <h2 id="welcomeMsg" style="margin:10px 0 0 0; color: var(--primary); font-size: 1.2rem;">Welcome!</h2>
     <p id="teacherEmailDisplay" style="margin:5px 0 0 0; font-size: 0.8rem; color: #444;"></p>
 </div>
-
 
 <h3 id="welcomeMsg">Welcome</h3>
 
@@ -714,6 +712,47 @@ async function markAttendance(type){
 
         alert(err.message);
     }
+}
+async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // 1. Show a loading state
+    const picElement = document.getElementById('profilePic');
+    picElement.style.opacity = "0.5";
+
+    // 2. Convert image to a string (Base64)
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        const email = auth.currentUser.email;
+
+        try {
+            // 3. Find the teacher document in Firestore
+            const snap = await db.collection("teachers").where("email", "==", email).get();
+            
+            if (!snap.empty) {
+                const docId = snap.docs[0].id;
+                
+                // 4. Save the string to the 'photo' field
+                await db.collection("teachers").doc(docId).update({
+                    photo: base64Image
+                });
+
+                // 5. Update the UI
+                picElement.src = base64Image;
+                picElement.style.opacity = "1";
+                alert("✅ Photo Uploaded Successfully!");
+            } else {
+                alert("Teacher record not found in database.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error saving: " + err.message);
+            picElement.style.opacity = "1";
+        }
+    };
+    reader.readAsDataURL(file);
 }
 
 // ================= TODAY ATTENDANCE =================
