@@ -537,39 +537,68 @@ window.onload = autoSelectNearestCampus;
 function startGPSCheck(selectedCampus) {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((pos) => {
+            const userLat = pos.coords.latitude;
+            const userLng = pos.coords.longitude;
+            
+            // 1. Check distance to the CURRENTLY SELECTED campus
             const target = campusCoords[selectedCampus];
-            const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, target.lat, target.lng);
+            const dist = calculateDistance(userLat, userLng, target.lat, target.lng);
             
             const statusBox = document.getElementById('gpsStatus');
             const bIn = document.getElementById('btnIn');
             const bOut = document.getElementById('btnOut');
 
             if (dist <= 50) {
+                // Success: Teacher is at the selected campus
                 statusBox.innerHTML = `<span style='color:green;'>✔ Verified: Inside ${selectedCampus}</span>`;
                 statusBox.style.borderColor = "green";
                 bIn.disabled = false;
                 bOut.disabled = false;
             } else {
-                // If they are far away, find which campus they ARE near to help them
-                let closestNow = "";
-                let closestDist = Infinity;
-                
+                // 2. Not at selected campus. Let's find if they are at ANY other campus
+                let foundCorrectCampus = false;
+
                 for (const [name, coords] of Object.entries(campusCoords)) {
-                    const d = calculateDistance(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lng);
-                    if (d < closestDist) { 
-                        closestDist = d; 
-                        closestNow = name; 
+                    const d = calculateDistance(userLat, userLng, coords.lat, coords.lng);
+                    
+                    if (d <= 50) {
+                        // AUTO-CORRECT: They are at a different campus!
+                        sessionStorage.setItem('activeCampus', name);
+                        document.getElementById('campusDisplay').innerText = "Campus: " + name;
+                        
+                        // Update status and enable buttons
+                        statusBox.innerHTML = `<span style='color:green;'>✔ Auto-Switched to ${name}</span>`;
+                        statusBox.style.borderColor = "green";
+                        bIn.disabled = false;
+                        bOut.disabled = false;
+                        
+                        foundCorrectCampus = true;
+                        break; 
                     }
                 }
 
-                statusBox.innerHTML = `
-                    <span style='color:red;'>✖ Wrong Location</span><br>
-                    <small>You selected <b>${selectedCampus}</b> but you are ${Math.round(dist)}m away.<br>
-                    Are you actually at <b>${closestNow}</b>?</small>
-                `;
-                statusBox.style.borderColor = "red";
-                bIn.disabled = true;
-                bOut.disabled = true;
+                // 3. If they aren't at ANY campus, show the error you saw in the screenshot
+                if (!foundCorrectCampus) {
+                    let closestNow = "";
+                    let closestDist = Infinity;
+                    
+                    for (const [name, coords] of Object.entries(campusCoords)) {
+                        const d = calculateDistance(userLat, userLng, coords.lat, coords.lng);
+                        if (d < closestDist) { 
+                            closestDist = d; 
+                            closestNow = name; 
+                        }
+                    }
+
+                    statusBox.innerHTML = `
+                        <span style='color:red;'>✖ Wrong Location</span><br>
+                        <small>You selected <b>${selectedCampus}</b> but you are ${Math.round(dist)}m away.<br>
+                        Are you actually at <b>${closestNow}</b>?</small>
+                    `;
+                    statusBox.style.borderColor = "red";
+                    bIn.disabled = true;
+                    bOut.disabled = true;
+                }
             }
         }, null, { enableHighAccuracy: true });
     }
