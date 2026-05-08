@@ -497,80 +497,84 @@ async function registerTeacher(){
         alert(err.message);
     }
 }
+    function autoSelectNearestCampus() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+            let nearestCampus = "Relangi"; // Default
+            let minDistance = Infinity;
+
+            for (const [name, coords] of Object.entries(campusCoords)) {
+                const dist = calculateDistance(
+                    pos.coords.latitude,
+                    pos.coords.longitude,
+                    coords.lat,
+                    coords.lng
+                );
+
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearestCampus = name;
+                }
+            }
+
+            // Update the dropdown automatically
+            const campusDropdown = document.getElementById('campus');
+            campusDropdown.value = nearestCampus;
+            
+            console.log("Automatically selected nearest campus: " + nearestCampus);
+        }, (err) => {
+            console.warn("Auto-select failed: GPS denied.");
+        });
+    }
+}
+
+// Call this when the window loads
+window.onload = autoSelectNearestCampus;
+
 
 // ================= GPS =================
 
-function startGPSCheck(campus){
+function startGPSCheck(selectedCampus) {
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition((pos) => {
+            const target = campusCoords[selectedCampus];
+            const dist = calculateDistance(pos.coords.latitude, pos.coords.longitude, target.lat, target.lng);
+            
+            const statusBox = document.getElementById('gpsStatus');
+            const bIn = document.getElementById('btnIn');
+            const bOut = document.getElementById('btnOut');
 
-    if(navigator.geolocation){
+            if (dist <= 50) {
+                statusBox.innerHTML = `<span style='color:green;'>✔ Verified: Inside ${selectedCampus}</span>`;
+                statusBox.style.borderColor = "green";
+                bIn.disabled = false;
+                bOut.disabled = false;
+            } else {
+                // If they are far away, find which campus they ARE near to help them
+                let closestNow = "";
+                let closestDist = Infinity;
+                
+                for (const [name, coords] of Object.entries(campusCoords)) {
+                    const d = calculateDistance(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lng);
+                    if (d < closestDist) { 
+                        closestDist = d; 
+                        closestNow = name; 
+                    }
+                }
 
-        navigator.geolocation.watchPosition(
-
-        position=>{
-
-            const userLat =
-            position.coords.latitude;
-
-            const userLng =
-            position.coords.longitude;
-
-            const campusLat =
-            campusCoords[campus].lat;
-
-            const campusLng =
-            campusCoords[campus].lng;
-
-            const distance =
-            calculateDistance(
-                userLat,
-                userLng,
-                campusLat,
-                campusLng
-            );
-
-            const gpsBox =
-            document.getElementById("gpsStatus");
-
-            if(distance <= 50){
-
-                gpsBox.innerHTML =
-                "✅ Inside Campus";
-
-                gpsBox.style.borderColor =
-                "green";
-
-                document.getElementById("btnIn").disabled=false;
-                document.getElementById("btnOut").disabled=false;
-
-            }else{
-
-                gpsBox.innerHTML =
-                "❌ Outside Campus (" +
-                Math.round(distance) +
-                "m)";
-
-                gpsBox.style.borderColor =
-                "red";
-
-                document.getElementById("btnIn").disabled=true;
-                document.getElementById("btnOut").disabled=true;
+                statusBox.innerHTML = `
+                    <span style='color:red;'>✖ Wrong Location</span><br>
+                    <small>You selected <b>${selectedCampus}</b> but you are ${Math.round(dist)}m away.<br>
+                    Are you actually at <b>${closestNow}</b>?</small>
+                `;
+                statusBox.style.borderColor = "red";
+                bIn.disabled = true;
+                bOut.disabled = true;
             }
-
-        },
-
-        ()=>{
-
-            document.getElementById("gpsStatus").innerHTML =
-            "Enable GPS Location";
-
-        },
-
-        {
-            enableHighAccuracy:true
-        });
-
+        }, null, { enableHighAccuracy: true });
     }
 }
+
 
 // ================= DISTANCE =================
 
