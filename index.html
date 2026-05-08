@@ -265,10 +265,20 @@ style="color:red;margin-top:10px;font-size:13px;display:none;">
 <div id="attendanceSection">
 
 <div class="teacher-info">
+    <div style="position: relative; display: inline-block;">
+        <img id="profilePic" src="https://via.placeholder.com/100?text=User" 
+             style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+        
+        <label for="photoUpload" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white;">
+            📷
+        </label>
+        <input type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
+    </div>
+    
+    <h2 id="welcomeMsg" style="margin:10px 0 0 0; color: var(--primary); font-size: 1.2rem;">Welcome!</h2>
+    <p id="teacherEmailDisplay" style="margin:5px 0 0 0; font-size: 0.8rem; color: #444;"></p>
+</div>
 
-<img id="profilePreview"
-class="profile-pic"
-src="https://via.placeholder.com/80">
 
 <h3 id="welcomeMsg">Welcome</h3>
 
@@ -791,6 +801,45 @@ window.addEventListener("online",()=>{
     document.getElementById("onlineStatus").style.color =
     "green";
 });
+    
+async function uploadPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Check file size (keep it under 1MB for Firestore)
+    if (file.size > 1024 * 1024) {
+        alert("Photo is too large! Please choose an image under 1MB.");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        const email = auth.currentUser.email;
+
+        try {
+            // Find the teacher's document
+            const snap = await db.collection("teachers").where("email", "==", email).get();
+            
+            if (!snap.empty) {
+                const docId = snap.docs[0].id;
+                
+                // Update the photo in Firestore
+                await db.collection("teachers").doc(docId).update({
+                    photo: base64Image
+                });
+
+                // Update the UI immediately
+                document.getElementById('profilePic').src = base64Image;
+                alert("✅ Profile photo updated!");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Error saving photo: " + err.message);
+        }
+    };
+    reader.readAsDataURL(file);
+}
 
 // ================= PHOTO SAVE =================
 
