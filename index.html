@@ -430,38 +430,46 @@ auth.onAuthStateChanged(user=>{
 // ================= LOGIN =================
 
 function handleLogin(){
+function handleLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const campus = document.getElementById('campus').value;
+    const errDisplay = document.getElementById('loginError');
 
-    const email =
-    document.getElementById("email").value.trim();
-
-    const password =
-    document.getElementById("password").value;
-
-    const campus =
-    document.getElementById("campus").value;
-
-    if(!email || !password){
-
-        showError("Enter email & password");
-
+    if(!email || !password) {
+        errDisplay.innerText = "Please enter credentials";
+        errDisplay.style.display = "block";
         return;
     }
 
-    auth.signInWithEmailAndPassword(email,password)
+    auth.signInWithEmailAndPassword(email, password).then((u) => {
+        // --- PASTE THE PHOTO FETCH LOGIC HERE ---
+        db.collection("teachers").where("email", "==", email).get().then(snap => {
+            if(!snap.empty) {
+                const data = snap.docs[0].data();
+                if(data.photo) {
+                    document.getElementById('profilePic').src = data.photo;
+                }
+            }
+        });
+        // ----------------------------------------
 
-    .then(()=>{
-
-        sessionStorage.setItem(
-        "activeCampus",
-        campus
-        );
-
-    })
-
-    .catch(err=>{
-        showError(err.message);
+        sessionStorage.setItem('activeCampus', campus);
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('attendanceSection').style.display = 'block';
+        
+        const namePart = u.user.email.split('@')[0].toUpperCase();
+        document.getElementById('welcomeMsg').innerText = "Welcome, " + namePart;
+        document.getElementById('teacherEmailDisplay').innerText = u.user.email;
+        document.getElementById('campusDisplay').innerText = "Campus: " + campus;
+        
+        startGPSCheck(campus);
+    }).catch(err => {
+        errDisplay.innerText = "Error: " + err.message;
+        errDisplay.style.display = 'block';
     });
 }
+
 
 // ================= REGISTER =================
 
