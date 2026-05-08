@@ -366,8 +366,33 @@ window.onload = () => {
             document.getElementById('campus').value = near;
         });
     }
-};
+};auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("attendanceSection").style.display = "block";
+        const campus = sessionStorage.getItem("activeCampus") || "Relangi";
+        
+        document.getElementById("welcomeMsg").innerText = "Welcome, " + user.email.split("@")[0].toUpperCase();
+        document.getElementById("teacherEmailDisplay").innerText = user.email;
+        document.getElementById("campusDisplay").innerText = "Campus: " + campus;
 
+        // FETCH PHOTO FROM FIRESTORE
+        db.collection("teachers").where("email", "==", user.email).get().then(snap => {
+            if (!snap.empty) {
+                const data = snap.docs[0].data();
+                // Check if the 'photo' field exists in the document
+                if (data.photo) {
+                    document.getElementById("profilePic").src = data.photo;
+                }
+            }
+        }).catch(err => console.error("Error fetching photo:", err));
+
+        startGPSCheck(campus);
+    }
+});
+    
+
+    
 window.addEventListener("offline", () => { document.getElementById("onlineStatus").innerText = "🔴 Offline"; document.getElementById("onlineStatus").style.color = "red"; });
 window.addEventListener("online", () => { document.getElementById("onlineStatus").innerText = "🟢 Online"; document.getElementById("onlineStatus").style.color = "green"; });
 </script>
