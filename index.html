@@ -1,562 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teacher Portal | Veeramallu Global Academy</title>
-
-<style>
-
-:root{
-    --primary:#1a237e;
-    --success:#28a745;
-    --error:#d32f2f;
-    --warning:#fbc02d;
-    --light:#f0f2f5;
-}
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-    background:var(--light);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    padding:20px;
-    transition:0.3s;
-}
-
-.card{
-    background:white;
-    width:100%;
-    max-width:430px;
-    padding:25px;
-    border-radius:18px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.12);
-}
-
-.logo{
-    width:90px;
-    margin:auto;
-    display:block;
-    margin-bottom:15px;
-}
-
-h2{
-    color:var(--primary);
-    margin-bottom:15px;
-}
-
-.form-group{
-    margin-bottom:15px;
-    text-align:left;
-}
-
-label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:600;
-    font-size:14px;
-}
-
-input,select{
-    width:100%;
-    padding:12px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:15px;
-}
-
-input:focus,select:focus{
-    outline:none;
-    border-color:var(--primary);
-}
-
-button{
-    width:100%;
-    padding:13px;
-    border:none;
-    border-radius:8px;
-    margin-top:10px;
-    font-size:15px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:0.3s;
-}
-
-button:hover{
-    opacity:0.9;
-}
-
-.btn-login{
-    background:var(--primary);
-    color:white;
-}
-
-.btn-in{
-    background:var(--success);
-    color:white;
-}
-
-.btn-out{
-    background:#e65100;
-    color:white;
-}
-
-.btn-secondary{
-    background:white;
-    border:2px solid var(--primary);
-    color:var(--primary);
-}
-
-.btn-secondary:hover{
-    background:var(--primary);
-    color:white;
-}
-
-button:disabled{
-    background:#ccc !important;
-    cursor:not-allowed;
-}
-
-#attendanceSection{
-    display:none;
-}
-
-.teacher-info{
-    background:#e3f2fd;
-    padding:12px;
-    border-radius:10px;
-    margin-bottom:15px;
-    border:1px solid var(--primary);
-}
-
-.status-box{
-    padding:14px;
-    border-radius:8px;
-    margin-top:12px;
-    margin-bottom:15px;
-    background:#fffde7;
-    border:1px solid var(--warning);
-    font-weight:bold;
-    text-align:center;
-}
-
-.btn-row{
-    display:flex;
-    gap:10px;
-}
-
-.darkMode{
-    background:#111 !important;
-}
-
-.darkMode .card{
-    background:#1e1e1e;
-    color:white;
-}
-
-.darkMode input,
-.darkMode select{
-    background:#333;
-    color:white;
-    border:1px solid #555;
-}
-
-.darkMode .teacher-info{
-    background:#222;
-}
-
-.darkMode .btn-secondary{
-    background:#222;
-    color:white;
-    border:1px solid white;
-}
-
-.small{
-    font-size:12px;
-}
-
-#currentTime{
-    margin-top:8px;
-    color:#555;
-    font-size:13px;
-}
-
-.darkMode #currentTime{
-    color:#ccc;
-}
-
-.profile-pic{
-    width:80px;
-    height:80px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid var(--primary);
-    margin-bottom:10px;
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Portal | Veeramallu Global Academy</title>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --success: #28a745;
+            --error: #d32f2f;
+            --warning: #fbc02d;
+            --light: #f0f2f5;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: 0.3s;
+        }
+        .card {
+            background: white;
+            width: 100%;
+            max-width: 430px;
+            padding: 25px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            text-align: center;
+        }
+        .logo { width: 90px; margin: 0 auto 15px; display: block; }
+        h2 { color: var(--primary); margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; }
+        button { width: 100%; padding: 13px; border: none; border-radius: 8px; margin-top: 10px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-login { background: var(--primary); color: white; }
+        .btn-in { background: var(--success); color: white; flex: 1; }
+        .btn-out { background: #e65100; color: white; flex: 1; }
+        .btn-secondary { background: white; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-secondary:hover { background: var(--primary); color: white; }
+        .btn-purple { background: #6a1b9a; color: white; }
+        button:disabled { background: #ccc !important; cursor: not-allowed; }
+        
+        #attendanceSection { display: none; }
+        .teacher-info { background: #e3f2fd; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--primary); }
+        .status-box { padding: 14px; border-radius: 8px; margin: 15px 0; background: #fffde7; border: 1px solid var(--warning); font-weight: bold; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .profile-pic { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        
+        /* Dark Mode */
+        .darkMode { background: #111 !important; }
+        .darkMode .card { background: #1e1e1e; color: white; }
+        .darkMode input, .darkMode select { background: #333; color: white; border: 1px solid #555; }
+        .darkMode .teacher-info { background: #222; border-color: #444; }
+        .darkMode .btn-secondary { background: #222; color: white; border: 1px solid white; }
+        .small { font-size: 12px; display: block; margin-top: 5px; }
+        #currentTime { margin-top: 8px; color: #555; font-size: 13px; }
+        .darkMode #currentTime { color: #ccc; }
+    </style>
 </head>
-
 <body>
 
 <div class="card">
-
-<img src="logo.png"
-     class="logo"
-     onerror="this.src='https://via.placeholder.com/100?text=VGA'">
-
-<button onclick="toggleDarkMode()"
-style="background:#111;color:white;">
-🌙 Dark Mode
-</button>
-
-<!-- LOGIN -->
-<div id="loginSection">
-
-<h2>Teacher Login</h2>
-
-<div class="form-group">
-<label>Select Campus</label>
-<select id="campus">
-<option value="Relangi">Relangi</option>
-<option value="Velpur">Velpur</option>
-<option value="Undrajavaram">Undrajavaram</option>
-</select>
-</div>
-
-<div class="form-group">
-<label>Email</label>
-<input type="email" id="email" placeholder="teacher@vga.com">
-</div>
-
-<div class="form-group">
-<label>Password</label>
-<input type="password" id="password" placeholder="••••••••">
-</div>
-
-<div class="form-group">
-<label>Teacher Photo</label>
-<input type="file" id="teacherPhoto" accept="image/*">
-</div>
-
-<button class="btn-login" onclick="handleLogin()">
-Sign In
-</button>
-
-<button class="btn-secondary" onclick="registerTeacher()">
-Create Account
-</button>
-
-<p id="loginError"
-style="color:red;margin-top:10px;font-size:13px;display:none;">
-</p>
-
-</div>
-
-<!-- ATTENDANCE -->
-<div class="teacher-info">
-    <div style="position: relative; display: inline-block;">
-        <img id="profilePic" src="https://via.placeholder.com/100?text=User" 
-             style="width: 90px; height: 90px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
-        
-        <label for="photoUpload" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">
-            📷
-        </label>
-        
-        <input type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
-    </div>
+    <img src="logo.png" class="logo" onerror="this.src='https://via.placeholder.com/100?text=VGA'">
     
-    <h2 id="welcomeMsg" style="margin:10px 0 0 0; color: var(--primary); font-size: 1.2rem;">Welcome!</h2>
-    <p id="teacherEmailDisplay" style="margin:5px 0 0 0; font-size: 0.8rem; color: #444;"></p>
+    <button onclick="toggleDarkMode()" style="background:#111; color:white; margin-bottom: 15px;">🌙 Toggle Dark Mode</button>
+
+    <div id="loginSection">
+        <h2>Teacher Login</h2>
+        <div class="form-group">
+            <label>Select Campus</label>
+            <select id="campus">
+                <option value="Relangi">Relangi</option>
+                <option value="Velpur">Velpur</option>
+                <option value="Undrajavaram">Undrajavaram</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="teacher@vga.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••">
+        </div>
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
+        <button class="btn-secondary" onclick="registerTeacher()">Create Account</button>
+        <p id="loginError" style="color:red; margin-top:10px; font-size:13px; display:none;"></p>
+    </div>
+
+    <div id="attendanceSection">
+        <div class="teacher-info">
+            <div style="position: relative; display: inline-block;">
+                <img id="profilePic" src="https://via.placeholder.com/100?text=User" class="profile-pic">
+                <label for="photoUpload" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">📷</label>
+                <input type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
+            </div>
+            <h2 id="welcomeMsg" style="margin-top:10px; font-size: 1.2rem;">Welcome!</h2>
+            <p id="teacherEmailDisplay" class="small"></p>
+            <p id="campusDisplay" class="small" style="font-weight:bold; color:var(--primary);"></p>
+            <p id="onlineStatus" style="color:green; font-weight:bold; margin-top:5px;">🟢 Online</p>
+            <p id="currentTime"></p>
+        </div>
+
+        <div class="status-box" id="gpsStatus">Checking GPS...</div>
+
+        <div class="btn-row">
+            <button id="btnIn" class="btn-in" disabled onclick="markAttendance('IN')">Check IN</button>
+            <button id="btnOut" class="btn-out" disabled onclick="markAttendance('OUT')">Check OUT</button>
+        </div>
+
+        <button class="btn-secondary" onclick="window.location.href='admissions.html'">New Admission Portal</button>
+        <button class="btn-secondary" onclick="window.location.href='admin.html'">Admin Dashboard</button>
+        <button class="btn-secondary" onclick="window.location.href='homework.html'">Homework Upload</button>
+        <button class="btn-secondary" onclick="window.location.href='salary-slip.html'">Salary Slip</button>
+        <button class="btn-secondary" onclick="generateIDCard()">Generate ID Card</button>
+        <button class="btn-secondary" onclick="window.location.href='bus-tracker.html'">Bus Tracking</button>
+        <button class="btn-purple" onclick="viewTodayAttendance()">Today's Attendance</button>
+        <button onclick="logoutUser()" style="background:#6c757d; color:white;">Logout</button>
+    </div>
 </div>
 
-<h3 id="welcomeMsg">Welcome</h3>
-
-<p id="teacherEmailDisplay" class="small"></p>
-
-<p id="campusDisplay" class="small"></p>
-
-<p id="onlineStatus"
-style="color:green;font-weight:bold;">
-🟢 Online
-</p>
-
-<p id="currentTime"></p>
-
-</div>
-
-<div class="status-box" id="gpsStatus">
-Checking GPS...
-</div>
-
-<div class="btn-row">
-
-<button id="btnIn"
-class="btn-in"
-disabled
-onclick="markAttendance('IN')">
-Check IN
-</button>
-
-<button id="btnOut"
-class="btn-out"
-disabled
-onclick="markAttendance('OUT')">
-Check OUT
-</button>
-
-</div>
-
-<button class="btn-secondary"
-onclick="goToAdmission()">
-New Admission Portal
-</button>
-
-<button class="btn-secondary"
-onclick="openDashboard()">
-Admin Dashboard
-</button>
-
-<button class="btn-secondary"
-onclick="openHomework()">
-Homework Upload
-</button>
-
-<button class="btn-secondary"
-onclick="openSalarySlip()">
-Salary Slip
-</button>
-
-<button class="btn-secondary"
-onclick="generateIDCard()">
-Generate ID Card
-</button>
-
-<button class="btn-secondary"
-onclick="openBusTracker()">
-Bus Tracking
-</button>
-
-<button onclick="viewTodayAttendance()"
-style="background:#6a1b9a;color:white;">
-Today's Attendance
-</button>
-
-<button onclick="logoutUser()"
-style="background:#6c757d;color:white;">
-Logout
-</button>
-
-</div>
-
-</div>
-
-<!-- HTML2CANVAS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-
 // ================= CONFIG =================
-
 const LATE_THRESHOLD = "08:30:00";
-    const campusCoords = {
-        "Relangi": { lat: 16.702710, lng: 81.644140 },
-        "Velpur": { lat: 16.719772, lng: 81.662377 },
-        "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
-    };
+const campusCoords = {
+    "Relangi": { lat: 16.702710, lng: 81.644140 },
+    "Velpur": { lat: 16.719772, lng: 81.662377 },
+    "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
+};
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-  authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-  projectId: "veeramalluerp-6cac5",
-  storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-  messagingSenderId: "379339569496",
-  appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+    messagingSenderId: "379339569496",
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ================= AUTO LOGIN =================
+// ================= AUTO LOGIN & INITIALIZE =================
+auth.onAuthStateChanged(user => {
+    if (user) {
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("attendanceSection").style.display = "block";
+        const campus = sessionStorage.getItem("activeCampus") || "Relangi";
+        
+        document.getElementById("welcomeMsg").innerText = "Welcome, " + user.email.split("@")[0].toUpperCase();
+        document.getElementById("teacherEmailDisplay").innerText = user.email;
+        document.getElementById("campusDisplay").innerText = "Campus: " + campus;
 
-auth.onAuthStateChanged(user=>{
-
-    if(user){
-
-        document.getElementById("loginSection").style.display="none";
-        document.getElementById("attendanceSection").style.display="block";
-
-        const campus =
-        sessionStorage.getItem("activeCampus") || "Relangi";
-
-        document.getElementById("welcomeMsg").innerText =
-        "Welcome " + user.email.split("@")[0].toUpperCase();
-
-        document.getElementById("teacherEmailDisplay").innerText =
-        user.email;
-
-        document.getElementById("campusDisplay").innerText =
-        "Campus : " + campus;
-
-        const savedPhoto =
-        localStorage.getItem("teacherPhoto");
-
-        if(savedPhoto){
-            document.getElementById("profilePreview").src =
-            savedPhoto;
-        }
+        // Fetch Photo from Firestore
+        db.collection("teachers").where("email", "==", user.email).get().then(snap => {
+            if (!snap.empty && snap.docs[0].data().photo) {
+                document.getElementById("profilePic").src = snap.docs[0].data().photo;
+            }
+        });
 
         startGPSCheck(campus);
     }
 });
 
-// ================= LOGIN =================
-
-function handleLogin(){
+// ================= LOGIN & REGISTER =================
 function handleLogin() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const campus = document.getElementById('campus').value;
     const errDisplay = document.getElementById('loginError');
 
-    if(!email || !password) {
+    if (!email || !password) {
         errDisplay.innerText = "Please enter credentials";
         errDisplay.style.display = "block";
         return;
     }
 
-    auth.signInWithEmailAndPassword(email, password).then((u) => {
-        // --- PASTE THE PHOTO FETCH LOGIC HERE ---
-        db.collection("teachers").where("email", "==", email).get().then(snap => {
-            if(!snap.empty) {
-                const data = snap.docs[0].data();
-                if(data.photo) {
-                    document.getElementById('profilePic').src = data.photo;
-                }
-            }
-        });
-        // ----------------------------------------
-
+    auth.signInWithEmailAndPassword(email, password).then(() => {
         sessionStorage.setItem('activeCampus', campus);
-        document.getElementById('loginSection').style.display = 'none';
-        document.getElementById('attendanceSection').style.display = 'block';
-        
-        const namePart = u.user.email.split('@')[0].toUpperCase();
-        document.getElementById('welcomeMsg').innerText = "Welcome, " + namePart;
-        document.getElementById('teacherEmailDisplay').innerText = u.user.email;
-        document.getElementById('campusDisplay').innerText = "Campus: " + campus;
-        
-        startGPSCheck(campus);
+        location.reload(); 
     }).catch(err => {
         errDisplay.innerText = "Error: " + err.message;
         errDisplay.style.display = 'block';
     });
 }
 
+async function registerTeacher() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if (!email || !password) return alert("Enter email & password");
 
-// ================= REGISTER =================
+    try {
+        const snap = await db.collection("teachers").where("email", "==", email).get();
+        if (snap.empty) return alert("Teacher not pre-approved by admin");
 
-async function registerTeacher(){
-
-    const email =
-    document.getElementById("email").value.trim();
-
-    const password =
-    document.getElementById("password").value;
-
-    if(!email || !password){
-        alert("Enter email & password");
-        return;
-    }
-
-    try{
-
-        const snap =
-        await db.collection("teachers")
-        .where("email","==",email)
-        .get();
-
-        if(snap.empty){
-            alert("Teacher not approved by admin");
-            return;
-        }
-
-        const userCred =
-        await auth.createUserWithEmailAndPassword(
-            email,password
-        );
-
-        await db.collection("teachers")
-        .doc(snap.docs[0].id)
-        .update({
-            uid:userCred.user.uid
-        });
-
-        alert("Account Created Successfully");
-
-    }catch(err){
-        alert(err.message);
-    }
-}
-    function autoSelectNearestCampus() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            let nearestCampus = "Relangi"; // Default
-            let minDistance = Infinity;
-
-            for (const [name, coords] of Object.entries(campusCoords)) {
-                const dist = calculateDistance(
-                    pos.coords.latitude,
-                    pos.coords.longitude,
-                    coords.lat,
-                    coords.lng
-                );
-
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearestCampus = name;
-                }
-            }
-
-            // Update the dropdown automatically
-            const campusDropdown = document.getElementById('campus');
-            campusDropdown.value = nearestCampus;
-            
-            console.log("Automatically selected nearest campus: " + nearestCampus);
-        }, (err) => {
-            console.warn("Auto-select failed: GPS denied.");
-        });
-    }
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection("teachers").doc(snap.docs[0].id).update({ uid: userCred.user.uid });
+        alert("Account Created Successfully! Now Login.");
+    } catch (err) { alert(err.message); }
 }
 
-// Call this when the window loads
-window.onload = autoSelectNearestCampus;
-
-
-// ================= GPS =================
-
+// ================= GPS LOGIC =================
 function startGPSCheck(selectedCampus) {
     if (navigator.geolocation) {
         navigator.geolocation.watchPosition((pos) => {
             const userLat = pos.coords.latitude;
             const userLng = pos.coords.longitude;
-            
-            // 1. Check distance to the CURRENTLY SELECTED campus
             const target = campusCoords[selectedCampus];
             const dist = calculateDistance(userLat, userLng, target.lat, target.lng);
             
@@ -565,477 +225,151 @@ function startGPSCheck(selectedCampus) {
             const bOut = document.getElementById('btnOut');
 
             if (dist <= 50) {
-                // Success: Teacher is at the selected campus
                 statusBox.innerHTML = `<span style='color:green;'>✔ Verified: Inside ${selectedCampus}</span>`;
-                statusBox.style.borderColor = "green";
-                bIn.disabled = false;
-                bOut.disabled = false;
+                bIn.disabled = false; bOut.disabled = false;
             } else {
-                // 2. Not at selected campus. Let's find if they are at ANY other campus
-                let foundCorrectCampus = false;
-
+                let foundOther = false;
                 for (const [name, coords] of Object.entries(campusCoords)) {
-                    const d = calculateDistance(userLat, userLng, coords.lat, coords.lng);
-                    
-                    if (d <= 50) {
-                        // AUTO-CORRECT: They are at a different campus!
+                    if (calculateDistance(userLat, userLng, coords.lat, coords.lng) <= 50) {
                         sessionStorage.setItem('activeCampus', name);
                         document.getElementById('campusDisplay').innerText = "Campus: " + name;
-                        
-                        // Update status and enable buttons
                         statusBox.innerHTML = `<span style='color:green;'>✔ Auto-Switched to ${name}</span>`;
-                        statusBox.style.borderColor = "green";
-                        bIn.disabled = false;
-                        bOut.disabled = false;
-                        
-                        foundCorrectCampus = true;
-                        break; 
+                        bIn.disabled = false; bOut.disabled = false;
+                        foundOther = true; break;
                     }
                 }
-
-                // 3. If they aren't at ANY campus, show the error you saw in the screenshot
-                if (!foundCorrectCampus) {
-                    let closestNow = "";
-                    let closestDist = Infinity;
-                    
-                    for (const [name, coords] of Object.entries(campusCoords)) {
-                        const d = calculateDistance(userLat, userLng, coords.lat, coords.lng);
-                        if (d < closestDist) { 
-                            closestDist = d; 
-                            closestNow = name; 
-                        }
-                    }
-
-                    statusBox.innerHTML = `
-                        <span style='color:red;'>✖ Wrong Location</span><br>
-                        <small>You selected <b>${selectedCampus}</b> but you are ${Math.round(dist)}m away.<br>
-                        Are you actually at <b>${closestNow}</b>?</small>
-                    `;
-                    statusBox.style.borderColor = "red";
-                    bIn.disabled = true;
-                    bOut.disabled = true;
+                if (!foundOther) {
+                    statusBox.innerHTML = `<span style='color:red;'>✖ Outside Campus (${Math.round(dist)}m)</span>`;
+                    bIn.disabled = true; bOut.disabled = true;
                 }
             }
         }, null, { enableHighAccuracy: true });
     }
 }
 
-
-// ================= DISTANCE =================
-
-function calculateDistance(lat1,lon1,lat2,lon2){
-
+function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3;
-
-    const dLat =
-    (lat2-lat1)*Math.PI/180;
-
-    const dLon =
-    (lon2-lon1)*Math.PI/180;
-
-    const a =
-    Math.sin(dLat/2)*Math.sin(dLat/2) +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2)*Math.sin(dLon/2);
-
-    return R * 2 *
-    Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // ================= ATTENDANCE =================
-
-async function markAttendance(type){
-
-    try{
-
-        const teacher =
-        auth.currentUser.email;
-
-        const campus =
-        sessionStorage.getItem("activeCampus");
-
+async function markAttendance(type) {
+    try {
+        const teacher = auth.currentUser.email;
+        const campus = sessionStorage.getItem("activeCampus");
         const now = new Date();
+        const today = now.toLocaleDateString("en-IN");
+        const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
 
-        const today =
-        now.toLocaleDateString("en-IN");
+        const existing = await db.collection("attendance")
+            .where("teacher", "==", teacher).where("type", "==", type).where("dateOnly", "==", today).get();
 
-        const timeStr =
-        now.toLocaleTimeString(
-            "en-GB",
-            {hour12:false}
-        );
-
-        const existing =
-        await db.collection("attendance")
-        .where("teacher","==",teacher)
-        .where("type","==",type)
-        .where("dateOnly","==",today)
-        .get();
-
-        if(!existing.empty){
-
-            alert(type + " already marked");
-
-            return;
-        }
-
-        const isLate =
-        type==="IN" &&
-        timeStr > LATE_THRESHOLD;
+        if (!existing.empty) return alert(type + " already marked for today");
 
         await db.collection("attendance").add({
-
-            teacher:teacher,
-            teacherEmail:teacher,
-            campus:campus,
-            type:type,
-            late:isLate,
-
-            time:
-            firebase.firestore.Timestamp.fromDate(now),
-
-            dateOnly:today,
-            dateISO:now.toISOString(),
-
-            method:"Teacher App"
+            teacher, teacherEmail: teacher, campus, type,
+            late: (type === "IN" && timeStr > LATE_THRESHOLD),
+            time: firebase.firestore.Timestamp.fromDate(now),
+            dateOnly: today,
+            method: "Teacher App"
         });
-
-        alert(
-        "Attendance Marked : " +
-        type +
-        " at " +
-        timeStr
-        );
-
-    }catch(err){
-
-        alert(err.message);
-    }
+        alert(`Attendance Marked: ${type} at ${timeStr}`);
+    } catch (err) { alert(err.message); }
 }
+
+// ================= PHOTO UPLOAD =================
 async function uploadPhoto(input) {
     const file = input.files[0];
     if (!file) return;
+    if (file.size > 1024 * 1024) return alert("Photo too large (Keep under 1MB)");
 
-    // 1. Show a loading state
-    const picElement = document.getElementById('profilePic');
-    picElement.style.opacity = "0.5";
-
-    // 2. Convert image to a string (Base64)
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = async (e) => {
         const base64Image = e.target.result;
-        const email = auth.currentUser.email;
-
-        try {
-            // 3. Find the teacher document in Firestore
-            const snap = await db.collection("teachers").where("email", "==", email).get();
-            
-            if (!snap.empty) {
-                const docId = snap.docs[0].id;
-                
-                // 4. Save the string to the 'photo' field
-                await db.collection("teachers").doc(docId).update({
-                    photo: base64Image
-                });
-
-                // 5. Update the UI
-                picElement.src = base64Image;
-                picElement.style.opacity = "1";
-                alert("✅ Photo Uploaded Successfully!");
-            } else {
-                alert("Teacher record not found in database.");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error saving: " + err.message);
-            picElement.style.opacity = "1";
+        const snap = await db.collection("teachers").where("email", "==", auth.currentUser.email).get();
+        if (!snap.empty) {
+            await db.collection("teachers").doc(snap.docs[0].id).update({ photo: base64Image });
+            document.getElementById('profilePic').src = base64Image;
+            alert("✅ Profile photo updated!");
         }
     };
     reader.readAsDataURL(file);
 }
 
-// ================= TODAY ATTENDANCE =================
+// ================= UTILITIES =================
+function toggleDarkMode() {
+    document.body.classList.toggle("darkMode");
+    localStorage.setItem("darkMode", document.body.classList.contains("darkMode") ? "ON" : "OFF");
+}
 
-async function viewTodayAttendance(){
+function updateClock() {
+    document.getElementById("currentTime").innerText = new Date().toLocaleString();
+}
 
-    const teacher =
-    auth.currentUser.email;
-
-    const today =
-    new Date().toLocaleDateString("en-IN");
-
-    const snap =
-    await db.collection("attendance")
-    .where("teacher","==",teacher)
-    .where("dateOnly","==",today)
-    .get();
-
-    if(snap.empty){
-
-        alert("No attendance today");
-
-        return;
-    }
-
-    let msg = "";
-
-    snap.forEach(doc=>{
-
-        const d = doc.data();
-
-        msg +=
-        d.type +
-        " - " +
-        new Date(
-            d.time.seconds * 1000
-        ).toLocaleTimeString() +
-        "\n";
-    });
-
+async function viewTodayAttendance() {
+    const today = new Date().toLocaleDateString("en-IN");
+    const snap = await db.collection("attendance").where("teacher", "==", auth.currentUser.email).where("dateOnly", "==", today).get();
+    if (snap.empty) return alert("No records for today");
+    let msg = "Today's Attendance:\n";
+    snap.forEach(doc => { msg += `${doc.data().type} - ${new Date(doc.data().time.seconds * 1000).toLocaleTimeString()}\n`; });
     alert(msg);
 }
 
-// ================= DARK MODE =================
+function generateIDCard() {
+    const pic = document.getElementById("profilePic").src;
+    const name = auth.currentUser.email.split('@')[0].toUpperCase();
+    const campus = sessionStorage.getItem("activeCampus");
 
-function toggleDarkMode(){
+    const idHtml = `
+        <div id="tempID" style="width:300px; padding:20px; text-align:center; background:white; border:5px solid #1a237e; border-radius:15px; font-family:sans-serif;">
+            <h2 style="color:#1a237e; font-size:16px;">VEERAMALLU GLOBAL ACADEMY</h2>
+            <img src="${pic}" style="width:100px; height:100px; border-radius:50%; border:3px solid #1a237e; object-fit:cover; margin:10px 0;">
+            <h3 style="margin:5px 0;">${name}</h3>
+            <p style="margin:0; font-weight:bold;">${campus}</p>
+            <p style="font-size:12px; color:gray;">Authorized Staff Member</p>
+        </div>
+    `;
+    const container = document.createElement("div");
+    container.style.position = "absolute"; container.style.left = "-9999px";
+    container.innerHTML = idHtml; document.body.appendChild(container);
 
-    document.body.classList.toggle("darkMode");
-
-    if(document.body.classList.contains("darkMode")){
-        localStorage.setItem("darkMode","ON");
-    }else{
-        localStorage.removeItem("darkMode");
-    }
+    html2canvas(document.getElementById("tempID")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "VGA-ID-Card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+        document.body.removeChild(container);
+    });
 }
 
-window.onload = ()=>{
+function logoutUser() {
+    auth.signOut().then(() => { sessionStorage.clear(); location.reload(); });
+}
 
-    if(localStorage.getItem("darkMode")){
-        document.body.classList.add("darkMode");
-    }
-
+// Initial Runners
+window.onload = () => {
+    if (localStorage.getItem("darkMode") === "ON") document.body.classList.add("darkMode");
     updateClock();
-    setInterval(updateClock,1000);
+    setInterval(updateClock, 1000);
+    
+    // Auto Select nearest campus on login screen
+    if (navigator.geolocation && !auth.currentUser) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            let near = "Relangi"; let min = Infinity;
+            for (const [name, coords] of Object.entries(campusCoords)) {
+                const d = calculateDistance(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lng);
+                if (d < min) { min = d; near = name; }
+            }
+            document.getElementById('campus').value = near;
+        });
+    }
 };
 
-// ================= CLOCK =================
-
-function updateClock(){
-
-    const now = new Date();
-
-    document.getElementById("currentTime").innerText =
-    now.toLocaleString();
-}
-
-// ================= ONLINE OFFLINE =================
-
-window.addEventListener("offline",()=>{
-
-    document.getElementById("onlineStatus").innerHTML =
-    "🔴 Offline";
-
-    document.getElementById("onlineStatus").style.color =
-    "red";
-});
-
-window.addEventListener("online",()=>{
-
-    document.getElementById("onlineStatus").innerHTML =
-    "🟢 Online";
-
-    document.getElementById("onlineStatus").style.color =
-    "green";
-});
-    
-async function uploadPhoto(input) {
-    const file = input.files[0];
-    if (!file) return;
-
-    // Check file size (keep it under 1MB for Firestore)
-    if (file.size > 1024 * 1024) {
-        alert("Photo is too large! Please choose an image under 1MB.");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const base64Image = e.target.result;
-        const email = auth.currentUser.email;
-
-        try {
-            // Find the teacher's document
-            const snap = await db.collection("teachers").where("email", "==", email).get();
-            
-            if (!snap.empty) {
-                const docId = snap.docs[0].id;
-                
-                // Update the photo in Firestore
-                await db.collection("teachers").doc(docId).update({
-                    photo: base64Image
-                });
-
-                // Update the UI immediately
-                document.getElementById('profilePic').src = base64Image;
-                alert("✅ Profile photo updated!");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Error saving photo: " + err.message);
-        }
-    };
-    reader.readAsDataURL(file);
-}
-
-// ================= PHOTO SAVE =================
-
-document.getElementById("teacherPhoto")
-.addEventListener("change",function(e){
-
-    const file = e.target.files[0];
-
-    if(!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = function(){
-
-        localStorage.setItem(
-            "teacherPhoto",
-            reader.result
-        );
-    };
-
-    reader.readAsDataURL(file);
-});
-
-// ================= NAVIGATION =================
-
-function openDashboard(){
-    window.location.href="admin.html";
-}
-
-function openHomework(){
-    window.location.href="homework.html";
-}
-
-function openSalarySlip(){
-    window.location.href="salary-slip.html";
-}
-
-function openBusTracker(){
-    window.location.href="bus-tracker.html";
-}
-
-function goToAdmission(){
-    window.location.href="admissions.html";
-}
-
-// ================= ID CARD =================
-
-function generateIDCard(){
-
-    const teacher =
-    auth.currentUser.email;
-
-    const photo =
-    localStorage.getItem("teacherPhoto") ||
-    "https://via.placeholder.com/80";
-
-    const html = `
-
-    <div id="idCard"
-    style="
-    width:300px;
-    background:white;
-    border-radius:15px;
-    padding:20px;
-    text-align:center;
-    border:3px solid #1a237e;
-    ">
-
-    <img src="logo.png" width="70">
-
-    <h2 style="color:#1a237e;">
-    VEERAMALLU GLOBAL ACADEMY
-    </h2>
-
-    <hr>
-
-    <img src="${photo}"
-    style="
-    width:90px;
-    height:90px;
-    border-radius:50%;
-    object-fit:cover;
-    border:3px solid #1a237e;
-    ">
-
-    <h3 style="margin-top:10px;">
-    ${teacher}
-    </h3>
-
-    <p>
-    ${sessionStorage.getItem("activeCampus")}
-    </p>
-
-    <p style="font-size:12px;">
-    Authorized Staff Member
-    </p>
-
-    </div>
-    `;
-
-    const div =
-    document.createElement("div");
-
-    div.innerHTML = html;
-
-    document.body.appendChild(div);
-
-    html2canvas(div).then(canvas=>{
-
-        const link =
-        document.createElement("a");
-
-        link.download =
-        "Teacher-ID.png";
-
-        link.href =
-        canvas.toDataURL();
-
-        link.click();
-
-        div.remove();
-    });
-}
-
-// ================= LOGOUT =================
-
-function logoutUser(){
-
-    auth.signOut().then(()=>{
-
-        sessionStorage.clear();
-
-        location.reload();
-    });
-}
-
-// ================= ERROR =================
-
-function showError(msg){
-
-    const err =
-    document.getElementById("loginError");
-
-    err.innerText = msg;
-
-    err.style.display = "block";
-}
-
+window.addEventListener("offline", () => { document.getElementById("onlineStatus").innerText = "🔴 Offline"; document.getElementById("onlineStatus").style.color = "red"; });
+window.addEventListener("online", () => { document.getElementById("onlineStatus").innerText = "🟢 Online"; document.getElementById("onlineStatus").style.color = "green"; });
 </script>
-
 </body>
 </html>
