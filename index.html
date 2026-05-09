@@ -282,20 +282,76 @@ async function markAttendance(type) {
 
 // ================= PHOTO UPLOAD =================
 async function uploadPhoto(input) {
+async function uploadPhoto(input) {
+
     const file = input.files[0];
-    if (!file) return;
-    if (file.size > 1024 * 1024) return alert("Photo too large (Keep under 1MB)");
+
+    if (!file) {
+        alert("No file selected");
+        return;
+    }
+
+    // FILE SIZE CHECK
+    if (file.size > 1024 * 1024) {
+        alert("Image too large. Keep under 1MB");
+        return;
+    }
 
     const reader = new FileReader();
-    reader.onload = async (e) => {
-        const base64Image = e.target.result;
-        const snap = await db.collection("teachers").where("email", "==", auth.currentUser.email).get();
-        if (!snap.empty) {
-            await db.collection("teachers").doc(snap.docs[0].id).update({ photo: base64Image });
-            document.getElementById('profilePic').src = base64Image;
-            alert("✅ Profile photo updated!");
+
+    reader.onload = async function(e) {
+
+        try {
+
+            const base64Image = e.target.result;
+
+            console.log("Image Converted");
+
+            // FIND TEACHER DOCUMENT
+            const snap = await db.collection("teachers")
+                .where("email", "==", auth.currentUser.email)
+                .get();
+
+            if (snap.empty) {
+
+                alert("Teacher document not found in Firestore");
+                return;
+            }
+
+            const docId = snap.docs[0].id;
+
+            console.log("Teacher Doc ID:", docId);
+
+            // SAVE PHOTO
+            await db.collection("teachers")
+                .doc(docId)
+                .update({
+                    photo: base64Image
+                });
+
+            console.log("Photo Saved Successfully");
+
+            // UPDATE UI
+            document.getElementById("profilePic").src =
+                base64Image;
+
+            alert("✅ Photo Uploaded Successfully");
+
+            // VERIFY SAVE
+            const verifyDoc = await db.collection("teachers")
+                .doc(docId)
+                .get();
+
+            console.log("Saved Data:", verifyDoc.data());
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Upload Error: " + err.message);
         }
     };
+
     reader.readAsDataURL(file);
 }
 
