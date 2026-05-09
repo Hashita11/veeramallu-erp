@@ -285,10 +285,51 @@ async function uploadPhoto(input) {
 
     const file = input.files[0];
 
-    if (!file) {
-        alert("No file selected");
-        return;
-    }
+    if (!file) return alert("Select Photo");
+
+    const reader = new FileReader();
+
+    reader.onload = async function (e) {
+
+        try {
+
+            // IMAGE DATA
+            const imageData = e.target.result;
+
+            // CURRENT USER
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert("User not logged in");
+                return;
+            }
+
+            // SAVE DIRECTLY USING UID
+            await db.collection("teachers")
+                .doc(user.uid)
+                .set({
+                    email: user.email,
+                    photo: imageData
+                }, { merge: true });
+
+            // UPDATE SCREEN
+            document.getElementById("profilePic").src =
+                imageData;
+
+            alert("✅ Photo Uploaded Successfully");
+
+            console.log("PHOTO SAVED");
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert(err.message);
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
 
     // FILE SIZE CHECK
     if (file.size > 1024 * 1024) {
