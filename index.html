@@ -336,65 +336,564 @@ function generateIDCard() {
     container.style.position = "absolute"; container.style.left = "-9999px";
     container.innerHTML = idHtml; document.body.appendChild(container);
 
-    html2canvas(document.getElementById("tempID")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "VGA-ID-Card.png";
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+
+// ================= CONFIG =================
+const LATE_THRESHOLD = "08:30:00";
+
+const campusCoords = {
+    "Relangi": { lat: 16.702710, lng: 81.644140 },
+    "Velpur": { lat: 16.719772, lng: 81.662377 },
+    "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
+};
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+    messagingSenderId: "379339569496",
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ================= AUTO LOGIN =================
+auth.onAuthStateChanged(async (user) => {
+
+    if (!user) return;
+
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("attendanceSection").style.display = "block";
+
+    const campus = sessionStorage.getItem("activeCampus") || "Relangi";
+
+    document.getElementById("welcomeMsg").innerText =
+        "Welcome, " + user.email.split("@")[0].toUpperCase();
+
+    document.getElementById("teacherEmailDisplay").innerText = user.email;
+
+    document.getElementById("campusDisplay").innerText =
+        "Campus: " + campus;
+
+    // LOAD PHOTO
+    loadTeacherPhoto(user.email);
+
+    // START GPS
+    startGPSCheck(campus);
+});
+
+// ================= LOAD PHOTO =================
+async function loadTeacherPhoto(email) {
+
+    try {
+
+        const snap = await db.collection("teachers")
+            .where("email", "==", email)
+            .get();
+
+        if (!snap.empty) {
+
+            const data = snap.docs[0].data();
+
+            if (data.photo && data.photo.startsWith("data:image")) {
+
+                document.getElementById("profilePic").src = data.photo;
+
+            } else {
+
+                document.getElementById("profilePic").src =
+                    "https://via.placeholder.com/100?text=User";
+            }
+
+        } else {
+
+            document.getElementById("profilePic").src =
+                "https://via.placeholder.com/100?text=User";
+        }
+
+    } catch (err) {
+
+        console.error("Photo Load Error:", err);
+
+        document.getElementById("profilePic").src =
+            "https://via.placeholder.com/100?text=User";
+    }
+}
+
+// ================= LOGIN =================
+function handleLogin() {
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const campus = document.getElementById('campus').value;
+
+    const errDisplay = document.getElementById('loginError');
+
+    if (!email || !password) {
+
+        errDisplay.innerText = "Please enter credentials";
+        errDisplay.style.display = "block";
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, password)
+
+    .then(() => {
+
+        sessionStorage.setItem('activeCampus', campus);
+
+        location.reload();
+
+    })
+
+    .catch(err => {
+
+        errDisplay.innerText = err.message;
+        errDisplay.style.display = "block";
+    });
+}
+
+// ================= REGISTER =================
+async function registerTeacher() {
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    if (!email || !password)
+        return alert("Enter Email & Password");
+
+    try {
+
+        const snap = await db.collection("teachers")
+            .where("email", "==", email)
+            .get();
+
+        if (snap.empty)
+            return alert("Teacher not approved by admin");
+
+        const userCred =
+            await auth.createUserWithEmailAndPassword(email, password);
+
+        await db.collection("teachers")
+            .doc(snap.docs[0].id)
+            .update({
+                uid: userCred.user.uid
+            });
+
+        alert("Account Created Successfully!");
+
+    } catch (err) {
+
+        alert(err.message);
+    }
+}
+
+// ================= GPS =================
+function startGPSCheck(selectedCampus) {
+
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.watchPosition((pos) => {
+
+        const userLat = pos.coords.latitude;
+        const userLng = pos.coords.longitude;
+
+        const target = campusCoords[selectedCampus];
+
+        const dist = calculateDistance(
+            userLat,
+            userLng,
+            target.lat,
+            target.lng
+        );
+
+        const statusBox = document.getElementById('gpsStatus');
+
+        const bIn = document.getElementById('btnIn');
+        const bOut = document.getElementById('btnOut');
+
+        if (dist <= 50) {
+
+            statusBox.innerHTML =
+                `<span style="color:green;">✔ Verified: Inside ${selectedCampus}</span>`;
+
+            bIn.disabled = false;
+            bOut.disabled = false;
+
+        } else {
+
+            let foundOther = false;
+
+            for (const [name, coords] of Object.entries(campusCoords)) {
+
+                const d = calculateDistance(
+                    userLat,
+                    userLng,
+                    coords.lat,
+                    coords.lng
+                );
+
+                if (d <= 50) {
+
+                    sessionStorage.setItem("activeCampus", name);
+
+                    document.getElementById("campusDisplay").innerText =
+                        "Campus: " + name;
+
+                    statusBox.innerHTML =
+                        `<span style="color:green;">✔ Auto-Switched to ${name}</span>`;
+
+                    bIn.disabled = false;
+                    bOut.disabled = false;
+
+                    foundOther = true;
+                    break;
+                }
+            }
+
+            if (!foundOther) {
+
+                statusBox.innerHTML =
+                    `<span style="color:red;">✖ Outside Campus</span>`;
+
+                bIn.disabled = true;
+                bOut.disabled = true;
+            }
+        }
+
+    }, (err) => {
+
+        console.log(err);
+
+    }, {
+        enableHighAccuracy: true
+    });
+}
+
+// ================= DISTANCE =================
+function calculateDistance(lat1, lon1, lat2, lon2) {
+
+    const R = 6371e3;
+
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ================= ATTENDANCE =================
+async function markAttendance(type) {
+
+    try {
+
+        const teacher = auth.currentUser.email;
+
+        const campus =
+            sessionStorage.getItem("activeCampus");
+
+        const now = new Date();
+
+        const today =
+            now.toLocaleDateString("en-IN");
+
+        const timeStr =
+            now.toLocaleTimeString("en-GB", {
+                hour12: false
+            });
+
+        const existing = await db.collection("attendance")
+            .where("teacher", "==", teacher)
+            .where("type", "==", type)
+            .where("dateOnly", "==", today)
+            .get();
+
+        if (!existing.empty)
+            return alert(type + " already marked");
+
+        await db.collection("attendance").add({
+
+            teacher,
+            teacherEmail: teacher,
+            campus,
+            type,
+
+            late:
+                type === "IN" &&
+                timeStr > LATE_THRESHOLD,
+
+            time:
+                firebase.firestore.Timestamp.fromDate(now),
+
+            dateOnly: today,
+
+            method: "Teacher App"
+        });
+
+        alert(`${type} Marked Successfully`);
+
+    } catch (err) {
+
+        alert(err.message);
+    }
+}
+
+// ================= PHOTO UPLOAD =================
+async function uploadPhoto(input) {
+
+    const file = input.files[0];
+
+    if (!file) return;
+
+    if (file.size > 1024 * 1024)
+        return alert("Keep image under 1MB");
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+
+        try {
+
+            const base64Image = e.target.result;
+
+            const snap = await db.collection("teachers")
+                .where("email", "==", auth.currentUser.email)
+                .get();
+
+            if (!snap.empty) {
+
+                await db.collection("teachers")
+                    .doc(snap.docs[0].id)
+                    .update({
+                        photo: base64Image
+                    });
+
+                document.getElementById("profilePic").src =
+                    base64Image;
+
+                alert("✅ Photo Updated");
+
+            }
+
+        } catch (err) {
+
+            alert(err.message);
+        }
+    };
+
+    reader.readAsDataURL(file);
+}
+
+// ================= DARK MODE =================
+function toggleDarkMode() {
+
+    document.body.classList.toggle("darkMode");
+
+    localStorage.setItem(
+        "darkMode",
+        document.body.classList.contains("darkMode")
+        ? "ON"
+        : "OFF"
+    );
+}
+
+// ================= CLOCK =================
+function updateClock() {
+
+    document.getElementById("currentTime").innerText =
+        new Date().toLocaleString();
+}
+
+// ================= VIEW ATTENDANCE =================
+async function viewTodayAttendance() {
+
+    const today =
+        new Date().toLocaleDateString("en-IN");
+
+    const snap = await db.collection("attendance")
+        .where("teacher", "==", auth.currentUser.email)
+        .where("dateOnly", "==", today)
+        .get();
+
+    if (snap.empty)
+        return alert("No records");
+
+    let msg = "Today's Attendance\n\n";
+
+    snap.forEach(doc => {
+
+        msg +=
+            `${doc.data().type} - ${
+                new Date(
+                    doc.data().time.seconds * 1000
+                ).toLocaleTimeString()
+            }\n`;
+    });
+
+    alert(msg);
+}
+
+// ================= ID CARD =================
+function generateIDCard() {
+
+    const pic =
+        document.getElementById("profilePic").src;
+
+    const name =
+        auth.currentUser.email
+        .split('@')[0]
+        .toUpperCase();
+
+    const campus =
+        sessionStorage.getItem("activeCampus");
+
+    const idHtml = `
+    <div id="tempID"
+    style="
+    width:300px;
+    padding:20px;
+    text-align:center;
+    background:white;
+    border:5px solid #1a237e;
+    border-radius:15px;
+    font-family:sans-serif;
+    ">
+
+    <h2 style="color:#1a237e;">
+    VEERAMALLU GLOBAL ACADEMY
+    </h2>
+
+    <img src="${pic}"
+    style="
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    border:3px solid #1a237e;
+    object-fit:cover;
+    ">
+
+    <h3>${name}</h3>
+
+    <p>${campus}</p>
+
+    </div>
+    `;
+
+    const container =
+        document.createElement("div");
+
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+
+    container.innerHTML = idHtml;
+
+    document.body.appendChild(container);
+
+    html2canvas(
+        document.getElementById("tempID")
+    ).then(canvas => {
+
+        const link =
+            document.createElement("a");
+
+        link.download = "VGA-ID.png";
+
         link.href = canvas.toDataURL();
+
         link.click();
+
         document.body.removeChild(container);
     });
 }
 
+// ================= LOGOUT =================
 function logoutUser() {
-    auth.signOut().then(() => { sessionStorage.clear(); location.reload(); });
+
+    auth.signOut().then(() => {
+
+        sessionStorage.clear();
+
+        location.reload();
+    });
 }
 
-// Initial Runners
+// ================= START =================
 window.onload = () => {
-    if (localStorage.getItem("darkMode") === "ON") document.body.classList.add("darkMode");
-    updateClock();
-    setInterval(updateClock, 1000);
-    
-    // Auto Select nearest campus on login screen
-    if (navigator.geolocation && !auth.currentUser) {
-        navigator.geolocation.getCurrentPosition(pos => {
-            let near = "Relangi"; let min = Infinity;
-            for (const [name, coords] of Object.entries(campusCoords)) {
-                const d = calculateDistance(pos.coords.latitude, pos.coords.longitude, coords.lat, coords.lng);
-                if (d < min) { min = d; near = name; }
-            }
-            document.getElementById('campus').value = near;
-        });
-    }
-};auth.onAuthStateChanged(user => {
-    if (user) {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("attendanceSection").style.display = "block";
-        const campus = sessionStorage.getItem("activeCampus") || "Relangi";
-        
-        document.getElementById("welcomeMsg").innerText = "Welcome, " + user.email.split("@")[0].toUpperCase();
-        document.getElementById("teacherEmailDisplay").innerText = user.email;
-        document.getElementById("campusDisplay").innerText = "Campus: " + campus;
 
-        // FETCH PHOTO FROM FIRESTORE
-        db.collection("teachers").where("email", "==", user.email).get().then(snap => {
-            if (!snap.empty) {
-                const data = snap.docs[0].data();
-                // Check if the 'photo' field exists in the document
-                if (data.photo) {
-                    document.getElementById("profilePic").src = data.photo;
+    if (localStorage.getItem("darkMode") === "ON") {
+
+        document.body.classList.add("darkMode");
+    }
+
+    updateClock();
+
+    setInterval(updateClock, 1000);
+
+    // AUTO CAMPUS
+    if (navigator.geolocation && !auth.currentUser) {
+
+        navigator.geolocation.getCurrentPosition(pos => {
+
+            let near = "Relangi";
+            let min = Infinity;
+
+            for (const [name, coords]
+                of Object.entries(campusCoords)) {
+
+                const d = calculateDistance(
+                    pos.coords.latitude,
+                    pos.coords.longitude,
+                    coords.lat,
+                    coords.lng
+                );
+
+                if (d < min) {
+
+                    min = d;
+                    near = name;
                 }
             }
-        }).catch(err => console.error("Error fetching photo:", err));
 
-        startGPSCheck(campus);
+            document.getElementById("campus").value =
+                near;
+        });
     }
-});
-    
+};
 
-    
-window.addEventListener("offline", () => { document.getElementById("onlineStatus").innerText = "🔴 Offline"; document.getElementById("onlineStatus").style.color = "red"; });
-window.addEventListener("online", () => { document.getElementById("onlineStatus").innerText = "🟢 Online"; document.getElementById("onlineStatus").style.color = "green"; });
+// ================= ONLINE STATUS =================
+window.addEventListener("offline", () => {
+
+    document.getElementById("onlineStatus").innerText =
+        "🔴 Offline";
+
+    document.getElementById("onlineStatus").style.color =
+        "red";
+});
+
+window.addEventListener("online", () => {
+
+    document.getElementById("onlineStatus").innerText =
+        "🟢 Online";
+
+    document.getElementById("onlineStatus").style.color =
+        "green";
+});
+
 </script>
 </body>
 </html>
