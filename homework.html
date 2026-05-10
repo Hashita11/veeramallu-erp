@@ -3,130 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Homework Upload</title>
-
+    <title>Homework Management</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            padding: 20px;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .logo { width: 100px; margin-bottom: 10px; }
+        h2 { color: #1a237e; margin-bottom: 20px; }
+        
+        label { display: block; text-align: left; margin-top: 15px; font-weight: bold; font-size: 14px; color: #333; }
+        input, textarea, select, button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        button { background: #1a237e; color: white; font-weight: bold; border: none; margin-top: 20px; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #283593; }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            max-width: 500px;
-            margin: auto;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-
-        .logo {
-            width: 120px;
-            margin-bottom: 10px;
-        }
-
-        h2 {
-            margin-top: 0;
-            color: #1a237e;
-        }
-
-        label {
-            display: block;
-            text-align: left;
-            margin-top: 15px;
-            font-weight: bold;
-            font-size: 14px;
-            color: #555;
-        }
-
-        input, textarea, select, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 5px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        button {
-            background: #1a237e;
-            color: white;
-            font-weight: bold;
-            border: none;
-            margin-top: 20px;
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        #list {
-            margin-top: 30px;
-            text-align: left;
-        }
-
-        .hw-item {
-            background: #f9f9f9;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 10px;
-            border-left: 5px solid #1a237e;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        /* Table Structure Styling */
+        .group-container { background: white; border-radius: 12px; overflow: hidden; margin-top: 25px; border: 1px solid #1a237e; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: left; }
+        .group-header { background: #1a237e; color: white; padding: 12px 15px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+        
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background: #f8f9fa; color: #555; font-size: 13px; text-transform: uppercase; }
+        .subject-cell { font-weight: bold; color: #1a237e; width: 30%; }
+        .homework-cell { color: #333; line-height: 1.4; }
+        
+        @media (max-width: 480px) {
+            .group-header { flex-direction: column; align-items: flex-start; gap: 5px; }
+            th, td { padding: 10px; font-size: 14px; }
         }
     </style>
 </head>
-
 <body>
 
 <div class="card">
-    <img src="logo.png" alt="VGA Logo" class="logo">
+    <img src="logo.png" alt="Logo" class="logo">
+    <h2>Homework Portal</h2>
 
-    <h2>Homework Upload</h2>
-
-    <label>Select Class</label>
+    <label>Class</label>
     <select id="class">
-        <option>P.KG</option>
-        <option>L.KG</option>
-        <option>U.KG</option>
-        <option>Class 1</option>
-        <option>Class 2</option>
-        <option>Class 3</option>
-        <option>Class 4</option>
-        <option>Class 5</option>
-        <option>Class 6</option>
-        <option>Class 7</option>
-        <option>Class 8</option>
-        <option>Class 9</option>
-        <option>Class 10</option>
+        <option>P.KG</option><option>L.KG</option><option>U.KG</option>
+        <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+        <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+        <option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option>
     </select>
 
-    <label>Select Subject</label>
+    <label>Subject</label>
     <select id="subject">
-        <option>Telugu</option>
-        <option>Hindi</option>
-        <option>English</option>
-        <option>Maths</option>
-        <option>Science</option>
-        <option>Social</option>
-        <option>G.K</option>
-        <option>Computer</option>
+        <option>Telugu</option><option>Hindi</option><option>English</option>
+        <option>Maths</option><option>Science</option><option>Social</option>
+        <option>G.K</option><option>Computer</option>
     </select>
 
     <label>Homework Details</label>
-    <textarea id="homework" placeholder="Enter Homework details..."></textarea>
+    <textarea id="homework" placeholder="What is the work for today?"></textarea>
 
-    <button onclick="uploadHomework()">
-        Upload Homework
-    </button>
+    <button onclick="uploadHomework()">Upload To Table</button>
 
     <div id="list"></div>
 </div>
@@ -151,50 +80,71 @@
         const cls = document.getElementById("class").value;
         const subject = document.getElementById("subject").value;
         const homework = document.getElementById("homework").value;
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('en-GB'); // Format: DD/MM/YYYY
 
-        if (!homework) {
-            alert("Please enter homework details");
-            return;
-        }
+        if (!homework) { alert("Please enter homework"); return; }
 
         try {
             await db.collection("homeworks").add({
                 class: cls,
                 subject: subject,
                 homework: homework,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                date: new Date().toLocaleString()
+                date: dateStr,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
-
-            alert("✅ Homework Uploaded Successfully");
-            document.getElementById("homework").value = ""; // Clear input
+            document.getElementById("homework").value = "";
+            alert("✅ Added to table");
             loadHomework();
-        } catch (error) {
-            console.error("Error uploading: ", error);
-            alert("Failed to upload");
-        }
+        } catch (e) { alert("Error: " + e.message); }
     }
 
     async function loadHomework() {
-        const snap = await db.collection("homeworks")
-            .orderBy("timestamp", "desc")
-            .limit(10) // Show last 10
-            .get();
+        const snap = await db.collection("homeworks").orderBy("timestamp", "desc").get();
+        const listDiv = document.getElementById("list");
+        listDiv.innerHTML = "";
 
-        let html = "";
+        // Grouping logic: Groups items by "Date + Class"
+        const groups = {};
 
         snap.forEach(doc => {
-            const d = doc.data();
-            html += `
-                <div class="hw-item">
-                    <b style="color:#1a237e; font-size:18px;">${d.class}</b> - <b>${d.subject}</b><br>
-                    <p style="margin: 10px 0;">${d.homework}</p>
-                    <small style="color:gray;">${d.date}</small>
-                </div>
-            `;
+            const data = doc.data();
+            const groupKey = `${data.date}_${data.class}`;
+            if (!groups[groupKey]) {
+                groups[groupKey] = { date: data.date, class: data.class, works: [] };
+            }
+            groups[groupKey].works.push(data);
         });
 
-        document.getElementById("list").innerHTML = html;
+        for (let key in groups) {
+            const g = groups[key];
+            let tableRows = g.works.map(w => `
+                <tr>
+                    <td class="subject-cell">${w.subject}</td>
+                    <td class="homework-cell">${w.homework}</td>
+                </tr>
+            `).join('');
+
+            listDiv.innerHTML += `
+                <div class="group-container">
+                    <div class="group-header">
+                        <span><b>${g.class}</b></span>
+                        <span style="font-size:14px; opacity:0.9;">Date: ${g.date}</span>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Homework</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
     }
 
     loadHomework();
