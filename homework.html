@@ -1,149 +1,203 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Homework Upload</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Homework Upload</title>
 
-<style>
-body{
-font-family:Arial;
-background:#f2f2f2;
-padding:20px;
-}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            padding: 20px;
+        }
 
-.card{
-background:white;
-padding:20px;
-border-radius:15px;
-max-width:500px;
-margin:auto;
-box-shadow:0 5px 20px rgba(0,0,0,0.1);
-}
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
 
-input,textarea,select,button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border-radius:10px;
-border:1px solid #ccc;
-font-size:16px;
-}
+        .logo {
+            width: 120px;
+            margin-bottom: 10px;
+        }
 
-button{
-background:#1a237e;
-color:white;
-font-weight:bold;
-border:none;
-}
+        h2 {
+            margin-top: 0;
+            color: #1a237e;
+        }
 
-#list{
-margin-top:20px;
-}
-</style>
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input, textarea, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button {
+            background: #1a237e;
+            color: white;
+            font-weight: bold;
+            border: none;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        #list {
+            margin-top: 30px;
+            text-align: left;
+        }
+
+        .hw-item {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #1a237e;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="card">
+    <img src="logo.png" alt="VGA Logo" class="logo">
 
-<h2>Homework Upload</h2>
+    <h2>Homework Upload</h2>
 
-<select id="class">
-<option>Class 1</option>
-<option>Class 2</option>
-<option>Class 3</option>
-<option>Class 4</option>
-<option>Class 5</option>
-</select>
+    <label>Select Class</label>
+    <select id="class">
+        <option>P.KG</option>
+        <option>L.KG</option>
+        <option>U.KG</option>
+        <option>Class 1</option>
+        <option>Class 2</option>
+        <option>Class 3</option>
+        <option>Class 4</option>
+        <option>Class 5</option>
+        <option>Class 6</option>
+        <option>Class 7</option>
+        <option>Class 8</option>
+        <option>Class 9</option>
+        <option>Class 10</option>
+    </select>
 
-<input type="text" id="subject" placeholder="Subject">
+    <label>Select Subject</label>
+    <select id="subject">
+        <option>Telugu</option>
+        <option>Hindi</option>
+        <option>English</option>
+        <option>Maths</option>
+        <option>Science</option>
+        <option>Social</option>
+        <option>G.K</option>
+        <option>Computer</option>
+    </select>
 
-<textarea id="homework" placeholder="Enter Homework"></textarea>
+    <label>Homework Details</label>
+    <textarea id="homework" placeholder="Enter Homework details..."></textarea>
 
-<button onclick="uploadHomework()">
-Upload Homework
-</button>
+    <button onclick="uploadHomework()">
+        Upload Homework
+    </button>
 
-<div id="list"></div>
-
+    <div id="list"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+        messagingSenderId: "379339569496",
+        appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+    };
 
-const firebaseConfig = {
-apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-projectId: "veeramalluerp-6cac5",
-storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-messagingSenderId: "379339569496",
-appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
-};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-firebase.initializeApp(firebaseConfig);
+    async function uploadHomework() {
+        const cls = document.getElementById("class").value;
+        const subject = document.getElementById("subject").value;
+        const homework = document.getElementById("homework").value;
 
-const db = firebase.firestore();
+        if (!homework) {
+            alert("Please enter homework details");
+            return;
+        }
 
-async function uploadHomework(){
+        try {
+            await db.collection("homeworks").add({
+                class: cls,
+                subject: subject,
+                homework: homework,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                date: new Date().toLocaleString()
+            });
 
-const cls=document.getElementById("class").value;
-const subject=document.getElementById("subject").value;
-const homework=document.getElementById("homework").value;
+            alert("✅ Homework Uploaded Successfully");
+            document.getElementById("homework").value = ""; // Clear input
+            loadHomework();
+        } catch (error) {
+            console.error("Error uploading: ", error);
+            alert("Failed to upload");
+        }
+    }
 
-if(!subject || !homework){
-alert("Fill all fields");
-return;
-}
+    async function loadHomework() {
+        const snap = await db.collection("homeworks")
+            .orderBy("timestamp", "desc")
+            .limit(10) // Show last 10
+            .get();
 
-await db.collection("homeworks").add({
+        let html = "";
 
-class:cls,
-subject,
-homework,
-date:new Date().toLocaleString()
+        snap.forEach(doc => {
+            const d = doc.data();
+            html += `
+                <div class="hw-item">
+                    <b style="color:#1a237e; font-size:18px;">${d.class}</b> - <b>${d.subject}</b><br>
+                    <p style="margin: 10px 0;">${d.homework}</p>
+                    <small style="color:gray;">${d.date}</small>
+                </div>
+            `;
+        });
 
-});
+        document.getElementById("list").innerHTML = html;
+    }
 
-alert("Homework Uploaded");
-
-loadHomework();
-}
-
-async function loadHomework(){
-
-const snap=await db.collection("homeworks")
-.orderBy("date","desc")
-.get();
-
-let html="";
-
-snap.forEach(doc=>{
-
-const d=doc.data();
-
-html+=`
-<div style="
-background:#eee;
-padding:10px;
-margin-top:10px;
-border-radius:10px;
-">
-<b>${d.class}</b><br>
-${d.subject}<br><br>
-${d.homework}<br><br>
-<small>${d.date}</small>
-</div>
-`;
-});
-
-document.getElementById("list").innerHTML=html;
-}
-
-loadHomework();
-
+    loadHomework();
 </script>
 
 </body>
