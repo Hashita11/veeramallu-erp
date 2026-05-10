@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Homework Upload</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f2f2f2;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:15px;
+max-width:500px;
+margin:auto;
+box-shadow:0 5px 20px rgba(0,0,0,0.1);
+}
+
+input,textarea,select,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ccc;
+font-size:16px;
+}
+
+button{
+background:#1a237e;
+color:white;
+font-weight:bold;
+border:none;
+}
+
+#list{
+margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Homework Upload</h2>
+
+<select id="class">
+<option>Class 1</option>
+<option>Class 2</option>
+<option>Class 3</option>
+<option>Class 4</option>
+<option>Class 5</option>
+</select>
+
+<input type="text" id="subject" placeholder="Subject">
+
+<textarea id="homework" placeholder="Enter Homework"></textarea>
+
+<button onclick="uploadHomework()">
+Upload Homework
+</button>
+
+<div id="list"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+projectId: "veeramalluerp-6cac5",
+storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+messagingSenderId: "379339569496",
+appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+async function uploadHomework(){
+
+const cls=document.getElementById("class").value;
+const subject=document.getElementById("subject").value;
+const homework=document.getElementById("homework").value;
+
+if(!subject || !homework){
+alert("Fill all fields");
+return;
+}
+
+await db.collection("homeworks").add({
+
+class:cls,
+subject,
+homework,
+date:new Date().toLocaleString()
+
+});
+
+alert("Homework Uploaded");
+
+loadHomework();
+}
+
+async function loadHomework(){
+
+const snap=await db.collection("homeworks")
+.orderBy("date","desc")
+.get();
+
+let html="";
+
+snap.forEach(doc=>{
+
+const d=doc.data();
+
+html+=`
+<div style="
+background:#eee;
+padding:10px;
+margin-top:10px;
+border-radius:10px;
+">
+<b>${d.class}</b><br>
+${d.subject}<br><br>
+${d.homework}<br><br>
+<small>${d.date}</small>
+</div>
+`;
+});
+
+document.getElementById("list").innerHTML=html;
+}
+
+loadHomework();
+
+</script>
+
+</body>
+</html>
