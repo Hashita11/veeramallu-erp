@@ -152,9 +152,9 @@ async function loadClassList() {
 
         try {
             // NOTE: Field names 'campus' and 'joinClass' must match your Save() function in admissions.html
-            const snapshot = await db.collection("admissions")
+            const snapshot = await db.collection("attendance")
                 .where("campus", "==", campus)
-                .where("joinclass", "==", className)
+                .where("className", "==", className)
                 .get();
             
             tbody.innerHTML = "";
