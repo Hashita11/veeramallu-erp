@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>VGA Homework Management</title>
+    <title>VGA Homework Portal</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 15px; margin: 0; }
         .card { background: white; padding: 20px; border-radius: 15px; max-width: 600px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
@@ -18,14 +18,13 @@
         .filter-section { margin-top: 30px; padding: 15px; background: #e8eaf6; border-radius: 12px; text-align: left; border: 1px dashed #1a237e; }
         .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 
-        /* Table Styling */
+        /* Table Structure */
         .group-container { background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; border: 1px solid #1a237e; text-align: left; }
         .group-header { background: #1a237e; color: white; padding: 12px; display: flex; justify-content: space-between; font-weight: bold; }
         
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; }
-        th { background: #f8f9fa; color: #666; font-size: 12px; }
-        .subject-cell { font-weight: bold; color: #1a237e; width: 35%; }
+        .subject-cell { font-weight: bold; color: #1a237e; width: 35%; border-right: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -55,10 +54,14 @@
         <div class="filter-grid">
             <select id="filterClass" onchange="loadHomework()">
                 <option value="All">All Classes</option>
-                <option>Class 1</option><option>Class 2</option></select>
+                <option>P.KG</option><option>L.KG</option><option>U.KG</option>
+                <option>Class 1</option><option>Class 2</option><option>Class 3</option>
+                <option>Class 4</option><option>Class 5</option><option>Class 6</option>
+                <option>Class 7</option><option>Class 8</option><option>Class 9</option><option>Class 10</option>
+            </select>
             <input type="date" id="filterDate" onchange="loadHomework()">
         </div>
-        <button style="margin-top:10px; padding:5px; background:#555" onclick="resetFilters()">Show All</button>
+        <button style="margin-top:10px; padding:8px; background:#555" onclick="resetFilters()">Show All</button>
     </div>
 
     <div id="list"></div>
@@ -85,27 +88,31 @@
         const subject = document.getElementById("subject").value;
         const homework = document.getElementById("homework").value;
         const dateObj = new Date();
-        const dateStr = dateObj.toISOString().split('T')[0]; // Format: YYYY-MM-DD for easy filtering
+        // dateStr is YYYY-MM-DD for the date input filter to match
+        const dateStr = dateObj.toLocaleDateString('en-CA'); 
 
-        if (!homework) return alert("Fill work!");
+        if (!homework) return alert("Please enter work details!");
 
-        await db.collection("homeworks").add({
-            class: cls, subject, homework, date: dateStr,
-            displayDate: dateObj.toLocaleDateString('en-GB'),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        document.getElementById("homework").value = "";
-        loadHomework();
+        try {
+            await db.collection("homeworks").add({
+                class: cls,
+                subject: subject,
+                homework: homework,
+                date: dateStr,
+                displayDate: dateObj.toLocaleDateString('en-GB'),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById("homework").value = "";
+            alert("✅ Successfully Posted");
+            loadHomework();
+        } catch (e) { alert("Error: " + e.message); }
     }
 
     async function loadHomework() {
         const fClass = document.getElementById("filterClass").value;
         const fDate = document.getElementById("filterDate").value;
         
-        let query = db.collection("homeworks").orderBy("timestamp", "desc");
-
-        const snap = await query.get();
+        const snap = await db.collection("homeworks").orderBy("timestamp", "desc").get();
         const listDiv = document.getElementById("list");
         listDiv.innerHTML = "";
 
@@ -114,7 +121,7 @@
         snap.forEach(doc => {
             const d = doc.data();
             
-            // Apply Filters in Logic
+            // Apply Logic Filters
             if (fClass !== "All" && d.class !== fClass) return;
             if (fDate !== "" && d.date !== fDate) return;
 
@@ -122,6 +129,11 @@
             if (!groups[key]) groups[key] = { date: d.displayDate, class: d.class, works: [] };
             groups[key].works.push(d);
         });
+
+        if (Object.keys(groups).length === 0) {
+            listDiv.innerHTML = "<p style='margin-top:20px; color:gray;'>No homework found for this filter.</p>";
+            return;
+        }
 
         for (let k in groups) {
             const g = groups[k];
