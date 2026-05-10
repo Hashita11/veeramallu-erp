@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VGA Admission & Fee Portal |</title>
-    <!-- HTML2CANVAS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>VGA Admission & Fee Portal</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; --border-color: #e0e0e0; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; }
         
         /* Navigation Menu */
         .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 100; }
-        .nav-menu a { color: white; margin: 0 10px; text-decoration: none; font-weight: bold; font-size: 13px; border-right: 1px solid #3f51b5; padding-right: 15px; }
+        .nav-menu a { color: white; margin: 0 10px; text-decoration: none; font-weight: bold; font-size: 13px; border-right: 1px solid #3f51b5; padding-right: 15px; cursor: pointer;}
         .nav-menu a:last-child { border-right: none; }
 
-        .container { width: 100%; max-width: 1150px; margin: 20px auto; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { width: 100%; max-width: 1100px; margin: 20px auto; padding: 25px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         
         .header { text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-bottom: 20px; }
+        .header img { width: 80px; margin-bottom: 10px; }
         .header h1 { margin: 0; color: var(--primary-color); font-size: 26px; font-weight: 800; }
         .header p { margin: 5px 0; font-size: 12px; color: #666; font-weight: bold; text-transform: uppercase; }
 
@@ -32,10 +33,10 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 10px; font-weight: bold; color: #666; margin-bottom: 4px; text-transform: uppercase; }
-        input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 13px; }
+        input, select { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 13px; outline: none;}
 
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; min-width: 950px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th, td { padding: 10px; border: 1px solid #eee; text-align: left; }
         th { background: #f8f9fa; font-size: 11px; color: #555; }
 
@@ -50,13 +51,14 @@
         @media print { 
             .no-print { display: none !important; } 
             .container { box-shadow: none; width: 100%; margin: 0; padding: 0; }
-            input, select { border: none !important; appearance: none; -webkit-appearance: none; font-weight: bold; }
+            input, select { border: none !important; background: none; font-weight: bold; }
         }
     </style>
 </head>
 <body>
 
 <div class="nav-menu no-print">
+    <a href="index.html">Dashboard</a>
     <a href="admissions.html">New Admission</a>
     <a href="attendance.html">Daily Attendance</a>
     <a href="marks-entry.html">Marks Entry</a>
@@ -66,6 +68,7 @@
 
 <div class="container">
     <div class="header">
+        <img src="logo.png" alt="VGA Logo">
         <h1>VEERAMALLU GLOBAL ACADEMY</h1>
         <p>Student Admission & Fee Management System </p>
     </div>
@@ -149,55 +152,8 @@
         <button class="btn-save no-print" onclick="save()">SAVE TO DATABASE & PRINT RECEIPT</button>
     </div>
 </div>
+
 <script>
-
-// ✅ LOGIN CHECK
-const teacher = sessionStorage.getItem("teacherEmail");
-
-if (!teacher) {
-    alert("Access Denied. Please login first.");
-    window.location.href = "index.html";
-}
-
-// ✅ SHOW LOGGED IN TEACHER
-document.addEventListener("DOMContentLoaded", () => {
-    if (teacher) {
-        document.body.insertAdjacentHTML("afterbegin",
-            `<div style="background:#1a237e;color:white;padding:8px;text-align:center;font-size:12px;">
-                Logged in as: ${teacher}
-            </div>`
-        );
-    }
-});
-
-// ✅ CALCULATION
-function calc() {
-    let totalDue = 0;
-
-    document.querySelectorAll('#feeTable tbody tr').forEach(row => {
-        const total = parseFloat(row.querySelector('.f-total').value) || 0;
-        let paid = 0;
-
-        row.querySelectorAll('.f-term').forEach(t => {
-            const parts = t.value.split('/');
-            const amt = parseFloat(parts[parts.length - 1]) || parseFloat(t.value) || 0;
-            paid += amt;
-        });
-
-        let bal = total - paid;
-
-        // ❌ Prevent negative balance
-        if (bal < 0) {
-            alert("⚠️ Paid amount exceeds total fee!");
-            bal = 0;
-        }
-
-        row.querySelector('.f-bal').value = bal;
-        totalDue += bal;
-    });
-
-    document.getElementById('grandBal').innerText = totalDue;
-}
 // ✅ FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
@@ -207,57 +163,77 @@ const firebaseConfig = {
   messagingSenderId: "379339569496",
   appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
-    firebase.initializeApp(firebaseConfig);
-
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ✅ WHATSAPP FUNCTION
-function sendWhatsAppReceipt(data) {
+let teacherEmail = "";
 
+// ✅ SECURITY & SESSION CHECK
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        teacherEmail = user.email;
+        document.body.insertAdjacentHTML("afterbegin",
+            `<div id="authBar" class="no-print" style="background:#1a237e;color:white;padding:8px;text-align:center;font-size:12px;">
+                Logged in as: ${teacherEmail}
+            </div>`
+        );
+    } else {
+        alert("Access Denied. Redirecting to login...");
+        window.location.href = "index.html";
+    }
+});
+
+// ✅ FEE CALCULATOR
+function calc() {
+    let totalDue = 0;
+    document.querySelectorAll('#feeTable tbody tr').forEach(row => {
+        const total = parseFloat(row.querySelector('.f-total').value) || 0;
+        let paid = 0;
+        row.querySelectorAll('.f-term').forEach(t => {
+            const parts = t.value.split('/');
+            const amt = parseFloat(parts[parts.length - 1]) || parseFloat(t.value) || 0;
+            paid += amt;
+        });
+        let bal = total - paid;
+        if (bal < 0) bal = 0;
+        row.querySelector('.f-bal').value = bal;
+        totalDue += bal;
+    });
+    document.getElementById('grandBal').innerText = totalDue;
+}
+
+// ✅ WHATSAPP RECEIPT
+function sendWhatsAppReceipt(data) {
     let message = `🎓 *VEERAMALLU GLOBAL ACADEMY*\n\n`;
     message += `📄 *Fee Receipt*\n\n`;
     message += `👤 Student: ${data.name}\n`;
     message += `🏫 Campus: ${data.campus}\n`;
     message += `🎯 Class: ${data.class}\n\n`;
-
     message += `💰 *Fee Details:*\n`;
-
     Object.keys(data.feeDetails).forEach(key => {
         const f = data.feeDetails[key];
         if (f.total > 0) {
             message += `- ${key}: ₹${f.total} | Bal: ₹${f.balance}\n`;
         }
     });
-
     message += `\n📊 *Total Balance:* ₹${data.totalBalance}\n\n`;
     message += `🙏 Thank you!`;
 
-    const phone = "91" + data.mobile;; // India code
+    const phone = "91" + data.mobile;
     const adminPhone = "919059988802";
-
-    window.open(`https://wa.me/${parentPhone}?text=${encodeURIComponent(message)}`, "_blank");
-
-    setTimeout(() => {
-        window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`, "_blank");
-    }, 1500);
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    setTimeout(() => { window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(message)}`, "_blank"); }, 2000);
 }
 
-// ✅ SAVE FUNCTION
+// ✅ SAVE DATA
 async function save() {
-
     const mobile = document.getElementById('mobile').value;
-
-    // ✅ VALIDATIONS
-    if (mobile.length !== 10) {
-        alert("Enter valid 10-digit mobile number");
-        return;
-    }
+    if (mobile.length !== 10) { alert("Enter valid 10-digit mobile number"); return; }
 
     const fees = {};
     document.querySelectorAll('#feeTable tbody tr').forEach(row => {
         const pName = row.cells[0].innerText;
-
         fees[pName] = { 
             total: row.querySelector('.f-total').value || 0, 
             term1: row.querySelectorAll('.f-term')[0].value,
@@ -273,67 +249,35 @@ async function save() {
         campus: document.getElementById('campus').value,
         class: document.getElementById('joinClass').value,
         mobile: mobile,
-
-        createdBy: teacher,
-
+        createdBy: teacherEmail,
         dob: document.getElementById('dob').value,
-        caste: document.getElementById('caste').value,
         aadhaar: document.getElementById('stuAadhaar').value,
-        prevSchool: document.getElementById('prevSchool').value,
-        prevClass: document.getElementById('prevClass').value,
-        tcNo: document.getElementById('tcNo').value,
-
-        moles: [
-            document.getElementById('mole1').value,
-            document.getElementById('mole2').value
-        ],
-
-        fAadhaar: document.getElementById('fAadhaar').value,
-        mAadhaar: document.getElementById('mAadhaar').value,
-        ration: document.getElementById('ration').value,
-        bankAcc: document.getElementById('accNo').value,
-        ifsc: document.getElementById('ifsc').value,
-
         feeDetails: fees,
         totalBalance: document.getElementById('grandBal').innerText,
-
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    if (!data.id || !data.name) {
-        alert("Student ID & Name required");
-        return;
-    }
+    if (!data.id || !data.name) { alert("Student ID & Name required"); return; }
 
     try {
         await db.collection("admissions").doc(data.id).set(data);
-
         alert("✅ Saved Successfully");
-
-        // 🔥 WHATSAPP AUTO OPEN
         sendWhatsAppReceipt(data);
-// Download PDF
-        downloadPDF()
-        // 🖨 PRINT
-        
-setTimeout(() => {
-            window.print();
-        }, 1000);
-    } catch (e) {
-        alert("❌ Error: " + e.message);
-    }
+        downloadPDF();
+        setTimeout(() => { window.print(); }, 3000);
+    } catch (e) { alert("❌ Error: " + e.message); }
 }
+
+// ✅ PDF DOWNLOAD
 function downloadPDF() {
     const element = document.querySelector('.container');
-
     const opt = {
-        margin:       5,
-        filename:     'Fee_Receipt.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: 5,
+        filename: `VGA_${document.getElementById('stuName').value}_Fee.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
     html2pdf().set(opt).from(element).save();
 }
 </script>
