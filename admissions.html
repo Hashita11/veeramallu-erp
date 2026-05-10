@@ -63,7 +63,6 @@
     <a href="attendance.html">Daily Attendance</a>
     <a href="marks-entry.html">Marks Entry</a>
     <a href="parent-view.html">Parent Portal</a>
-    <a href="admin.html">Admin ERP</a>
 </div>
 
 <div class="container">
@@ -170,19 +169,21 @@ const auth = firebase.auth();
 let teacherEmail = "";
 
 // ✅ SECURITY & SESSION CHECK
+let activeTeacher = "";
+
+// ✅ FIX: AUTH CHECK
 auth.onAuthStateChanged((user) => {
     if (user) {
-        teacherEmail = user.email;
-        document.body.insertAdjacentHTML("afterbegin",
-            `<div id="authBar" class="no-print" style="background:#1a237e;color:white;padding:8px;text-align:center;font-size:12px;">
-                Logged in as: ${teacherEmail}
-            </div>`
+        activeTeacher = user.email;
+        document.body.insertAdjacentHTML("afterbegin", 
+            `<div id="authBar" class="no-print" style="background:#1a237e;color:white;padding:8px;text-align:center;font-size:12px;">Logged in: ${activeTeacher}</div>`
         );
     } else {
-        alert("Access Denied. Redirecting to login...");
+        alert("Access Denied. Please login first.");
         window.location.href = "index.html";
     }
 });
+
 
 // ✅ FEE CALCULATOR
 function calc() {
