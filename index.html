@@ -405,7 +405,7 @@ auth.onAuthStateChanged(async(user)=>{
     document.getElementById("attendanceSection").style.display="block";
 
     const campus =
-    sessionStorage.getItem("activeCampus") || "Relangi";
+    sessionStorage.getItem("activeCampus") || " ";
 
     document.getElementById("welcomeMsg").innerText =
     "Welcome, " + user.email.split("@")[0].toUpperCase();
