@@ -127,6 +127,7 @@
 </div>
 
 <script>
+    let studentsArray = [];
     // Firebase Configuration
     const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
@@ -140,46 +141,44 @@
 
 const db = firebase.firestore();
 const auth = firebase.auth();
-    let studentsArray = [];
-
-    async function loadClassList() {
+async function loadClassList() {
         const campus = document.getElementById('campusPicker').value;
         const className = document.getElementById('classPicker').value;
         const tbody = document.getElementById('studentTableBody');
         
-        if(!campus || !className) return alert("Please select both Campus and Class.");
+        if(!campus || !className) return alert("Select Campus and Class.");
         
         tbody.innerHTML = "<tr><td colspan='2' style='text-align: center;'>Fetching students...</td></tr>";
 
         try {
-            // Querying based on both Campus and Class fields from admissions
+            // NOTE: Field names 'campus' and 'joinClass' must match your Save() function in admissions.html
             const snapshot = await db.collection("admissions")
                 .where("campus", "==", campus)
-                .where("joinClass", "==", className)
+                .where("class", "==", className)
                 .get();
             
             tbody.innerHTML = "";
             studentsArray = [];
 
             if (snapshot.empty) {
-                tbody.innerHTML = "<tr><td colspan='2' style='text-align: center; color: red;'>No students found for this selection.</td></tr>";
+                tbody.innerHTML = "<tr><td colspan='2' style='text-align: center; color: red;'>No students found.</td></tr>";
                 return;
             }
 
             snapshot.forEach(doc => {
                 const student = doc.data();
+                // FIX: Matching your database keys: 'name' and 'id'
                 studentsArray.push({ 
                     id: doc.id, 
-                    name: student.studentName, 
-                    admNo: student.admissionNo,
+                    name: student.name, 
                     status: "Present" 
                 });
                 
                 const row = `
                     <tr>
                         <td>
-                            <div style="font-weight: 800; color: #333;">${student.studentName}</div>
-                            <div style="font-size: 11px; color: #777;">ADM: ${student.admissionNo} | ${campus}</div>
+                            <div style="font-weight: 800; color: #333;">${student.name}</div>
+                            <div style="font-size: 11px; color: #777;">ID: ${doc.id} | ${campus}</div>
                         </td>
                         <td style="text-align: center;">
                             <button id="btn-${doc.id}" class="status-toggle is-present" onclick="toggle('${doc.id}')">
@@ -214,27 +213,22 @@ const auth = firebase.auth();
         const campusName = document.getElementById('campusPicker').value;
         const className = document.getElementById('classPicker').value;
         
-        if(!date || !className || !campusName) {
-            return alert("Please select Date, Campus, and Class.");
-        }
-        if(studentsArray.length === 0) return alert("No students to mark.");
+        if(!date || !className || !campusName) return alert("Select Date, Campus, and Class.");
+        if(studentsArray.length === 0) return alert("Load list first.");
 
-        // Record ID ensures no overlap between campuses or dates
         const recordID = `${campusName}_${className}_${date}`;
 
         try {
-            await db.collection("attendance").doc(recordID).set({
+            await db.collection("daily_attendance").doc(recordID).set({
                 campus: campusName,
                 className: className,
                 date: date,
                 records: studentsArray,
-                totalStudents: studentsArray.length,
-                presentCount: studentsArray.filter(s => s.status === "Present").length,
                 submittedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert(`Success! Attendance for ${campusName} - Class ${className} is saved.`);
+            alert("✅ Attendance Synced to Cloud!");
         } catch (e) {
-            alert("Upload Error: " + e.message);
+            alert("Sync Error: " + e.message);
         }
     }
     
