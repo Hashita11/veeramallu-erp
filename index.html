@@ -405,7 +405,7 @@ auth.onAuthStateChanged(async(user)=>{
     document.getElementById("attendanceSection").style.display="block";
 
     const campus =
-    sessionStorage.getItem("activeCampus") || " ";
+    sessionStorage.getItem("activeCampus") || "";
 
     document.getElementById("welcomeMsg").innerText =
     "Welcome, " + user.email.split("@")[0].toUpperCase();
@@ -591,46 +591,111 @@ async function uploadPhoto(input){
 
 // GPS
 function startGPSCheck(selectedCampus){
+// ================= GPS CHECK =================
+function startGPSCheck(selectedCampus) {
 
-    if(!navigator.geolocation) return;
+    if (!navigator.geolocation) {
 
-    navigator.geolocation.watchPosition((pos)=>{
+        document.getElementById("gpsStatus").innerHTML =
+        "<span style='color:red;'>GPS Not Supported</span>";
 
-        const userLat = pos.coords.latitude;
-        const userLng = pos.coords.longitude;
+        return;
+    }
 
-        const target = campusCoords[selectedCampus];
+    navigator.geolocation.watchPosition(
 
-        const dist = calculateDistance(
-            userLat,
-            userLng,
-            target.lat,
-            target.lng
-        );
+        (pos) => {
 
-        const gps =
-        document.getElementById("gpsStatus");
+            const userLat = pos.coords.latitude;
+            const userLng = pos.coords.longitude;
 
-        if(dist <= 50){
+            console.log("LIVE GPS:", userLat, userLng);
 
-            gps.innerHTML =
-            "<span style='color:green;'>✔ Inside Campus</span>";
+            let nearestCampus = "";
+            let nearestDistance = Infinity;
 
-            btnIn.disabled = false;
-            btnOut.disabled = false;
+            // FIND NEAREST CAMPUS
+            for (const [name, coords] of Object.entries(campusCoords)) {
 
-        }else{
+                const distance = calculateDistance(
+                    userLat,
+                    userLng,
+                    coords.lat,
+                    coords.lng
+                );
 
-            gps.innerHTML =
-            "<span style='color:red;'>✖ Outside Campus</span>";
+                console.log(name + " Distance:", distance);
 
-            btnIn.disabled = true;
-            btnOut.disabled = true;
+                if (distance < nearestDistance) {
+
+                    nearestDistance = distance;
+                    nearestCampus = name;
+                }
+            }
+
+            // UPDATE CURRENT CAMPUS
+            sessionStorage.setItem(
+                "activeCampus",
+                nearestCampus
+            );
+
+            document.getElementById("campusDisplay").innerText =
+            "Campus: " + nearestCampus;
+
+            // GPS STATUS
+            const gpsStatus =
+            document.getElementById("gpsStatus");
+
+            const btnIn =
+            document.getElementById("btnIn");
+
+            const btnOut =
+            document.getElementById("btnOut");
+
+            // 150 METERS RANGE
+            if (nearestDistance <= 150) {
+
+                gpsStatus.innerHTML =
+                `<span style="color:green;">
+                ✔ Inside ${nearestCampus} Campus
+                <br>
+                Distance: ${Math.round(nearestDistance)} meters
+                </span>`;
+
+                btnIn.disabled = false;
+                btnOut.disabled = false;
+
+            } else {
+
+                gpsStatus.innerHTML =
+                `<span style="color:red;">
+                ✖ Outside Campus
+                <br>
+                Nearest: ${nearestCampus}
+                <br>
+                Distance: ${Math.round(nearestDistance)} meters
+                </span>`;
+
+                btnIn.disabled = true;
+                btnOut.disabled = true;
+            }
+
+        },
+
+        (error) => {
+
+            console.log(error);
+
+            document.getElementById("gpsStatus").innerHTML =
+            "<span style='color:red;'>GPS Permission Denied</span>";
+        },
+
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
         }
-
-    },{
-        enableHighAccuracy:true
-    });
+    );
 }
 
 // DISTANCE
