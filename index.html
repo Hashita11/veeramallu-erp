@@ -320,10 +320,7 @@ onclick="window.location.href='admissions.html'">
 New Admission Portal
 </button>
 
-<button class="btn-secondary"
-onclick="window.location.href='admin.html'">
-Admin Dashboard
-</button>
+<button onclick="goToAdmin()">Admin Dashboard</button>
 
 <button class="btn-secondary"
 onclick="window.location.href='homework.html'">
@@ -912,6 +909,14 @@ window.addEventListener("online",()=>{
 
     onlineStatus.style.color="green";
 });
+    function goToAdmin() {
+    const user = auth.currentUser;
+    if (user && user.email === "admin@gmail.com") {
+        window.location.href = 'admin.html';
+    } else {
+        alert("Access Denied: Only Admins can enter here.");
+    }
+}
 
 </script>
 
