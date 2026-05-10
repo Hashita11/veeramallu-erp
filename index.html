@@ -95,10 +95,14 @@
 
     <div id="attendanceSection">
         <div class="teacher-info">
-            <div style="position: relative; display: inline-block;">
-                <img id="profilePic" crossorigin="anonymous" src="https://via.placeholder.com/100?text=User" class="profile-pic">
-                <label for="photoUpload" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">📷</label>
-                <input type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
+            <div  for="photoUpload" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; font-size: 14px;">📷</label>
+                <instyle="position: relative; display: inline-block;">
+                <img
+    id="profilePic"
+    class="profile-pic"
+    crossorigin="anonymous"
+    src="https://via.placeholder.com/150?text=User">
+                <labelput type="file" id="photoUpload" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
             </div>
             <h2 id="welcomeMsg" style="margin-top:10px; font-size: 1.2rem;">Welcome!</h2>
             <p id="teacherEmailDisplay" class="small"></p>
@@ -750,49 +754,185 @@ async function markAttendance(type) {
 }
 
 // ================= PHOTO UPLOAD =================
+// ================= AUTH STATE =================
+auth.onAuthStateChanged(async (user) => {
+
+    if (!user) return;
+
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("attendanceSection").style.display = "block";
+
+    const campus =
+        sessionStorage.getItem("activeCampus") || "Relangi";
+
+    document.getElementById("welcomeMsg").innerText =
+        "Welcome, " +
+        user.email.split("@")[0].toUpperCase();
+
+    document.getElementById("teacherEmailDisplay").innerText =
+        user.email;
+
+    document.getElementById("campusDisplay").innerText =
+        "Campus: " + campus;
+
+    // LOAD PHOTO
+    loadTeacherPhoto();
+
+    // START GPS
+    startGPSCheck(campus);
+});
+
+// ================= LOAD PHOTO =================
+async function loadTeacherPhoto() {
+
+    try {
+
+        const user = auth.currentUser;
+
+        if (!user) return;
+
+        const doc = await db.collection("teachers")
+            .doc(user.uid)
+            .get();
+
+        // PHOTO EXISTS
+        if (doc.exists && doc.data().photo) {
+
+            document.getElementById("profilePic").src =
+                doc.data().photo;
+
+            console.log("PHOTO LOADED");
+
+        } else {
+
+            document.getElementById("profilePic").src =
+                "https://via.placeholder.com/150?text=User";
+
+            console.log("NO PHOTO FOUND");
+        }
+
+    } catch (err) {
+
+        console.error("LOAD ERROR:", err);
+    }
+}
+
+// ================= PHOTO UPLOAD =================
 async function uploadPhoto(input) {
 
     const file = input.files[0];
 
-    if (!file) return;
+    if (!file) {
+        alert("Select image");
+        return;
+    }
 
-    if (file.size > 1024 * 1024)
-        return alert("Keep image under 1MB");
+    // LIMIT SIZE
+    if (file.size > 5 * 1024 * 1024) {
+        alert("Image too large");
+        return;
+    }
 
-    const reader = new FileReader();
+    const img = new Image();
 
-    reader.onload = async function(e) {
+    img.onload = async function () {
+
+        // COMPRESS IMAGE
+        const canvas =
+            document.createElement("canvas");
+
+        const ctx =
+            canvas.getContext("2d");
+
+        const MAX = 250;
+
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+
+            if (width > MAX) {
+
+                height =
+                    height * (MAX / width);
+
+                width = MAX;
+            }
+
+        } else {
+
+            if (height > MAX) {
+
+                width =
+                    width * (MAX / height);
+
+                height = MAX;
+            }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            width,
+            height
+        );
+
+        // COMPRESSED BASE64
+        const compressedImage =
+            canvas.toDataURL(
+                "image/jpeg",
+                0.7
+            );
 
         try {
 
-            const base64Image = e.target.result;
+            const user =
+                auth.currentUser;
 
-            const snap = await db.collection("teachers")
-                .where("email", "==", auth.currentUser.email)
-                .get();
+            if (!user) {
 
-            if (!snap.empty) {
-
-                await db.collection("teachers")
-                    .doc(snap.docs[0].id)
-                    .update({
-                        photo: base64Image
-                    });
-
-                document.getElementById("profilePic").src =
-                    base64Image;
-
-                alert("✅ Photo Updated");
-
+                alert("User not logged in");
+                return;
             }
 
+            // SAVE TO FIRESTORE
+            await db.collection("teachers")
+                .doc(user.uid)
+                .set({
+
+                    uid: user.uid,
+                    email: user.email,
+                    photo: compressedImage,
+                    updatedAt: new Date()
+
+                }, { merge: true });
+
+            // UPDATE UI
+            document.getElementById("profilePic").src =
+                compressedImage;
+
+            console.log("PHOTO SAVED");
+
+            alert("✅ Photo Uploaded Successfully");
+
         } catch (err) {
+
+            console.error("UPLOAD ERROR:", err);
 
             alert(err.message);
         }
     };
 
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+
+        alert("Invalid image");
+    };
+
+    img.src = URL.createObjectURL(file);
 }
 
 // ================= DARK MODE =================
