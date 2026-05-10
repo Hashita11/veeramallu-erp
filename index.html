@@ -385,13 +385,12 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-const campusCoords = {
-    "Relangi": { lat:16.702710, lng:81.644140 },
-    "Velpur": { lat:16.719772, lng:81.662377 },
-    "Undrajavaram": { lat:16.791772, lng:81.701022 }
-};
-
 const LATE_THRESHOLD = "08:30:00";
+    const campusCoords = {
+        "Relangi": { lat: 16.702710, lng: 81.644140 },
+        "Velpur": { lat: 16.719772, lng: 81.662377 },
+        "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
+    };
 
 // AUTO LOGIN
 auth.onAuthStateChanged(async(user)=>{
