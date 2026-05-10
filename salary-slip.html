@@ -3,38 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>VGA Admin - Auto Payroll System</title>
+    <title>VGA Admin - Payroll System</title>
     <style>
         :root { --primary: #1a237e; --danger: #c62828; --success: #2e7d32; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 15px; max-width: 550px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; margin: 0; }
         
-        .section-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-top: 15px; display: block; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 10px;}
+        .card { background: white; padding: 25px; border-radius: 15px; max-width: 550px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;}
+        
+        /* LOGO STYLING */
+        .logo { width: 100px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        
+        h2 { color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        .section-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-top: 20px; display: block; border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 10px; text-align: left;}
+        
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
+        label { font-size: 12px; color: #666; display: block; margin-bottom: 5px; text-align: left;}
+        input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
         
         .fetch-btn { background: var(--success); margin-bottom: 20px; }
         button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; }
         button:hover { opacity: 0.9; }
 
+        /* SLIP DESIGN */
         #result { margin-top: 30px; }
-        .slip { background: white; border: 2px solid var(--primary); border-radius: 10px; padding: 20px; }
-        .slip-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .slip { background: white; border: 2px solid var(--primary); border-radius: 12px; padding: 25px; position: relative; }
+        .slip-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
         .loss { color: var(--danger); font-weight: bold; }
-        .total-box { background: var(--primary); color: white; padding: 15px; margin-top: 15px; border-radius: 8px; font-size: 18px; display: flex; justify-content: space-between; }
+        .total-box { background: var(--primary); color: white; padding: 15px; margin-top: 20px; border-radius: 8px; font-size: 18px; display: flex; justify-content: space-between; }
         
-        @media print { .no-print { display: none; } body { background: white; padding: 0; } .card { box-shadow: none; border: none; } }
+        @media print { 
+            .no-print { display: none !important; } 
+            body { background: white; padding: 0; } 
+            .card { box-shadow: none; border: none; }
+            #result { margin-top: 0; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card no-print">
+    <img src="logo.png" alt="VGA Logo" class="logo">
     <h2>Payroll Administration</h2>
 
     <label>Teacher Email</label>
-    <input type="text" id="teacherEmail" placeholder="e.g. teacher1@gmail.com">
+    <input type="text" id="teacherEmail" placeholder="teacher1@gmail.com">
     
     <button class="fetch-btn" onclick="fetchAttendanceData()">
         🔍 Fetch Attendance from Firebase
@@ -44,7 +57,7 @@
     <div class="input-grid">
         <div>
             <label>Gross Salary (₹)</label>
-            <input type="number" id="grossSalary" placeholder="15000">
+            <input type="number" id="grossSalary" value="10000">
         </div>
         <div>
             <label>Total Days in Month</label>
@@ -85,7 +98,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // YOUR FIREBASE CONFIG
+    // FIREBASE CONFIG
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -98,100 +111,79 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 1. FETCH ATTENDANCE FROM FIREBASE
     async function fetchAttendanceData() {
         const email = document.getElementById("teacherEmail").value;
-        if (!email) return alert("Please enter the teacher's email first!");
+        if (!email) return alert("Enter Teacher Email");
 
         const today = new Date();
-        const currentMonth = (today.getMonth() + 1).toString().padStart(2, '0');
-        const currentYear = today.getFullYear();
-        const datePattern = `/${currentMonth}/${currentYear}`;
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const year = today.getFullYear();
+        const pattern = `/${month}/${year}`;
 
         try {
-            const snap = await db.collection("attendance")
-                .where("teacher", "==", email)
-                .get();
-
-            let presentCount = 0;
-            let lateCount = 0;
+            const snap = await db.collection("attendance").where("teacher", "==", email).get();
+            let count = 0; let lates = 0;
 
             snap.forEach(doc => {
-                const data = doc.data();
-                // Filter by current month
-                if (data.date && data.date.includes(datePattern)) {
-                    presentCount++;
-                    // Late logic: Check if time is after 09:15:00
-                    if (data.time && data.time > "09:15:00") {
-                        lateCount++;
-                    }
+                const d = doc.data();
+                if (d.date && d.date.includes(pattern)) {
+                    count++;
+                    if (d.time && d.time > "09:15:00") lates++;
                 }
             });
 
-            document.getElementById("presentDays").value = presentCount;
-            document.getElementById("lateMarks").value = lateCount;
-
-            alert(`Success! Found ${presentCount} working days and ${lateCount} lates for this month.`);
-
-        } catch (error) {
-            console.error("Firebase Error:", error);
-            alert("Error fetching data: " + error.message);
-        }
+            document.getElementById("presentDays").value = count;
+            document.getElementById("lateMarks").value = lates;
+            alert(`Found ${count} days and ${lates} lates.`);
+        } catch (e) { alert(e.message); }
     }
 
-    // 2. GENERATE AND CALCULATE SLIP
     function generateSalarySlip() {
-        const teacher = document.getElementById("teacherEmail").value;
+        const email = document.getElementById("teacherEmail").value;
         const gross = Number(document.getElementById("grossSalary").value);
         const totalDays = Number(document.getElementById("totalMonthDays").value);
         const present = Number(document.getElementById("presentDays").value);
         const lates = Number(document.getElementById("lateMarks").value);
-        const holidayLossDays = Number(document.getElementById("holidayLoss").value);
+        const holLoss = Number(document.getElementById("holidayLoss").value);
         const other = Number(document.getElementById("otherDeductions").value);
 
-        if (!teacher || !gross) return alert("Fill in Teacher Email and Gross Salary");
-
         const perDay = gross / totalDays;
-        
-        // Policy: 3 Lates = 1 Day Wage Loss
         const lateLossDays = Math.floor(lates / 3);
-        const lateLossAmount = Math.round(lateLossDays * perDay);
-        
-        // Policy: Holiday Rule Loss (Before/After)
-        const holidayLossAmount = Math.round(holidayLossDays * perDay);
-        
-        // Actual Earned for attendance
-        const earnedSalary = Math.round(perDay * present);
-        
-        // Final Calculation
-        const netSalary = earnedSalary - lateLossAmount - holidayLossAmount - other;
+        const lateLossAmt = Math.round(lateLossDays * perDay);
+        const holLossAmt = Math.round(holLoss * perDay);
+        const earned = Math.round(perDay * present);
+        const net = earned - lateLossAmt - holLossAmt - other;
 
         document.getElementById("result").innerHTML = `
             <div class="slip">
+                <img src="logo.png" alt="Logo" class="logo">
                 <div style="text-align:center; border-bottom:2px solid var(--primary); padding-bottom:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:var(--primary);">VEERAMALLU GLOBAL ACADEMY</h3>
                     <small>Official Salary Statement</small>
                 </div>
 
-                <div class="slip-row"><span>Teacher:</span><b>${teacher}</b></div>
+                <div class="slip-row"><span>Teacher:</span><b>${email}</b></div>
                 <div class="slip-row"><span>Gross Monthly Salary:</span><span>₹${gross}</span></div>
                 <div class="slip-row"><span>Total Days in Month:</span><span>${totalDays}</span></div>
                 <div class="slip-row"><span>Attendance (Present):</span><span>${present} Days</span></div>
-                <div class="slip-row"><span>Earned (Before Deductions):</span><span>₹${earnedSalary}</span></div>
+                <div class="slip-row"><span>Earned (Before Deductions):</span><span>₹${earned}</span></div>
                 
-                <div style="margin-top:15px; font-weight:bold; font-size:12px; color:var(--primary);">LOSS & DEDUCTIONS</div>
-                <div class="slip-row"><span>Late Marks (${lates} lates):</span><span class="loss">- ₹${lateLossAmount}</span></div>
-                <div class="slip-row"><span>Holiday Policy Loss:</span><span class="loss">- ₹${holidayLossAmount}</span></div>
+                <div style="margin-top:15px; font-weight:bold; font-size:12px; color:var(--primary); text-align:left;">LOSS & DEDUCTIONS</div>
+                <div class="slip-row"><span>Late Marks (${lates} lates):</span><span class="loss">- ₹${lateLossAmt}</span></div>
+                <div class="slip-row"><span>Holiday Policy Loss:</span><span class="loss">- ₹${holLossAmt}</span></div>
                 <div class="slip-row"><span>Advance/Other:</span><span class="loss">- ₹${other}</span></div>
                 
                 <div class="total-box">
                     <span>NET PAYABLE:</span>
-                    <span>₹${netSalary < 0 ? 0 : netSalary}</span>
+                    <span>₹${net < 0 ? 0 : net}</span>
                 </div>
 
                 <button class="no-print" style="background:#555; margin-top:15px;" onclick="window.print()">Print Salary Slip</button>
             </div>
         `;
+        
+        // Scroll to result
+        window.scrollTo({ top: document.getElementById("result").offsetTop, behavior: 'smooth' });
     }
 </script>
 
