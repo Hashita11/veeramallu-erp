@@ -180,25 +180,6 @@ window.onload = async () => {
     }
 };
 
-// --- 4. STAFF RECRUITMENT ---
-async function createTeacher() {
-    const name = document.getElementById("t_name")?.value;
-    const email = document.getElementById("t_email")?.value;
-    const pass = document.getElementById("t_password")?.value;
-    const subject = document.getElementById("t_subject")?.value;
-    const salary = document.getElementById("t_salary")?.value;
-
-    if(!name || !email || !pass) return alert("Fill Name, Email, and Password.");
-
-    try {
-        const userCred = await auth.createUserWithEmailAndPassword(email, pass);
-        await db.collection("teachers").doc(userCred.user.uid).set({
-            name, email, subject, salary: Number(salary), uid: userCred.user.uid
-        });
-        alert("Staff Registered Successfully!");
-        location.reload();
-    } catch (e) { alert("Recruitment Error: " + e.message); }
-}
 
 // --- 5. ATTENDANCE LOGS & FILTERS ---
 async function loadAttendance() {
@@ -231,52 +212,6 @@ async function loadAttendance() {
     });
 }
 
-// --- 6. PAYROLL CALCULATION ---
-async function generateSalary() {
-    const s = document.getElementById("startDate").value;
-    const e = document.getElementById("endDate").value;
-    if(!s || !e) return alert("Select Date Range first.");
-
-    const snap = await db.collection("attendance").get();
-    let staffMap = {};
-
-    snap.forEach(doc => {
-        const d = doc.data(); const dt = d.time?.toDate();
-        if(!dt) return; const ds = dt.toISOString().split('T')[0];
-        if(ds < s || ds > e) return;
-
-        const n = d.name || teachersList.find(t => t.uid == d.teacherId)?.name;
-        if(!n) return;
-        if(!staffMap[n]) staffMap[n] = { days: new Set(), lates: 0 };
-        if(d.type === "IN") {
-            staffMap[n].days.add(ds);
-            if(dt.toTimeString().slice(0,8) > LATE_TIME) staffMap[n].lates++;
-        }
-    });
-
-    let wd = 0, cal = []; let cur = new Date(s);
-    while(cur <= new Date(e)){
-        const iso = cur.toISOString().split('T')[0];
-        const isH = (cur.getDay()==0 || HOLIDAYS.includes(iso));
-        cal.push({ iso, isH }); if(!isH) wd++; cur.setDate(cur.getDate()+1);
-    }
-
-    let res = "PAYROLL SUMMARY\n----------------\n";
-    teachersList.forEach(t => {
-        const m = staffMap[t.name] || { days: new Set(), lates: 0 };
-        const rate = t.salary / wd;
-        const lateLoss = Math.floor(m.lates/3);
-        let sLoss = 0;
-        cal.forEach((day, i) => {
-            if(day.isH && i > 0 && i < cal.length-1){
-                if(!m.days.has(cal[i-1].iso) && !m.days.has(cal[i+1].iso)) sLoss++;
-            }
-        });
-        const final = t.salary - ((wd - m.days.size + lateLoss + sLoss) * rate);
-        res += `${t.name}: ₹${Math.max(0, final).toFixed(0)} (Lates: ${m.lates})\n`;
-    });
-    document.getElementById("output").innerText = res;
-}
 
 // --- 7. CLASS-WISE STUDENT ATTENDANCE ---
 async function checkClassAttendance() {
