@@ -48,7 +48,7 @@
 
         <div id="loginSection">
             <label>Admission Number</label>
-            <input type="text" id="loginAdmNo" placeholder="Enter Admission No.">
+            <input type="text" id="loginAdmNo" placeholder="VGA-2026-0001">
             <label>Parent Mobile Number</label>
             <input type="text" id="loginMobile" placeholder="Registered Mobile No.">
             <button class="btn-action" onclick="checkStudent()">VIEW DASHBOARD</button>
@@ -101,7 +101,6 @@ const db = firebase.firestore();
 
 let currentStudent = null;
 
-// 1. CHECK STUDENT LOGIN
 async function checkStudent() {
     const admNo = document.getElementById("loginAdmNo").value.trim();
     const mobile = document.getElementById("loginMobile").value.trim();
@@ -118,7 +117,6 @@ async function checkStudent() {
     } catch (e) { alert(e.message); }
 }
 
-// 2. SHOW DASHBOARD & DATA
 function showDashboard() {
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("dashboard").classList.remove("hidden");
@@ -133,7 +131,6 @@ function showDashboard() {
     fetchAttendance();
 }
 
-// 3. FETCH DATA HELPERS
 async function fetchAnnouncement() {
     const doc = await db.collection("notifications").doc("latest").get();
     if(doc.exists) {
@@ -143,15 +140,33 @@ async function fetchAnnouncement() {
     }
 }
 
+// ✅ FIXED: CORRECTLY SEARCHES ARRAY OF MAPS IN 'daily_attendance'
 async function fetchAttendance() {
-    const today = new Date().toLocaleDateString('en-GB');
-    const query = await db.collection("daily_attendance").where("studentId", "==", currentStudent.id).where("date", "==", today).get();
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     const statusEl = document.getElementById("attStatus");
-    
-    if(query.empty) statusEl.innerHTML = "<i>Not Marked</i>";
-    else {
-        const status = query.docs[0].data().status;
-        statusEl.innerHTML = `<b style="color:${status=='Present'?'green':'red'}">${status}</b>`;
+
+    try {
+        const query = await db.collection("daily_attendance")
+            .where("date", "==", today)
+            .where("className", "==", currentStudent.class)
+            .get();
+
+        if (query.empty) {
+            statusEl.innerHTML = `<span style="color:orange">Not Marked</span>`;
+            return;
+        }
+
+        let foundStatus = "Not Marked";
+        query.forEach(doc => {
+            const records = doc.data().records || [];
+            const myRecord = records.find(r => r.id === currentStudent.id);
+            if (myRecord) foundStatus = myRecord.status;
+        });
+
+        const color = foundStatus === "Present" ? "green" : "red";
+        statusEl.innerHTML = `<b style="color:${color}">${foundStatus.toUpperCase()}</b>`;
+    } catch (e) {
+        statusEl.innerText = "Error loading";
     }
 }
 
@@ -161,7 +176,7 @@ async function fetchParentMarks() {
     if(!exam) return area.innerHTML = "";
 
     const doc = await db.collection("marks").doc(`${currentStudent.id}_${exam}`).get();
-    if(!doc.exists) return area.innerHTML = "<p style='text-align:center; padding:10px;'>No marks found for this exam.</p>";
+    if(!doc.exists) return area.innerHTML = "<p style='text-align:center;'>No marks found.</p>";
 
     const m = doc.data().subjects;
     let table = `<table class="marks-table"><tr><th>Subject</th><th>Marks</th></tr>`;
@@ -169,7 +184,6 @@ async function fetchParentMarks() {
     area.innerHTML = table + `</table>`;
 }
 
-// 4. PDF GENERATOR
 function downloadPDF() {
     const { jsPDF } = window.jspdf;
     html2canvas(document.getElementById("reportArea"), { scale: 2 }).then(canvas => {
