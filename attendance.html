@@ -128,90 +128,168 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-    let studentsArray = [];
-    // Firebase Configuration
-    const firebaseConfig = {
-  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-  authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-  projectId: "veeramalluerp-6cac5",
-  storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-  messagingSenderId: "379339569496",
-  appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+
+let studentsArray = [];
+
+// FIREBASE CONFIG
+const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+    messagingSenderId: "379339569496",
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
-    firebase.initializeApp(firebaseConfig);
+
+firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+
+// LOAD STUDENTS
 async function loadClassList() {
-        const campus = document.getElementById('campusPicker').value;
-        const className = document.getElementById('classPicker').value;
-        const tbody = document.getElementById('studentTableBody');
-        
-        if(!campus || !className) return alert("Select Campus and Class.");
-        
-        tbody.innerHTML = "<tr><td colspan='2' style='text-align: center;'>Fetching students...</td></tr>";
 
-        try {
-            // NOTE: Field names 'campus' and 'joinClass' must match your Save() function in admissions.html
-            const snapshot = await db.collection("admissions")
-                .where("campus", "==", campus)
-                .where("class", "==", className)
-                .get();
-            
-            tbody.innerHTML = "";
-            studentsArray = [];
+    const campus =
+        document.getElementById('campusPicker').value;
 
-            if (snapshot.empty) {
-                tbody.innerHTML = "<tr><td colspan='2' style='text-align: center; color: red;'>No students found.</td></tr>";
-                return;
-            }
+    const className =
+        document.getElementById('classPicker').value;
 
-            snapshot.forEach(doc => {
-                const student = doc.data();
-                // FIX: Matching your database keys: 'name' and 'id'
-                studentsArray.push({ 
-                    id: doc.id, 
-                    name: student.name, 
-                    status: "Present" 
-                });
-                
-                const row = `
-                    <tr>
-                        <td>
-                            <div style="font-weight: 800; color: #333;">${student.name}</div>
-                            <div style="font-size: 11px; color: #777;">ID: ${doc.id} | ${campus}</div>
-                        </td>
-                        <td style="text-align: center;">
-                            <button id="btn-${doc.id}" class="status-toggle is-present" onclick="toggle('${doc.id}')">
-                                ✓ PRESENT
-                            </button>
-                        </td>
-                    </tr>`;
-                tbody.innerHTML += row;
+    const tbody =
+        document.getElementById('studentTableBody');
+
+    if (!campus || !className) {
+        alert("Select Campus and Class.");
+        return;
+    }
+
+    tbody.innerHTML =
+    "<tr><td colspan='2' style='text-align:center;'>Fetching students...</td></tr>";
+
+    try {
+
+        const snapshot =
+            await db.collection("admissions")
+            .where("campus", "==", campus)
+            .where("class", "==", className)
+            .get();
+
+        tbody.innerHTML = "";
+        studentsArray = [];
+
+        if (snapshot.empty) {
+
+            tbody.innerHTML =
+            "<tr><td colspan='2' style='text-align:center;color:red;'>No students found.</td></tr>";
+
+            return;
+        }
+
+        snapshot.forEach(doc => {
+
+            const student = doc.data();
+
+            studentsArray.push({
+
+                id: doc.id,
+
+                name: student.name,
+
+                mobile: student.mobile || "",
+
+                status: "Present"
             });
-        } catch (error) {
-            alert("Error loading list: " + error.message);
-        }
-    }
 
-    function toggle(id) {
-        const student = studentsArray.find(s => s.id === id);
-        const btn = document.getElementById(`btn-${id}`);
-        
-        if(student.status === "Present") {
-            student.status = "Absent";
-            btn.innerText = "X ABSENT";
-            btn.className = "status-toggle is-absent";
-        } else {
-            student.status = "Present";
-            btn.innerText = "✓ PRESENT";
-            btn.className = "status-toggle is-present";
-        }
-    }
+            const row = `
+            <tr>
+                <td>
+                    <div style="font-weight:800;color:#333;">
+                        ${student.name}
+                    </div>
 
+                    <div style="font-size:11px;color:#777;">
+                        ID: ${doc.id} | ${campus}
+                    </div>
+                </td>
+
+                <td style="text-align:center;">
+                    <button
+                        id="btn-${doc.id}"
+                        class="status-toggle is-present"
+                        onclick="toggle('${doc.id}')">
+
+                        ✓ PRESENT
+
+                    </button>
+                </td>
+            </tr>
+            `;
+
+            tbody.innerHTML += row;
+
+        });
+
+    } catch (error) {
+
+        alert("Error loading list: " + error.message);
+    }
+}
+
+
+
+// TOGGLE ATTENDANCE
+function toggle(id) {
+
+    const student =
+        studentsArray.find(s => s.id === id);
+
+    const btn =
+        document.getElementById(`btn-${id}`);
+
+    if (student.status === "Present") {
+
+        student.status = "Absent";
+
+        btn.innerText = "X ABSENT";
+
+        btn.className =
+        "status-toggle is-absent";
+
+    } else {
+
+        student.status = "Present";
+
+        btn.innerText = "✓ PRESENT";
+
+        btn.className =
+        "status-toggle is-present";
+    }
+}
+
+
+
+// SAVE ATTENDANCE
 async function submitAttendance() {
+
+    const now = new Date();
+
+    const hour = now.getHours();
+
+    // AUTO LOCK AFTER 10AM
+    if(hour >= 10){
+
+        const allow = confirm(
+            "Attendance time closed after 10 AM.\nContinue with admin permission?"
+        );
+
+        if(!allow){
+            return;
+        }
+    }
 
     const date =
         document.getElementById('attDate').value;
@@ -223,41 +301,42 @@ async function submitAttendance() {
         document.getElementById('classPicker').value;
 
     if (!date || !className || !campusName) {
+
         alert("Select Date, Campus and Class");
+
         return;
     }
 
     if (studentsArray.length === 0) {
+
         alert("Load student list first");
+
         return;
     }
 
-    // UNIQUE DAILY RECORD ID
     const recordID =
         `${campusName}_${className}_${date}`;
 
     try {
 
-        // CHECK EXISTING ATTENDANCE
+        // CHECK EXISTING
         const existing =
             await db.collection("daily_attendance")
             .doc(recordID)
             .get();
 
-        // IF ALREADY SUBMITTED
         if (existing.exists) {
 
             const allowUpdate = confirm(
-                "⚠ Attendance already submitted for this class today.\n\nDo you want to UPDATE it?"
+                "⚠ Attendance already submitted.\nDo you want to UPDATE it?"
             );
 
-            // STOP HERE
             if (!allowUpdate) {
                 return;
             }
         }
 
-        // SAVE TO FIRESTORE
+        // SAVE FIRESTORE
         await db.collection("daily_attendance")
         .doc(recordID)
         .set({
@@ -268,11 +347,33 @@ async function submitAttendance() {
 
             date: date,
 
+            teacher:
+                auth.currentUser
+                ? auth.currentUser.email
+                : "Unknown Teacher",
+
             records: studentsArray,
 
             updatedAt:
                 firebase.firestore.FieldValue.serverTimestamp()
+        });
 
+        // WHATSAPP ALERT FOR ABSENT
+        studentsArray.forEach(student => {
+
+            if(student.status === "Absent"
+            && student.mobile){
+
+                const msg =
+`Dear Parent,
+
+${student.name} is absent today at VEERAMALLU GLOBAL ACADEMY.`;
+
+                const url =
+`https://wa.me/91${student.mobile}?text=${encodeURIComponent(msg)}`;
+
+                window.open(url, "_blank");
+            }
         });
 
         alert("✅ Attendance Saved Successfully");
@@ -282,6 +383,46 @@ async function submitAttendance() {
         alert("❌ Error: " + error.message);
     }
 }
+
+
+
+// EXPORT EXCEL
+function exportExcel() {
+
+    const data = studentsArray.map(s => ({
+
+        StudentID: s.id,
+
+        Name: s.name,
+
+        Status: s.status
+    }));
+
+    const ws =
+        XLSX.utils.json_to_sheet(data);
+
+    const wb =
+        XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+        wb,
+        ws,
+        "Attendance"
+    );
+
+    XLSX.writeFile(
+        wb,
+        "Attendance.xlsx"
+    );
+}
+
+
+
+// TODAY DATE AUTO
+document.getElementById('attDate').valueAsDate =
+new Date();
+
+
 
 </script>
 
