@@ -52,6 +52,10 @@
     <div class="section-header">ACADEMIC MANAGEMENT</div>
     <div class="marks-box">
         <button class="btn btn-aca" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
+        <button class="btn-action" style="background: #c62828; margin-top: 10px;" onclick="deleteMarksRecord()">
+    🗑️ DELETE MARKS RECORD
+</button>
+
         <p style="margin:15px 0 5px 0; font-weight:bold;">Search Student Results:</p>
         <div class="controls">
             <input id="searchAdmNo" placeholder="Admission Number">
@@ -364,51 +368,77 @@ function generateSalary(){
 // =====================
 // ✅ MARKS (FINAL)
 // =====================
+// 1. VIEW MARKS - FIXED FOR NEW SUBJECTS OBJECT
 async function viewMarksReport() {
     const adm = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
     const exam = document.querySelector('select').value;
-    const output = document.querySelector('.card pre') || document.querySelector('#marksOutput'); // Adjust selector to your code
+    const output = document.querySelector('.card pre') || document.querySelector('.card div[style*="border: 1px dashed"]');
 
     if(!adm || !exam) return alert("Please enter Admission No and select Exam.");
+
+    output.innerText = "Fetching report...";
 
     try {
         const doc = await db.collection("marks").doc(`${adm}_${exam}`).get();
         
         if(!doc.exists) {
-            output.innerText = "No marks found for this student.";
+            output.innerText = "No marks found for this student/exam.";
             return;
         }
 
         const data = doc.data();
         const subjects = data.subjects || {};
         
-        let report = `VGA REPORT\n`;
-        report += `${adm} - ${exam}\n`;
-        report += `------------------\n`;
+        let report = `VGA ACADEMY REPORT\n`;
+        report += `ID: ${adm} | EXAM: ${exam}\n`;
+        report += `--------------------------\n`;
 
         let total = 0;
         let count = 0;
 
-        // Loop through the subjects object correctly
+        // Loop through the subjects object correctly to fix "undefined"
         for (let sub in subjects) {
             let marks = parseFloat(subjects[sub]) || 0;
-            report += `${sub} : ${marks}\n`;
+            report += `${sub.padEnd(12)} : ${marks}\n`;
             total += marks;
             count++;
         }
 
-        const maxMarks = count * (exam.startsWith("SA") ? 100 : 50);
-        const percentage = ((total / maxMarks) * 100).toFixed(1);
+        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
+        const totalMax = count * maxPerSub;
+        const per = ((total / totalMax) * 100).toFixed(1);
 
-        report += `------------------\n`;
-        report += `Total: ${total}/${maxMarks}\n`;
-        report += `${percentage}%`;
+        report += `--------------------------\n`;
+        report += `GRAND TOTAL  : ${total} / ${totalMax}\n`;
+        report += `PERCENTAGE   : ${per}%\n`;
 
         output.innerText = report;
 
     } catch (e) {
+        output.innerText = "Error loading marks.";
         console.error(e);
-        alert("Error fetching report: " + e.message);
+    }
+}
+
+// 2. DELETE MARKS - ADMIN ONLY SECURITY FEATURE
+async function deleteMarksRecord() {
+    const adm = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
+    const exam = document.querySelector('select').value;
+
+    if (!adm || !exam) return alert("Enter Admission No and Exam first.");
+
+    const confirm1 = confirm(`⚠️ PERMANENT DELETE: Are you sure you want to remove ${exam} marks for ${adm}?`);
+    if (confirm1) {
+        const confirm2 = confirm("CRITICAL: This will remove ALL subject marks for this exam. Proceed?");
+        if (!confirm2) return;
+    } else { return; }
+
+    try {
+        await db.collection("marks").doc(`${adm}_${exam}`).delete();
+        alert("✅ Record successfully deleted from VGA Cloud.");
+        viewMarksReport(); // Refresh view
+    } catch (e) {
+        alert("Error deleting record: " + e.message);
     }
 }
 
