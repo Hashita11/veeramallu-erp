@@ -368,56 +368,26 @@ function generateSalary(){
 // =====================
 // ✅ MARKS (FINAL)
 // =====================
-// 1. VIEW MARKS - FIXED FOR NEW SUBJECTS OBJECT
-async function viewMarksReport() {
-    const adm = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
-    const exam = document.querySelector('select').value;
-    const output = document.querySelector('.card pre') || document.querySelector('.card div[style*="border: 1px dashed"]');
-
-    if(!adm || !exam) return alert("Please enter Admission No and select Exam.");
-
-    output.innerText = "Fetching report...";
-
+async function fetchParentMarks() {
+    const exam = document.getElementById("parentExamView").value;
+    const area = document.getElementById("marksArea");
+    if (!exam) return area.innerHTML = "";
     try {
-        const doc = await db.collection("marks").doc(`${adm}_${exam}`).get();
-        
-        if(!doc.exists) {
-            output.innerText = "No marks found for this student/exam.";
-            return;
+        const doc = await db.collection("marks").doc(`${currentStudent.id}_${exam}`).get();
+        if (!doc.exists) { area.innerHTML = "<p style='text-align:center; padding:10px;'>No marks found.</p>"; return; }
+        const subs = doc.data().subjects;
+        let html = `<table class="marks-table"><tr><th>Subject</th><th>Marks</th></tr>`;
+        let total = 0, count = 0;
+        for (let s in subs) { 
+            let m = parseFloat(subs[s]) || 0; total += m; count++;
+            html += `<tr><td>${s}</td><td>${m}</td></tr>`; 
         }
-
-        const data = doc.data();
-        const subjects = data.subjects || {};
-        
-        let report = `VGA ACADEMY REPORT\n`;
-        report += `ID: ${adm} | EXAM: ${exam}\n`;
-        report += `--------------------------\n`;
-
-        let total = 0;
-        let count = 0;
-
-        // Loop through the subjects object correctly to fix "undefined"
-        for (let sub in subjects) {
-            let marks = parseFloat(subjects[sub]) || 0;
-            report += `${sub.padEnd(12)} : ${marks}\n`;
-            total += marks;
-            count++;
-        }
-
-        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
-        const totalMax = count * maxPerSub;
-        const per = ((total / totalMax) * 100).toFixed(1);
-
-        report += `--------------------------\n`;
-        report += `GRAND TOTAL  : ${total} / ${totalMax}\n`;
-        report += `PERCENTAGE   : ${per}%\n`;
-
-        output.innerText = report;
-
-    } catch (e) {
-        output.innerText = "Error loading marks.";
-        console.error(e);
-    }
+        const max = count * (exam.startsWith("SA") ? 100 : 50);
+        const per = (total / max) * 100;
+        let gr = per >= 90 ? "A1" : per >= 80 ? "A2" : per >= 70 ? "B1" : per >= 60 ? "B2" : per >= 50 ? "C1" : per >= 40 ? "C2" : "D";
+        area.innerHTML = html + `<tr style="background:#f0f2f5; font-weight:bold;"><td>TOTAL</td><td>${total} / ${max}</td></tr>
+            <tr style="background:#e8f5e9; font-weight:bold; color:green;"><td>GRADE</td><td>${per.toFixed(1)}% - ${gr}</td></tr></table>`;
+    } catch (e) { area.innerHTML = "Error"; }
 }
 
 // 2. DELETE MARKS - ADMIN ONLY SECURITY FEATURE
