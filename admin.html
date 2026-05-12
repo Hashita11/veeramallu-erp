@@ -50,27 +50,29 @@
     </div>
 
     <div class="section-header">ACADEMIC MANAGEMENT</div>
-    <div class="marks-box">
-        <button class="btn btn-aca" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
-        <button class="btn-action" style="background: #c62828; margin-top: 10px;" onclick="deleteMarksRecord()">
-    🗑️ DELETE MARKS RECORD
-</button>
+    <div class="card" style="background:#f3e5f5;">
+    <button class="btn-action" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
+    
+    <h3 style="margin-top:20px; font-size:14px;">SEARCH STUDENT RESULTS:</h3>
+    <input type="text" id="adminSearchId" placeholder="VGA-2026-0001">
+    
+    <select id="adminSearchExam">
+        <option value="FA1">FA 1 (Formative)</option>
+        <option value="FA2">FA 2 (Formative)</option>
+        <option value="FA3">FA 3 (Formative)</option>
+        <option value="FA4">FA 4 (Formative)</option>
+        <option value="SA1">SA 1 (Summative)</option>
+        <option value="SA2">SA 2 (Summative)</option>
+    </select>
 
-        <p style="margin:15px 0 5px 0; font-weight:bold;">Search Student Results:</p>
-        <div class="controls">
-            <input id="searchAdmNo" placeholder="Admission Number">
-            <select id="searchExam">
-                <option value="FA 1 (Formative)">FA 1 (Formative)</option>
-                <option value="FA 2 (Formative)">FA 2 (Formative)</option>
-                <option value="FA 3 (Formative)">FA 3 (Formative)</option>
-                <option value="FA 4 (Formative)">FA 4 (Formative)</option>
-                <option value="SA 1 (Summative)">SA 1 (Summative)</option>
-                <option value="SA 2 (Summative)">SA 2 (Summative)</option>
-            </select>
-        </div>
-        <button class="btn" style="background:var(--academic); color:white;" onclick="viewMarks()">View Marks Report</button>
-        <div id="marksOutput">Results will appear here...</div>
+    <button class="btn-action" onclick="fetchAdminMarks()">View Marks Report</button>
+    <div id="adminMarksOutput" style="border: 1px dashed #666; padding: 15px; margin-top: 15px; background: white; min-height: 50px; white-space: pre-wrap; font-family: monospace; font-size: 12px;">
+        Results will appear here...
     </div>
+   <button class="btn-action" style="background: #c62828; margin-top: 15px;" onclick="deleteMarksRecord()">
+        🗑️ DELETE MARKS RECORD
+    </button>
+</div>
 
     <div class="section-header">STAFF RECRUITMENT</div>
     <div style="background:#fff3cd;padding:15px;border-radius:10px; border: 1px solid #ffeeba;">
@@ -369,88 +371,76 @@ function generateSalary(){
 // ✅ MARKS (FINAL)
 // =====================
 // 1. VIEW MARKS REPORT (Admin Version)
+// 1. FETCH MARKS FOR ADMIN
 async function fetchAdminMarks() {
-    // Get values from the Admin's search boxes
-    const admNo = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
-    const exam = document.querySelector('select').value;
-    const area = document.querySelector('.card div[style*="border: 1px dashed"]');
+    const admNo = document.getElementById('adminSearchId').value.trim();
+    const exam = document.getElementById('adminSearchExam').value;
+    const output = document.getElementById('adminMarksOutput');
 
-    if (!admNo || !exam) {
-        return alert("Please enter Admission No and select Exam assessment.");
-    }
+    if (!admNo) return alert("Please enter an Admission Number.");
 
-    area.innerHTML = "Fetching results...";
+    output.innerText = "Searching VGA Cloud...";
 
     try {
-        // Query the 'marks' collection using the ID from the input box
         const doc = await db.collection("marks").doc(`${admNo}_${exam}`).get();
         
         if (!doc.exists) {
-            area.innerHTML = "No marks found for this record.";
+            output.innerText = "❌ No records found for ID: " + admNo + " and Exam: " + exam;
             return;
         }
 
         const data = doc.data();
         const subs = data.subjects || {};
         
-        let reportText = `VGA REPORT: ${admNo} - ${exam}\n`;
-        reportText += `--------------------------\n`;
+        let report = `VGA ACADEMY - MARKS REPORT\n`;
+        report += `STUDENT ID : ${admNo}\n`;
+        report += `EXAM TYPE  : ${exam}\n`;
+        report += `--------------------------\n`;
 
         let total = 0;
         let count = 0;
 
-        // Loop through subjects to calculate total
         for (let s in subs) {
             let m = parseFloat(subs[s]) || 0;
             total += m;
             count++;
-            reportText += `${s.padEnd(12)} : ${m}\n`;
+            report += `${s.padEnd(12)} : ${m}\n`;
         }
 
-        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
-        const maxTotal = count * maxPerSub;
-        const percentage = ((total / maxTotal) * 100).toFixed(1);
+        const maxPer = exam.startsWith("SA") ? 100 : 50;
+        const totalMax = count * maxPer;
+        const percentage = ((total / totalMax) * 100).toFixed(1);
 
-        // Determine Grade
-        let grade = percentage >= 90 ? "A1" : percentage >= 80 ? "A2" : percentage >= 70 ? "B1" : percentage >= 60 ? "B2" : percentage >= 50 ? "C1" : percentage >= 40 ? "C2" : "D";
+        report += `--------------------------\n`;
+        report += `GRAND TOTAL  : ${total} / ${totalMax}\n`;
+        report += `PERCENTAGE   : ${percentage}%\n`;
+        report += `STATUS       : VERIFIED`;
 
-        reportText += `--------------------------\n`;
-        reportText += `GRAND TOTAL  : ${total} / ${maxTotal}\n`;
-        reportText += `GRADE        : ${percentage}% (${grade})`;
-
-        // Display as plain text in the dashed box
-        area.innerText = reportText;
+        output.innerText = report;
 
     } catch (e) {
         console.error(e);
-        area.innerHTML = "Error loading report.";
+        output.innerText = "Error: " + e.message;
     }
 }
 
-// 2. DELETE MARKS RECORD (Principal Only)
+// 2. DELETE RECORD (ADMIN ONLY)
 async function deleteMarksRecord() {
-    const admNo = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
-    const exam = document.querySelector('select').value;
+    const admNo = document.getElementById('adminSearchId').value.trim();
+    const exam = document.getElementById('adminSearchExam').value;
 
-    if (!admNo || !exam) return alert("Identify the record first!");
+    if (!admNo) return alert("Enter Admission No to delete.");
 
-    const check = confirm(`⚠️ PRINCIPAL ACTION: Delete ${exam} marks for ${admNo} permanently?`);
-    if (check) {
-        const finalCheck = confirm("This will erase all subjects for this exam. Proceed?");
-        if (!finalCheck) return;
-    } else { return; }
-
-    try {
-        await db.collection("marks").doc(`${admNo}_${exam}`).delete();
-        alert("✅ Record successfully deleted.");
-        fetchAdminMarks(); // Clear the view
-    } catch (e) {
-        alert("Deletion failed: " + e.message);
+    if (confirm(`⚠️ DELETE RECORD: Are you sure you want to permanently erase ${exam} marks for ${admNo}?`)) {
+        try {
+            await db.collection("marks").doc(`${admNo}_${exam}`).delete();
+            alert("✅ Success: Record removed from cloud.");
+            document.getElementById('adminMarksOutput').innerText = "Results will appear here...";
+        } catch (e) {
+            alert("Delete failed: " + e.message);
+        }
     }
 }
-
-
-
 // =====================
 // ✅ CLASS ATTENDANCE
 // =====================
