@@ -134,15 +134,23 @@ function showDashboard() {
     fetchAnnouncement();
     fetchDailyAttendance();
 }
-
 async function fetchAnnouncement() {
+    // This looks at the "latest" document inside the "notifications" collection
     const doc = await db.collection("notifications").doc("latest").get();
+    
     if(doc.exists) {
+        const data = doc.data();
         document.getElementById("noticeBox").style.display = "block";
-        document.getElementById("noticeText").innerText = doc.data().text;
-        document.getElementById("noticeDate").innerText = doc.data().date || "";
+        document.getElementById("noticeText").innerText = data.text;
+        
+        // This fixes the "undefined" date issue from earlier
+        document.getElementById("noticeDate").innerText = data.date || ""; 
+    } else {
+        // If no notice exists, hide the box
+        document.getElementById("noticeBox").style.display = "none";
     }
 }
+
 
 async function fetchDailyAttendance() {
     const now = new Date();
