@@ -106,21 +106,25 @@
     </div>
     <button class="btn btn-csv" onclick="exportCSV()">Download CSV Report</button>
 
-    <div class="section-header">ADMIN MANUAL ENTRY</div>
-    <div style="background:#f8f9fa; padding:15px; border-radius:10px; border:1px solid #ddd;">
-        <div class="controls">
-            <select id="teacherSelect"></select>
-            <select id="campusSelect">
-                <option value="Relangi">Relangi</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-        </div>
-        <div style="display:flex;gap:10px;">
-            <button class="btn" style="background:#2e7d32;color:white;" onclick="saveAttendance('IN')">FORCE IN</button>
-            <button class="btn" style="background:#c62828;color:white;" onclick="saveAttendance('OUT')">FORCE OUT</button>
-        </div>
+    <div class="card" style="padding:20px; background:#f9f9f9; border:1px solid #ddd;">
+    <h3 style="background:var(--primary); color:white; padding:10px; margin:-20px -20px 20px -20px; border-radius:12px 12px 0 0;">ADMIN MANUAL ENTRY</h3>
+    
+    <select id="manualStaffSelect" style="margin-bottom:10px;">
+        <option value="">Select Staff</option>
+        </select>
+
+    <select id="manualCampusSelect" style="margin-bottom:15px;">
+        <option value="Velpur">Velpur</option>
+        <option value="Relangi">Relangi</option>
+        <option value="Undrajavaram">Undrajavaram</option>
+    </select>
+
+    <div style="display:flex; gap:10px;">
+        <button onclick="adminForceAttendance('IN')" style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">FORCE IN</button>
+        <button onclick="adminForceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">FORCE OUT</button>
     </div>
+</div>
+
 
     <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
     <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
