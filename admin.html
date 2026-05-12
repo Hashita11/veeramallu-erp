@@ -621,6 +621,41 @@ function saveWhatsAppImage(){
         }
     }
 }
+// FUNCTION TO FILL THE DROPDOWN WITH TEACHERS
+async function populateStaffDropdown() {
+    const staffDropdown = document.getElementById("manualStaffSelect");
+    
+    // Clear existing options first
+    staffDropdown.innerHTML = '<option value="">Select Staff</option>';
+
+    try {
+        const snap = await db.collection("teachers").get();
+        
+        snap.forEach(doc => {
+            const data = doc.data();
+            const email = data.email;
+            const name = data.name || email.split('@')[0]; // Use name, or email prefix if name is missing
+
+            const option = document.createElement("option");
+            option.value = email; // We use email to track attendance
+            option.textContent = name.toUpperCase();
+            staffDropdown.appendChild(option);
+        });
+
+        console.log("Staff list loaded into Manual Entry");
+
+    } catch (error) {
+        console.error("Error loading staff list:", error);
+    }
+}
+
+// MAKE SURE THIS RUNS WHEN THE PAGE LOADS
+window.onload = function() {
+    // Run your existing load functions...
+    loadAttendance(); 
+    // Add this new one
+    populateStaffDropdown(); 
+};
 
 </script>
 </body>
