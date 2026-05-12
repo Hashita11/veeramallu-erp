@@ -190,23 +190,36 @@ window.onload = () => {
 
 
 
+
 // =====================
 // ✅ TEACHERS
 // =====================
 function loadTeachers(){
+
     const ts = document.getElementById("teacherSelect");
 
-    db.collection("teachers").get().then(snap=>{
-        teachers=[];
-        ts.innerHTML="<option value=''>Select Staff</option>";
+    db.collection("teachers").onSnapshot(snap=>{
+
+        teachers = [];
+        ts.innerHTML = "<option value=''>Select Staff</option>";
 
         snap.forEach(doc=>{
-            let d=doc.data();
-            d.uid=doc.id;
-            teachers.push(d);
 
-            ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
+            let d = doc.data();
+
+            teachers.push({
+                uid: doc.id,
+                name: d.name || "",
+                email: d.email || ""
+            });
+
+            ts.innerHTML += `
+            <option value="${doc.id}">
+                ${d.name}
+            </option>`;
         });
+
+        load(); // refresh attendance
     });
 }
 
@@ -307,7 +320,44 @@ function load(){
     });
 }
 
+// =====================
+// ✅ NAME FIX FINAL
+// =====================
+function resolveName(d){
 
+    // already saved name
+    if(d.name && !d.name.includes("@")){
+        return d.name;
+    }
+
+    // teacherId match
+    let byId = teachers.find(t => t.uid === d.teacherId);
+    if(byId && byId.name){
+        return byId.name;
+    }
+
+    // teacherEmail match
+    let byEmail = teachers.find(t => 
+        t.email === d.teacherEmail ||
+        t.email === d.teacher ||
+        t.email === d.name
+    );
+
+    if(byEmail && byEmail.name){
+        return byEmail.name;
+    }
+
+    // if gmail showing remove @gmail
+    if(d.name){
+        return d.name.split("@")[0];
+    }
+
+    if(d.teacher){
+        return d.teacher.split("@")[0];
+    }
+
+    return "Unknown";
+}
 
 
 // =====================
