@@ -128,14 +128,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // 1. FETCH STUDENT (FIXED TO FIND HARRY/NAME KEY)
     async function fetchStudent() {
         const adm = document.getElementById('mAdmNo').value.trim();
         if(!adm) return;
         try {
             const doc = await db.collection("admissions").doc(adm).get();
             if(doc.exists) {
-                // FIXED: Use 'name' to match your Admission database exactly
-                document.getElementById('mStuName').value = doc.data().name || doc.data().studentName;
+                // Checks 'name' first (Harry), then 'studentName' (Sudeep)
+                document.getElementById('mStuName').value = doc.data().name || doc.data().studentName || "No Name Found";
             } else {
                 alert("ID Not Found!");
                 document.getElementById('mStuName').value = "";
@@ -143,6 +144,7 @@
         } catch(e) { console.error(e); }
     }
 
+    // 2. UPDATE SCALE
     function updateScale() {
         const sub = document.getElementById('subject').value;
         const exam = document.getElementById('examType').value;
@@ -162,6 +164,7 @@
         calculate();
     }
 
+    // 3. CALCULATE TOTAL & GRADE
     function calculate() {
         const intM = parseFloat(document.getElementById('intM').value) || 0;
         const extM = parseFloat(document.getElementById('extM').value) || 0;
@@ -182,21 +185,38 @@
         document.getElementById('gradeRes').innerText = grade;
     }
 
+    // 4. SAVE TO FIREBASE (BLOCKS EXCESS MARKS & DUPLICATES)
     async function saveToFirebase() {
         const adm = document.getElementById('mAdmNo').value.trim();
         const stuName = document.getElementById('mStuName').value;
         const sub = document.getElementById('subject').value;
         const exam = document.getElementById('examType').value;
         
-        if(!adm || !stuName) return alert("Fetch student first!");
+        const intM = parseFloat(document.getElementById('intM').value) || 0;
+        const extM = parseFloat(document.getElementById('extM').value) || 0;
+        const maxI = parseFloat(document.getElementById('maxI').innerText);
+        const maxE = parseFloat(document.getElementById('maxE').innerText);
+
+        if(!adm || !stuName) return alert("⚠️ Fetch student first!");
+
+        // BLOCK EXCESS MARKS
+        if (intM > maxI || extM > maxE) {
+            alert("⚠️ STOP: Marks entered are higher than the Maximum allowed!");
+            return;
+        }
 
         const docID = `${adm}_${exam}`;
 
         try {
             const docRef = db.collection("marks").doc(docID);
             const docSnap = await docRef.get();
-
             let subjectsData = docSnap.exists ? (docSnap.data().subjects || {}) : {};
+
+            // BLOCK DUPLICATES / CONFIRM OVERWRITE
+            if (subjectsData[sub]) {
+                const confirmUpdate = confirm(`⚠️ ${sub} marks already exist for this exam. Update them?`);
+                if (!confirmUpdate) return;
+            }
 
             subjectsData[sub] = document.getElementById('totM').innerText;
 
@@ -208,11 +228,14 @@
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
 
-            alert(`Saved ${sub} marks for ${stuName}`);
-        } catch (e) { alert("Error: " + e.message); }
+            alert(`✅ Saved ${sub} marks for ${stuName}`);
+        } catch (e) { alert("Cloud Error: " + e.message); }
     }
 
-    window.onload = updateScale;
+    // Initialize correctly
+    document.addEventListener('DOMContentLoaded', () => {
+        updateScale();
+    });
 </script>
 </body>
 </html>
