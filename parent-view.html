@@ -12,31 +12,31 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; --bg-light: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-light); margin: 0; padding: 0; }
-        .nav-menu { background: var(--primary-color); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
+        :root { --primary: #1a237e; --secondary: #c62828; --success: #2e7d32; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        .nav-menu { background: var(--primary); padding: 12px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .nav-menu a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; font-size: 14px; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px; }
         .logo-img { width: 100px; height: auto; margin-bottom: 8px; }
-        .header h1 { color: var(--primary-color); margin: 0; font-size: 20px; font-weight: 800; }
+        .header h1 { color: var(--primary); margin: 0; font-size: 20px; font-weight: 800; }
         .header p { margin: 2px 0; color: #666; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-bottom: 5px; }
         input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        .btn-action { background: var(--primary-color); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase; }
+        .btn-action { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 15px; text-transform: uppercase; }
         .hidden { display: none; }
-        .section-title { background: #f0f2f5; padding: 10px; border-radius: 4px; font-weight: 800; margin-top: 20px; color: var(--primary-color); font-size: 12px; }
+        .section-title { background: #f0f2f5; padding: 10px; border-radius: 4px; font-weight: 800; margin-top: 20px; color: var(--primary); font-size: 12px; }
         .data-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
         .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
         .marks-table th, .marks-table td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        .absent-badge { background: #ffebee; color: #c62828; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin: 2px; display: inline-block; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body>
 
-<div class="nav-menu no-print">
-    <a href="parent-view.html">Parent Login</a>
-</div>
+<div class="nav-menu no-print"><a href="parent-view.html">Parent Login</a></div>
 
 <div class="container">
     <div class="card" id="reportArea">
@@ -55,7 +55,7 @@
         </div>
 
         <div id="dashboard" class="hidden">
-            <h2 id="dispName" style="color: var(--primary-color); margin: 0; text-align: center;"></h2>
+            <h2 id="dispName" style="color: var(--primary); margin: 0; text-align: center;"></h2>
             <p id="dispInfo" style="color: #666; font-size: 13px; text-align: center; margin-top: 5px;"></p>
             
             <div id="noticeBox" style="display: none; background: #fff9c4; border-left: 5px solid #fbc02d; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
@@ -64,25 +64,34 @@
                 <div id="noticeDate" style="font-size: 10px; color: #777; text-align: right;"></div>
             </div>
 
-            <div class="section-title">TODAY'S ATTENDANCE</div>
+            <div class="section-title">📅 ATTENDANCE SUMMARY</div>
             <div class="data-row">
-                <span>Date: <b id="currentDate"></b></span>
+                <span>Today's Status (<b id="currentDate"></b>):</span>
                 <span id="attStatus">Loading...</span>
             </div>
+            
+            <div class="no-print" style="display: flex; gap: 5px; margin-top: 10px;">
+                <select id="histMonth">
+                    <option value="01">January</option><option value="02">February</option><option value="03">March</option>
+                    <option value="04">April</option><option value="05">May</option><option value="06">June</option>
+                    <option value="07">July</option><option value="08">August</option><option value="09">September</option>
+                    <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                </select>
+                <button onclick="fetchAttendanceHistory()" style="background:#5c6bc0; color:white; border:none; border-radius:6px; padding:0 15px; cursor:pointer;">HISTORY</button>
+            </div>
+            <div id="historyArea"></div>
 
             <div class="section-title">📊 ACADEMIC PERFORMANCE</div>
-            <select id="parentExamView" style="margin-top:10px;" onchange="fetchParentMarks()">
+            <select id="parentExamView" class="no-print" style="margin-top:10px;" onchange="fetchParentMarks()">
                 <option value="">-- Select Exam --</option>
-                <option value="FA1">FA1</option><option value="FA2">FA2</option>
-                <option value="FA1">FA3</option><option value="FA2">FA4</option>
-                <option value="SA1">SA1</option><option value="SA2">SA2</option>
+                <option value="FA1">FA1</option><option value="FA2">FA2</option><option value="SA1">SA1</option><option value="SA2">SA2</option>
             </select>
             <div id="marksArea"></div>
 
-            <div class="section-title">FEE SETTLEMENT SUMMARY</div>
+            <div class="section-title">💰 FEE SUMMARY</div>
             <div id="feeArea"></div>
 
-            <button class="btn-action no-print" style="margin-top:20px; background: #4527a0;" onclick="downloadPDF()">📥 DOWNLOAD REPORT (PDF)</button>
+            <button class="btn-action no-print" style="margin-top:20px; background: #4527a0;" onclick="downloadPDF()">📥 DOWNLOAD PDF REPORT</button>
             <button class="btn-action no-print" style="margin-top:10px; background:#555;" onclick="location.reload()">LOGOUT</button>
         </div>
     </div>
@@ -99,20 +108,16 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-
 let currentStudent = null;
 
 async function checkStudent() {
     const admNo = document.getElementById("loginAdmNo").value.trim();
     const mobile = document.getElementById("loginMobile").value.trim();
-
     try {
         const doc = await db.collection("admissions").doc(admNo).get();
         if(!doc.exists) return alert("Admission Number not found.");
-        
         const data = doc.data();
         if(data.mobile !== mobile) return alert("Mobile number mismatch.");
-
         currentStudent = data;
         showDashboard();
     } catch (e) { alert(e.message); }
@@ -121,15 +126,13 @@ async function checkStudent() {
 function showDashboard() {
     document.getElementById("loginSection").classList.add("hidden");
     document.getElementById("dashboard").classList.remove("hidden");
-    
     document.getElementById("dispName").innerText = currentStudent.name;
     document.getElementById("dispInfo").innerText = `Class: ${currentStudent.class} | ID: ${currentStudent.id}`;
     document.getElementById("currentDate").innerText = new Date().toLocaleDateString('en-IN');
+    document.getElementById("feeArea").innerHTML = `<div class="data-row"><span>Total Balance Due:</span><b style="color:red">₹${currentStudent.totalBalance}</b></div>`;
     
-    document.getElementById("feeArea").innerHTML = `<div class="data-row"><span>Balance Due:</span><b style="color:red">₹${currentStudent.totalBalance}</b></div>`;
-
     fetchAnnouncement();
-    fetchAttendance();
+    fetchDailyAttendance();
 }
 
 async function fetchAnnouncement() {
@@ -137,109 +140,73 @@ async function fetchAnnouncement() {
     if(doc.exists) {
         document.getElementById("noticeBox").style.display = "block";
         document.getElementById("noticeText").innerText = doc.data().text;
-        document.getElementById("noticeDate").innerText = doc.data().date;
+        document.getElementById("noticeDate").innerText = doc.data().date || "";
     }
 }
 
-// ✅ FIXED: CORRECTLY SEARCHES ARRAY OF MAPS IN 'daily_attendance'
-async function fetchAttendance() {
-    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+async function fetchDailyAttendance() {
+    const now = new Date();
+    const todaySearch = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const statusEl = document.getElementById("attStatus");
-
     try {
-        const query = await db.collection("daily_attendance")
-            .where("date", "==", today)
-            .where("className", "==", currentStudent.class)
-            .get();
-
-        if (query.empty) {
-            statusEl.innerHTML = `<span style="color:orange">Not Marked</span>`;
-            return;
-        }
-
-        let foundStatus = "Not Marked";
+        const query = await db.collection("daily_attendance").where("date", "==", todaySearch).where("className", "==", currentStudent.class).get();
+        if (query.empty) { statusEl.innerHTML = "<i>Not Marked</i>"; return; }
+        let found = "Not Marked";
         query.forEach(doc => {
-            const records = doc.data().records || [];
-            const myRecord = records.find(r => r.id === currentStudent.id);
-            if (myRecord) foundStatus = myRecord.status;
+            const rec = (doc.data().records || []).find(r => r.id === currentStudent.id);
+            if (rec) found = rec.status;
         });
+        statusEl.innerHTML = `<b style="color:${found=='Present'?'green':'red'}">${found.toUpperCase()}</b>`;
+    } catch (e) { statusEl.innerText = "Error"; }
+}
 
-        const color = foundStatus === "Present" ? "green" : "red";
-        statusEl.innerHTML = `<b style="color:${color}">${foundStatus.toUpperCase()}</b>`;
-    } catch (e) {
-        statusEl.innerText = "Error loading";
-    }
+async function fetchAttendanceHistory() {
+    const month = document.getElementById("histMonth").value;
+    const year = new Date().getFullYear();
+    const area = document.getElementById("historyArea");
+    area.innerHTML = "<p style='font-size:11px;'>Calculating...</p>";
+    try {
+        const query = await db.collection("daily_attendance").where("className", "==", currentStudent.class).get();
+        let working = 0, present = 0, absents = [];
+        query.forEach(doc => {
+            const d = doc.data();
+            if (d.date.startsWith(`${year}-${month}`)) {
+                working++;
+                const rec = (d.records || []).find(r => r.id === currentStudent.id);
+                if (rec && rec.status === "Present") present++;
+                else absents.push(d.date);
+            }
+        });
+        if (working === 0) { area.innerHTML = "<p style='color:orange; font-size:11px;'>No data for this month.</p>"; return; }
+        area.innerHTML = `
+            <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-top:10px; border:1px solid #eee;">
+                <div class="data-row"><span>Working/Present:</span><b>${working} / ${present}</b></div>
+                <div class="data-row"><span>Percentage:</span><b>${((present/working)*100).toFixed(1)}%</b></div>
+                ${absents.length > 0 ? `<div style="margin-top:5px;"><label style="color:red; font-size:9px;">Absent Dates:</label><br>${absents.map(date => `<span class="absent-badge">${date}</span>`).join('')}</div>` : ''}
+            </div>`;
+    } catch (e) { area.innerHTML = "Error"; }
 }
 
 async function fetchParentMarks() {
     const exam = document.getElementById("parentExamView").value;
     const area = document.getElementById("marksArea");
     if (!exam) return area.innerHTML = "";
-
-    area.innerHTML = "<p style='text-align:center;'>Loading Marks...</p>";
-
     try {
         const doc = await db.collection("marks").doc(`${currentStudent.id}_${exam}`).get();
-        if (!doc.exists) {
-            area.innerHTML = "<p style='text-align:center; padding:10px;'>No marks found for this exam.</p>";
-            return;
+        if (!doc.exists) { area.innerHTML = "<p style='text-align:center; padding:10px;'>No marks found.</p>"; return; }
+        const subs = doc.data().subjects;
+        let html = `<table class="marks-table"><tr><th>Subject</th><th>Marks</th></tr>`;
+        let total = 0, count = 0;
+        for (let s in subs) { 
+            let m = parseFloat(subs[s]) || 0; total += m; count++;
+            html += `<tr><td>${s}</td><td>${m}</td></tr>`; 
         }
-
-        const subjects = doc.data().subjects;
-        let tableHtml = `
-            <table class="marks-table">
-                <thead>
-                    <tr>
-                        <th>Subject</th>
-                        <th>Marks</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-        let grandTotal = 0;
-        let subjectCount = 0;
-
-        for (let sub in subjects) {
-            let mark = parseFloat(subjects[sub]) || 0;
-            grandTotal += mark;
-            subjectCount++;
-            tableHtml += `<tr><td>${sub}</td><td>${mark}</td></tr>`;
-        }
-
-        // --- CALCULATION LOGIC ---
-        // Assuming FA marks are out of 50 and SA marks out of 100
-        const maxPerSubject = exam.startsWith("SA") ? 100 : 50;
-        const totalMaxMarks = subjectCount * maxPerSubject;
-        const percentage = (grandTotal / totalMaxMarks) * 100;
-
-        // Determine Grade
-        let overallGrade = "";
-        if (percentage >= 90) overallGrade = "A1";
-        else if (percentage >= 80) overallGrade = "A2";
-        else if (percentage >= 70) overallGrade = "B1";
-        else if (percentage >= 60) overallGrade = "B2";
-        else if (percentage >= 50) overallGrade = "C1";
-        else if (percentage >= 40) overallGrade = "C2";
-        else overallGrade = "D";
-
-        tableHtml += `
-                <tr style="background:#f0f2f5; font-weight:bold;">
-                    <td>TOTAL MARKS</td>
-                    <td>${grandTotal} / ${totalMaxMarks}</td>
-                </tr>
-                <tr style="background:#e8f5e9; font-weight:bold; color:#2e7d32;">
-                    <td>PERCENTAGE / GRADE</td>
-                    <td>${percentage.toFixed(1)}% - ${overallGrade}</td>
-                </tr>
-            </tbody>
-        </table>`;
-
-        area.innerHTML = tableHtml;
-
-    } catch (e) {
-        console.error(e);
-        area.innerHTML = "Error loading marks.";
-    }
+        const max = count * (exam.startsWith("SA") ? 100 : 50);
+        const per = (total / max) * 100;
+        let gr = per >= 90 ? "A1" : per >= 80 ? "A2" : per >= 70 ? "B1" : per >= 60 ? "B2" : per >= 50 ? "C1" : per >= 40 ? "C2" : "D";
+        area.innerHTML = html + `<tr style="background:#f0f2f5; font-weight:bold;"><td>TOTAL</td><td>${total} / ${max}</td></tr>
+            <tr style="background:#e8f5e9; font-weight:bold; color:green;"><td>GRADE</td><td>${per.toFixed(1)}% - ${gr}</td></tr></table>`;
+    } catch (e) { area.innerHTML = "Error"; }
 }
 
 function downloadPDF() {
