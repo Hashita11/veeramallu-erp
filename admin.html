@@ -371,50 +371,71 @@ function generateSalary(){
 // ✅ MARKS (FINAL)
 // =====================
 // 1. VIEW MARKS REPORT (Admin Version)
-// 1. FETCH MARKS FOR ADMIN
 async function fetchAdminMarks() {
     const admNo = document.getElementById('adminSearchId').value.trim();
     const exam = document.getElementById('adminSearchExam').value;
     const output = document.getElementById('adminMarksOutput');
 
     if (!admNo) return alert("Please enter an Admission Number.");
-
     output.innerText = "Searching VGA Cloud...";
 
     try {
         const doc = await db.collection("marks").doc(`${admNo}_${exam}`).get();
         
         if (!doc.exists) {
-            output.innerText = "❌ No records found for ID: " + admNo + " and Exam: " + exam;
+            output.innerText = "❌ No records found.";
             return;
         }
 
         const data = doc.data();
         const subs = data.subjects || {};
+        const studentName = data.studentName || "Name Not Found";
         
         let report = `VGA ACADEMY - MARKS REPORT\n`;
-        report += `STUDENT ID : ${admNo}\n`;
-        report += `EXAM TYPE  : ${exam}\n`;
-        report += `--------------------------\n`;
+        report += `NAME      : ${studentName.toUpperCase()}\n`;
+        report += `ID        : ${admNo}\n`;
+        report += `EXAM      : ${exam}\n`;
+        report += `--------------------------------\n`;
+        report += `SUBJECT       MARKS    GRADE\n`;
+        report += `--------------------------------\n`;
 
         let total = 0;
         let count = 0;
 
+        // Helper function for individual grades
+        const getGrade = (per) => {
+            if (per >= 90) return "A1";
+            if (per >= 80) return "A2";
+            if (per >= 70) return "B1";
+            if (per >= 60) return "B2";
+            if (per >= 50) return "C1";
+            if (per >= 40) return "C2";
+            return "D";
+        };
+
+        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
+
         for (let s in subs) {
-            let m = parseFloat(subs[s]) || 0;
+            let m = parseFloat(subjects[s]) || 0;
+            let subPer = (m / maxPerSub) * 100;
+            let subGrade = getGrade(subPer);
+            
+            // Formatting the line: Subject Name (12 chars), Mark (5 chars), Grade
+            report += `${s.padEnd(12)} : ${m.toString().padEnd(5)} [${subGrade}]\n`;
+            
             total += m;
             count++;
-            report += `${s.padEnd(12)} : ${m}\n`;
         }
 
-        const maxPer = exam.startsWith("SA") ? 100 : 50;
-        const totalMax = count * maxPer;
-        const percentage = ((total / totalMax) * 100).toFixed(1);
+        const totalMax = count * maxPerSub;
+        const totalPer = ((total / totalMax) * 100).toFixed(1);
+        const finalGrade = getGrade(totalPer);
 
-        report += `--------------------------\n`;
+        report += `--------------------------------\n`;
         report += `GRAND TOTAL  : ${total} / ${totalMax}\n`;
-        report += `PERCENTAGE   : ${percentage}%\n`;
-        report += `STATUS       : VERIFIED`;
+        report += `PERCENTAGE   : ${totalPer}%\n`;
+        report += `FINAL GRADE  : ${finalGrade}\n`;
+        report += `--------------------------------`;
 
         output.innerText = report;
 
@@ -423,6 +444,7 @@ async function fetchAdminMarks() {
         output.innerText = "Error: " + e.message;
     }
 }
+
 
 // 2. DELETE RECORD (ADMIN ONLY)
 async function deleteMarksRecord() {
