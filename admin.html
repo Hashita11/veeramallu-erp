@@ -1,662 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Veeramallu Global Academy</title>
-    <!-- HTML2CANVAS -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Veeramallu Global Academy</title>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <style>
-        :root { --primary:#1a237e; --secondary:#0d47a1; --success:#28a745; --error:#d32f2f; --academic:#6a1b9a; }
-        body { font-family:'Segoe UI',sans-serif;background:#f0f2f5;margin:0;padding:20px;display:flex;justify-content:center; }
-        .container { background:white;padding:2rem;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:100%;max-width:950px;text-align:center; }
-        .logo { max-width:100px;margin-bottom:10px; }
-        .section-header { background: var(--primary); color: white; padding: 12px; border-radius: 8px; margin: 20px 0 10px 0; font-size: 1.1rem; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .controls { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:15px; }
-        input,select,textarea { padding:12px;border:1px solid #ddd;border-radius:8px;width:100%; box-sizing: border-box; }
-        .table-container { width:100%;overflow-x:auto;margin-top:15px;border-radius:8px;border:1px solid #eee; }
-        table { width:100%;border-collapse:collapse; }
-        th { background:var(--primary);color:white;padding:12px; }
-        td { padding:12px;border-bottom:1px solid #eee;font-size:0.9rem; }
-        .btn { padding:12px;border:none;border-radius:8px;font-weight:600;cursor:pointer;width:100%;margin-top:10px; transition: 0.3s; }
-        .btn:hover { opacity: 0.8; }
-        .btn-adm { background:#ff9800; color:white; font-size: 1rem; border: 2px solid #ef6c00; }
-        .btn-aca { background:var(--academic); color:white; font-size: 1rem; }
-        .btn-csv { background:#388e3c;color:white; }
-        .btn-salary { background:var(--secondary);color:white; }
-        .btn-wa { background:#25d366;color:white; }
-        .salary-box, .marks-box { background:#f3e5f5;padding:1rem;border-radius:10px;margin-top:15px;text-align:left; border: 1px solid #e1bee7; }
-        #output, #marksOutput { white-space:pre-wrap;background:white;padding:15px;border-radius:8px;margin-top:10px;font-family:monospace;border:1px dashed var(--primary); font-size: 14px; min-height: 50px; }
-        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    </style>
+
+<style>
+:root{
+--primary:#1a237e;
+--secondary:#0d47a1;
+--academic:#6a1b9a;
+}
+
+body{
+font-family:Segoe UI;
+background:#f0f2f5;
+margin:0;
+padding:20px;
+display:flex;
+justify-content:center;
+}
+
+.container{
+background:#fff;
+padding:2rem;
+border-radius:15px;
+width:100%;
+max-width:950px;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+.logo{max-width:90px;}
+
+.section-header{
+background:var(--primary);
+color:#fff;
+padding:10px;
+border-radius:8px;
+margin-top:20px;
+font-weight:bold;
+}
+
+.controls{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+margin:10px 0;
+}
+
+input,select,textarea{
+padding:10px;
+border:1px solid #ddd;
+border-radius:8px;
+width:100%;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+margin-top:10px;
+}
+
+.btn{background:var(--primary);color:white;}
+.btn-green{background:#388e3c;color:white;}
+.btn-red{background:#d32f2f;color:white;}
+.btn-orange{background:#ff9800;color:white;}
+
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th{background:var(--primary);color:white;padding:10px;}
+td{padding:10px;border-bottom:1px solid #eee;font-size:13px;}
+</style>
 </head>
+
 <body>
+
 <div class="container" id="capture">
-    <img src="logo.png" class="logo">
-    <h1 style="color:#1a237e; margin:0;">VEERAMALLU GLOBAL ACADEMY</h1>
-    <h3 style="margin-top:5px; color: #555;">ERP CENTRAL ADMINISTRATION</h3>
-    
-    <div class="section-header">ADMISSIONS & REGISTRATION</div>
-    <div style="background:#fff4e5; padding:20px; border-radius:12px; border:1px solid #ffe0b2;">
-        <div class="nav-grid">
-            <button class="btn btn-adm" onclick="location.href='admissions.html'">➕ Add New Admission</button>
-            <button class="btn btn-adm" style="background:#0288d1; border-color:#01579b;" onclick="location.href='admissions.html#view'">📋 View Admission List</button>
-        </div>
-    </div>
 
-    <div class="section-header">ACADEMIC MANAGEMENT</div>
-    <div class="card" style="background:#f3e5f5;">
-    <button class="btn-action" onclick="location.href='marks-entry.html'">📝 Enter Student Marks</button>
-    
-    <h3 style="margin-top:20px; font-size:14px;">SEARCH STUDENT RESULTS:</h3>
-    <input type="text" id="adminSearchId" placeholder="VGA-2026-0001">
-    
-    <select id="adminSearchExam">
-        <option value="FA1">FA 1 (Formative)</option>
-        <option value="FA2">FA 2 (Formative)</option>
-        <option value="FA3">FA 3 (Formative)</option>
-        <option value="FA4">FA 4 (Formative)</option>
-        <option value="SA1">SA 1 (Summative)</option>
-        <option value="SA2">SA 2 (Summative)</option>
-    </select>
+<img src="logo.png" class="logo">
+<h2>VEERAMALLU GLOBAL ACADEMY</h2>
+<h4>ERP ADMIN v3</h4>
 
-    <button class="btn-action" onclick="fetchAdminMarks()">View Marks Report</button>
-    <div id="adminMarksOutput" style="border: 1px dashed #666; padding: 15px; margin-top: 15px; background: white; min-height: 50px; white-space: pre-wrap; font-family: monospace; font-size: 12px;">
-        Results will appear here...
-    </div>
-   <button class="btn-action" style="background: #c62828; margin-top: 15px;" onclick="deleteMarksRecord()">
-        🗑️ DELETE MARKS RECORD
-    </button>
+<!-- ADMISSIONS -->
+<div class="section-header">ADMISSIONS</div>
+<button class="btn" onclick="location.href='admissions.html'">Add / View Admissions</button>
+
+<!-- ACADEMIC -->
+<div class="section-header">ACADEMIC</div>
+<input id="adminSearchId" placeholder="Student ID">
+<select id="adminSearchExam">
+<option>FA1</option><option>FA2</option>
+<option>SA1</option><option>SA2</option>
+</select>
+<button class="btn" onclick="fetchAdminMarks()">View Marks</button>
+
+<pre id="adminMarksOutput">Results...</pre>
+<button class="btn-red" onclick="deleteMarksRecord()">Delete Marks</button>
+
+<!-- STAFF -->
+<div class="section-header">STAFF</div>
+
+<div class="controls">
+<input id="t_name" placeholder="Name">
+<input id="t_email" placeholder="Email">
+<input id="t_subject" placeholder="Subject">
+<input id="t_salary" type="number" placeholder="Salary">
 </div>
 
-    <div class="section-header">STAFF RECRUITMENT</div>
-    <div style="background:#fff3cd;padding:15px;border-radius:10px; border: 1px solid #ffeeba;">
-        <div class="controls">
-            <input id="t_name" placeholder="Full Name">
-            <input id="t_email" placeholder="Email Address">
-            <input id="t_password" type="password" placeholder="Set Password">
-            <input id="t_subject" placeholder="Subject/Role">
-           <input id="t_salary" type="number" placeholder="Monthly Salary">
-        </div>
-       <button class="btn" style="background:#1a237e;color:white;" onclick="createTeacher()">Register Staff Account</button>
-    </div>
+<button class="btn" onclick="createTeacher()">Add Staff</button>
 
-    <div class="section-header">STAFF ATTENDANCE LOGS</div>
-    <div class="controls">
-        <input id="search" placeholder="Search Staff Name..." onkeyup="load()">
-        <select id="filterCampus" onchange="load()">
-            <option value="All">All Campuses</option>
-            <option value="Relangi">Relangi</option>
-            <option value="Velpur">Velpur</option>
-            <option value="Undrajavaram">Undrajavaram</option>
-        </select>
-        <input type="date" id="start" onchange="load()">
-        <input type="date" id="end" onchange="load()">
-    </div>
-    <div class="table-container">
-        <table>
-            <thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
-            <tbody id="list"></tbody>
-        </table>
-    </div>
-    <button class="btn btn-csv" onclick="exportCSV()">Download CSV Report</button>
+<!-- MANUAL ATTENDANCE -->
+<div class="section-header">MANUAL ATTENDANCE</div>
 
-    <div class="card" style="padding:20px; background:#f9f9f9; border:1px solid #ddd;">
-    <h3 style="background:var(--primary); color:white; padding:10px; margin:-20px -20px 20px -20px; border-radius:12px 12px 0 0;">ADMIN MANUAL ENTRY</h3>
-    
-    <select id="manualStaffSelect" style="margin-bottom:10px;">
-        <option value="">Select Staff</option>
-        </select>
+<select id="manualStaffSelect"></select>
 
-    <select id="manualCampusSelect" style="margin-bottom:15px;">
-        <option value="Velpur">Velpur</option>
-        <option value="Relangi">Relangi</option>
-        <option value="Undrajavaram">Undrajavaram</option>
-    </select>
+<select id="manualCampusSelect">
+<option>Relangi</option>
+<option>Velpur</option>
+<option>Undrajavaram</option>
+</select>
 
-    <div style="display:flex; gap:10px;">
-        <button onclick="adminForceAttendance('IN')" style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">FORCE IN</button>
-        <button onclick="adminForceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">FORCE OUT</button>
-    </div>
-</div>
+<button class="btn-green" onclick="adminForceAttendance('IN')">FORCE IN</button>
+<button class="btn-red" onclick="adminForceAttendance('OUT')">FORCE OUT</button>
 
+<!-- ATTENDANCE -->
+<div class="section-header">ATTENDANCE LOGS</div>
 
-    <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
-    <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
-        <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
-        <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
-        <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
-        <div id="output">Salary results will appear here...</div>
-    </div>
+<table>
+<thead>
+<tr>
+<th>Name</th><th>Campus</th><th>Type</th><th>Time</th>
+</tr>
+</thead>
+<tbody id="list"></tbody>
+</table>
 
-    <div class="section-header">Class-Wise Attendance Overview</div>
-    <div class="salary-box" style="background: #f1f8e9; border-color: #c5e1a5;">
-        <div class="controls">
-            <select id="viewCampus">
-                <option value="Relangi">Relangi</option>
-                <option value="Velpur">Velpur</option>
-               <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-            <select id="viewClass">
-                <option value="1">Class 1</option><option value="2">Class 2</option><option value="3">Class 3</option>
-                <option value="4">Class 4</option><option value="5">Class 5</option><option value="6">Class 6</option>
-                <option value="7">Class 7</option><option value="8">Class 8</option><option value="9">Class 9</option>
-                <option value="10">Class 10</option>
-            </select>
-            <input type="date" id="viewDate">
-        </div>
-        <button class="btn" style="background: #388e3c; color: white;" onclick="checkClassAttendance()">Check Present Members</button>
-        <div id="classReport" style="margin-top: 15px; font-weight: bold; color: #1a237e; text-align: left;">Results will appear here...</div>
-    </div>
+<button class="btn" onclick="exportCSV()">Export CSV</button>
 
-    <div class="section-header">NOTICE BOARD BROADCAST</div>
-    <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
-   <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
 
 <script>
 
-
-// ✅ FIREBASE INIT
+// ================= FIREBASE =================
 const firebaseConfig = {
-  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-  authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-  projectId: "veeramalluerp-6cac5",
-  storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-  messagingSenderId: "379339569496",
-  appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+apiKey:"AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+authDomain:"veeramalluerp-6cac5.firebaseapp.com",
+projectId:"veeramalluerp-6cac5",
+storageBucket:"veeramalluerp-6cac5.firebasestorage.app",
+appId:"1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth();
 
 let teachers = [];
-let unsubscribe = null;
 
-const LATE_TIME = "08:30:00";
-const HOLIDAYS = ["2026-01-26","2026-08-15","2026-10-02"];
+// ================= INIT =================
+document.addEventListener("DOMContentLoaded", ()=>{
+loadAttendance();
+loadTeachers();
+populateStaffDropdown();
+});
 
-window.onload = () => {
-    loadTeachers();
-    load(); // attendance load
-};
-
-
-
-// =====================
-// ✅ TEACHERS
-// =====================
+// ================= TEACHERS =================
 function loadTeachers(){
-    const ts = document.getElementById("teacherSelect");
-
-    db.collection("teachers").get().then(snap=>{
-        teachers=[];
-        ts.innerHTML="<option value=''>Select Staff</option>";
-
-        snap.forEach(doc=>{
-            let d=doc.data();
-            d.uid=doc.id;
-            teachers.push(d);
-
-            ts.innerHTML += `<option value="${d.uid}">${d.name}</option>`;
-        });
-    });
+db.collection("teachers").get().then(snap=>{
+teachers=[];
+snap.forEach(d=>{
+teachers.push({id:d.id,...d.data()});
+});
+});
 }
 
+// dropdown fix
+async function populateStaffDropdown(){
+let sel=document.getElementById("manualStaffSelect");
+sel.innerHTML="<option value=''>Select Staff</option>";
 
+let snap=await db.collection("teachers").get();
+snap.forEach(doc=>{
+let d=doc.data();
+sel.innerHTML+=`<option value="${d.email}">${d.name}</option>`;
+});
+}
 
-// =====================
-// ✅ NAME FIX (IMPORTANT)
-// =====================
+// ================= NAME FIX =================
 function resolveName(d){
-    return d.name
-        || teachers.find(t=>t.uid==d.teacherId)?.name
-        || teachers.find(t=>t.email==d.teacherEmail)?.name
-        || teachers.find(t=>t.email==d.teacher)?.name
-        || d.teacher
-        || "Unknown";
+return d.name ||
+teachers.find(t=>t.email===d.teacherEmail)?.name ||
+d.teacherEmail ||
+"Unknown";
 }
 
+// ================= ATTENDANCE =================
+function loadAttendance(){
+db.collection("attendance")
+.orderBy("time","desc")
+.onSnapshot(snap=>{
+let list=document.getElementById("list");
+list.innerHTML="";
 
+snap.forEach(doc=>{
+let d=doc.data();
+let dt=d.time?.toDate?.() || new Date();
 
-// =====================
-// ✅ ATTENDANCE LOAD (FINAL FIX)
-// =====================
-
-function load(){
-
-    if(unsubscribe) unsubscribe();
-
-    unsubscribe = db.collection("attendance")
-    .orderBy("time","desc")
-
-    .onSnapshot(snap=>{
-
-        let list =
-        document.getElementById("list");
-
-        list.innerHTML = "";
-
-        snap.forEach(doc=>{
-
-            let d = doc.data();
-
-            let name = resolveName(d);
-
-            // ✅ FIRESTORE TIMESTAMP FIX
-            let dt = d.time
-                ? d.time.toDate()
-                : new Date();
-
-            let late =
-                d.autoLate === true ||
-                d.late === true;
-
-            list.innerHTML += `
-
-            <tr>
-
-            <td>
-            <b>${name}</b>
-            </td>
-
-            <td>
-            ${d.campus || '-'}
-            </td>
-
-            <td>
-
-            ${d.type || '-'}
-
-            ${late
-                ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>'
-                : ''
-            }
-
-            </td>
-
-            <td>
-
-            ${dt.toLocaleDateString('en-IN')}
-
-            <br>
-
-            ${dt.toLocaleTimeString('en-IN')}
-
-            </td>
-
-            </tr>`;
-        });
-
-        if(list.innerHTML === ""){
-
-            list.innerHTML = `
-            <tr>
-            <td colspan="4">
-            No records found
-            </td>
-            </tr>`;
-        }
-    });
+list.innerHTML+=`
+<tr>
+<td>${resolveName(d)}</td>
+<td>${d.campus||"-"}</td>
+<td>${d.type||"-"}</td>
+<td>${dt.toLocaleString()}</td>
+</tr>`;
+});
+});
 }
 
-
-
-
-// =====================
-// ✅ ADMIN ENTRY
-// ====================
-    
-async function createTeacher() {
-    console.log("Function started");
-
-    const n = document.getElementById("t_name").value.trim();
-    const e = document.getElementById("t_email").value.trim();
-    const s = document.getElementById("t_subject").value.trim();
-    const sa = document.getElementById("t_salary").value;
-
-    console.log(n, e, s, sa);
-
-    if (!n || !e) {
-        alert("Enter Name and Email");
-        return;
-    }
-
-    try {
-        console.log("Saving to Firestore...");
-
-        await db.collection("teachers").add({
-            name: n,
-            email: e,
-            subject: s,
-            salary: Number(sa || 0),
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        console.log("Saved सफल");
-
-        alert("✅ Teacher Saved Successfully");
-
-    } catch (err) {
-        console.error("FULL ERROR:", err);
-        alert("Error: " + err.message);
-    }
+// ================= STAFF =================
+async function createTeacher(){
+await db.collection("teachers").add({
+name:t_name.value,
+email:t_email.value,
+subject:t_subject.value,
+salary:Number(t_salary.value||0),
+createdAt:new Date()
+});
+alert("Staff Added");
+populateStaffDropdown();
 }
 
-// =====================
-// ✅ LATE CHECK (FIXED)
-// =====================
-function checkLate(type, dt){
-    return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
+// ================= MANUAL ATTENDANCE =================
+async function adminForceAttendance(type){
+let email=document.getElementById("manualStaffSelect").value;
+let campus=document.getElementById("manualCampusSelect").value;
+
+if(!email) return alert("Select Staff");
+
+await db.collection("attendance").add({
+teacherEmail:email,
+campus,
+type,
+time:firebase.firestore.Timestamp.now()
+});
+
+alert("Saved");
 }
 
-// =====================
-// ✅ SALARY (WORKING)
-// =====================
-function generateSalary(){
+// ================= MARKS =================
+async function fetchAdminMarks(){
+let id=adminSearchId.value;
+let exam=adminSearchExam.value;
 
-    let s_val = document.getElementById("start").value;
-    let e_val = document.getElementById("end").value;
+let doc=await db.collection("marks").doc(id+"_"+exam).get();
 
-    if(!s_val || !e_val) return alert("Select date range");
-
-    let start=new Date(s_val);
-    let end=new Date(e_val);
-
-    db.collection("attendance").get().then(snap=>{
-
-        let map={};
-
-        snap.forEach(doc=>{
-            let d=doc.data();
-            let dt=new Date(d.fullTimestamp);
-
-            if(dt < start || dt > end) return;
-
-            let name = resolveName(d);
-
-            if(!map[name]) map[name]={p:new Set(), l:0};
-
-            if(d.type=="IN"){
-                map[name].p.add(dt.toDateString());
-                if(d.autoLate) map[name].l++;
-            }
-        });
-
-        let out="PAYROLL REPORT\n\n";
-
-        for(let n in map){
-
-            let teacher=teachers.find(x=>x.name==n);
-            let salary=teacher?.salary||0;
-
-            let present=map[n].p.size;
-            let late=map[n].l;
-
-            let lateCut=Math.floor(late/3);
-            let final=salary - (lateCut*(salary/30));
-
-            out+=`${n}\nPresent:${present} Late:${late}\nSalary: ₹${final.toFixed(0)}\n\n`;
-        }
-
-        document.getElementById("output").innerText=out;
-    });
+if(!doc.exists){
+adminMarksOutput.innerText="No Data";
+return;
 }
 
-
-
-// =====================
-// ✅ MARKS (FINAL)
-// =====================
-// 1. VIEW MARKS REPORT (Admin Version)
-async function fetchAdminMarks() {
-    const admNo = document.getElementById('adminSearchId').value.trim();
-    const exam = document.getElementById('adminSearchExam').value;
-    const output = document.getElementById('adminMarksOutput');
-
-    if (!admNo) return alert("Please enter an Admission Number.");
-    output.innerText = "Searching VGA Cloud...";
-
-    try {
-        const doc = await db.collection("marks").doc(`${admNo}_${exam}`).get();
-        
-        if (!doc.exists) {
-            output.innerText = "❌ No records found.";
-            return;
-        }
-
-        const data = doc.data();
-        const subs = data.subjects || {}; // We defined it as 'subs' here
-        const studentName = data.studentName || "Name Not Found";
-        
-        let report = `VGA ACADEMY - MARKS REPORT\n`;
-        report += `NAME      : ${studentName.toUpperCase()}\n`;
-        report += `ID        : ${admNo}\n`;
-        report += `EXAM      : ${exam}\n`;
-        report += `--------------------------------\n`;
-        report += `SUBJECT       MARKS    GRADE\n`;
-        report += `--------------------------------\n`;
-
-        let total = 0;
-        let count = 0;
-
-        const getGrade = (per) => {
-            if (per >= 90) return "A1";
-            if (per >= 80) return "A2";
-            if (per >= 70) return "B1";
-            if (per >= 60) return "B2";
-            if (per >= 50) return "C1";
-            if (per >= 40) return "C2";
-            return "D";
-        };
-
-        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
-
-        for (let s in subs) {
-            let m = parseFloat(subs[s]) || 0; // Fixed: using 'subs' correctly now
-            let subPer = (m / maxPerSub) * 100;
-            let subGrade = getGrade(subPer);
-            
-            report += `${s.padEnd(12)} : ${m.toString().padEnd(5)} [${subGrade}]\n`;
-            
-            total += m;
-            count++;
-        }
-
-        const totalMax = count * maxPerSub;
-        const totalPer = count > 0 ? ((total / totalMax) * 100).toFixed(1) : 0;
-        const finalGrade = getGrade(totalPer);
-
-        report += `--------------------------------\n`;
-        report += `GRAND TOTAL  : ${total} / ${totalMax}\n`;
-        report += `PERCENTAGE   : ${totalPer}%\n`;
-        report += `FINAL GRADE  : ${finalGrade}\n`;
-        report += `--------------------------------`;
-
-        output.innerText = report;
-
-    } catch (e) {
-        console.error(e);
-        output.innerText = "Error: " + e.message;
-    }
+adminMarksOutput.innerText=JSON.stringify(doc.data(),null,2);
 }
 
+async function deleteMarksRecord(){
+let id=adminSearchId.value;
+let exam=adminSearchExam.value;
 
-// 2. DELETE RECORD (ADMIN ONLY)
-async function deleteMarksRecord() {
-    const admNo = document.getElementById('adminSearchId').value.trim();
-    const exam = document.getElementById('adminSearchExam').value;
-
-    if (!admNo) return alert("Enter Admission No to delete.");
-
-    if (confirm(`⚠️ DELETE RECORD: Are you sure you want to permanently erase ${exam} marks for ${admNo}?`)) {
-        try {
-            await db.collection("marks").doc(`${admNo}_${exam}`).delete();
-            alert("✅ Success: Record removed from cloud.");
-            document.getElementById('adminMarksOutput').innerText = "Results will appear here...";
-        } catch (e) {
-            alert("Delete failed: " + e.message);
-        }
-    }
-}
-// =====================
-// ✅ CLASS ATTENDANCE
-// =====================
-async function checkClassAttendance(){
-
-    const campus=document.getElementById('viewCampus').value;
-    const cls=document.getElementById('viewClass').value;
-    const date=document.getElementById('viewDate').value;
-
-    if(!date) return alert("Select date");
-
-    const docID=`${campus}_${cls}_${date}`;
-
-    let doc=await db.collection("attendance").doc(docID).get();
-
-    let box=document.getElementById("classReport");
-
-    if(!doc.exists){
-        box.innerHTML="No data";
-        return;
-    }
-
-    let data=doc.data();
-    let present=data.records.filter(r=>r.status==="Present");
-
-    let html=`Present: ${present.length}/${data.records.length}<br><hr>`;
-
-    present.forEach((s,i)=>{
-        html+=`${i+1}. ${s.studentName}<br>`;
-    });
-
-    box.innerHTML=html;
+await db.collection("marks").doc(id+"_"+exam).delete();
+alert("Deleted");
 }
 
-
-
-// =====================
-// ✅ NOTICE
-// =====================
-async function sendNotice(){
-
-    let msg=document.getElementById("noticeMsg").value;
-
-    if(!msg) return alert("Enter message");
-
-    await db.collection("notifications").doc("latest").set({
-        text:msg,
-        date:new Date().toLocaleDateString('en-IN')
-    });
-
-    alert("Sent");
-}
-
-
-
-// =====================
-// ✅ CSV + IMAGE
-// =====================
+// ================= CSV =================
 function exportCSV(){
-    let csv="Name,Campus,Type,Time\n";
+let csv="Name,Campus,Type,Time\n";
 
-    document.querySelectorAll("#list tr").forEach(tr=>{
-        if(tr.children.length>1){
-            csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
-        }
-    });
+document.querySelectorAll("#list tr").forEach(r=>{
+csv+=`${r.children[0].innerText},${r.children[1].innerText},${r.children[2].innerText},${r.children[3].innerText}\n`;
+});
 
-    let a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([csv]));
-    a.download="attendance.csv";
-    a.click();
+let a=document.createElement("a");
+a.href=URL.createObjectURL(new Blob([csv]));
+a.download="attendance.csv";
+a.click();
 }
-
-function saveWhatsAppImage(){
-    html2canvas(document.getElementById("capture")).then(c=>{
-        let a=document.createElement("a");
-        a.href=c.toDataURL();
-        a.download="report.png";
-        a.click();
-    });
-}
-    async function adminForceAttendance(type) {
-    const staffEmail = document.getElementById("manualStaffSelect").value;
-    const campus = document.getElementById("manualCampusSelect").value;
-
-    if (!staffEmail) {
-        return alert("Please select a staff member first!");
-    }
-
-    if (confirm(`Admin Action: Force ${type} for ${staffEmail}?`)) {
-        try {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
-            
-            // 8:30 AM is your threshold
-            const isLate = (type === "IN" && timeStr > "08:30:00");
-
-            await db.collection("attendance").add({
-                teacher: staffEmail,
-                teacherEmail: staffEmail,
-                campus: campus,
-                type: type,
-                late: isLate,
-                time: firebase.firestore.Timestamp.fromDate(now),
-                dateOnly: now.toLocaleDateString("en-IN"),
-                method: "Admin Manual Entry"
-            });
-
-            alert(`✅ Success: ${type} recorded for ${staffEmail}`);
-            loadAttendance(); // Refresh your log list at the top
-        } catch (error) {
-            alert("Error: " + error.message);
-        }
-    }
-}
-// FUNCTION TO FILL THE DROPDOWN WITH TEACHERS
-async function populateStaffDropdown() {
-    const staffDropdown = document.getElementById("manualStaffSelect");
-    
-    // Clear existing options first
-    staffDropdown.innerHTML = '<option value="">Select Staff</option>';
-
-    try {
-        const snap = await db.collection("teachers").get();
-        
-        snap.forEach(doc => {
-            const data = doc.data();
-            const email = data.email;
-            const name = data.name || email.split('@')[0]; // Use name, or email prefix if name is missing
-
-            const option = document.createElement("option");
-            option.value = email; // We use email to track attendance
-            option.textContent = name.toUpperCase();
-            staffDropdown.appendChild(option);
-        });
-
-        console.log("Staff list loaded into Manual Entry");
-
-    } catch (error) {
-        console.error("Error loading staff list:", error);
-    }
-}
-
-// MAKE SURE THIS RUNS WHEN THE PAGE LOADS
-window.onload = function() {
-    // Run your existing load functions...
-    loadAttendance(); 
-    // Add this new one
-    populateStaffDropdown(); 
-};
 
 </script>
+
 </body>
 </html>
