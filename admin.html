@@ -587,8 +587,40 @@ function saveWhatsAppImage(){
         a.click();
     });
 }
+    async function adminForceAttendance(type) {
+    const staffEmail = document.getElementById("manualStaffSelect").value;
+    const campus = document.getElementById("manualCampusSelect").value;
 
-</script>
+    if (!staffEmail) {
+        return alert("Please select a staff member first!");
+    }
+
+    if (confirm(`Admin Action: Force ${type} for ${staffEmail}?`)) {
+        try {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
+            
+            // 8:30 AM is your threshold
+            const isLate = (type === "IN" && timeStr > "08:30:00");
+
+            await db.collection("attendance").add({
+                teacher: staffEmail,
+                teacherEmail: staffEmail,
+                campus: campus,
+                type: type,
+                late: isLate,
+                time: firebase.firestore.Timestamp.fromDate(now),
+                dateOnly: now.toLocaleDateString("en-IN"),
+                method: "Admin Manual Entry"
+            });
+
+            alert(`✅ Success: ${type} recorded for ${staffEmail}`);
+            loadAttendance(); // Refresh your log list at the top
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
+}
 
 </script>
 </body>
