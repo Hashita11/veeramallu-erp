@@ -713,47 +713,56 @@ function calculateDistance(lat1,lon1,lat2,lon2){
 
 // ATTENDANCE
 async function markAttendance(type){
+// UPDATED ATTENDANCE FUNCTION TO PREVENT DOUBLE-CLICKING
+async function markAttendance(type) {
+    // Select the buttons to disable them during processing
+    const btnIn = document.getElementById("btnIn");
+    const btnOut = document.getElementById("btnOut");
 
-    try{
+    // 1. Prevent double clicks if already processing
+    if (btnIn.disabled && btnOut.disabled) return;
 
-        const teacher =
-        auth.currentUser.email;
+    // 2. Lock the UI
+    btnIn.disabled = true;
+    btnOut.disabled = true;
+    const originalInText = btnIn.innerText;
+    const originalOutText = btnOut.innerText;
+    
+    if(type === "IN") btnIn.innerText = "Processing...";
+    else btnOut.innerText = "Processing...";
 
-        const campus =
-        sessionStorage.getItem("activeCampus");
-
+    try {
+        const teacher = auth.currentUser.email;
+        const campus = sessionStorage.getItem("activeCampus");
         const now = new Date();
+        const today = now.toLocaleDateString("en-IN");
+        const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
 
-        const today =
-        now.toLocaleDateString("en-IN");
-
-        const timeStr =
-        now.toLocaleTimeString("en-GB",{hour12:false});
-
+        // 3. Submit to Firebase
         await db.collection("attendance").add({
-
             teacher,
-            teacherEmail:teacher,
+            teacherEmail: teacher,
             campus,
             type,
-
-            late:
-            type==="IN" &&
-            timeStr > LATE_THRESHOLD,
-
-            time:
-            firebase.firestore.Timestamp.fromDate(now),
-
-            dateOnly:today,
-
-            method:"Teacher App"
+            late: type === "IN" && timeStr > LATE_THRESHOLD,
+            time: firebase.firestore.Timestamp.fromDate(now),
+            dateOnly: today,
+            method: "Teacher App"
         });
 
-        alert(type + " Marked Successfully");
+        alert("✅ " + type + " Marked Successfully");
 
-    }catch(err){
-
-        alert(err.message);
+    } catch (err) {
+        alert("❌ Error: " + err.message);
+    } finally {
+        // 4. Re-enable buttons after a 3-second delay to prevent spamming
+        setTimeout(() => {
+            btnIn.innerText = "Check IN";
+            btnOut.innerText = "Check OUT";
+            // The GPS checker will automatically re-enable them if they are inside campus
+            // But we call updateScale or similar logic here if needed
+            startGPSCheck(campus); 
+        }, 3000);
     }
 }
 
