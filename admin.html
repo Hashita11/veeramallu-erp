@@ -368,47 +368,84 @@ function generateSalary(){
 // =====================
 // ✅ MARKS (FINAL)
 // =====================
-async function fetchParentMarks() {
-    const exam = document.getElementById("parentExamView").value;
-    const area = document.getElementById("marksArea");
-    if (!exam) return area.innerHTML = "";
+// 1. VIEW MARKS REPORT (Admin Version)
+async function fetchAdminMarks() {
+    // Get values from the Admin's search boxes
+    const admNo = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
+    const exam = document.querySelector('select').value;
+    const area = document.querySelector('.card div[style*="border: 1px dashed"]');
+
+    if (!admNo || !exam) {
+        return alert("Please enter Admission No and select Exam assessment.");
+    }
+
+    area.innerHTML = "Fetching results...";
+
     try {
-        const doc = await db.collection("marks").doc(`${currentStudent.id}_${exam}`).get();
-        if (!doc.exists) { area.innerHTML = "<p style='text-align:center; padding:10px;'>No marks found.</p>"; return; }
-        const subs = doc.data().subjects;
-        let html = `<table class="marks-table"><tr><th>Subject</th><th>Marks</th></tr>`;
-        let total = 0, count = 0;
-        for (let s in subs) { 
-            let m = parseFloat(subs[s]) || 0; total += m; count++;
-            html += `<tr><td>${s}</td><td>${m}</td></tr>`; 
+        // Query the 'marks' collection using the ID from the input box
+        const doc = await db.collection("marks").doc(`${admNo}_${exam}`).get();
+        
+        if (!doc.exists) {
+            area.innerHTML = "No marks found for this record.";
+            return;
         }
-        const max = count * (exam.startsWith("SA") ? 100 : 50);
-        const per = (total / max) * 100;
-        let gr = per >= 90 ? "A1" : per >= 80 ? "A2" : per >= 70 ? "B1" : per >= 60 ? "B2" : per >= 50 ? "C1" : per >= 40 ? "C2" : "D";
-        area.innerHTML = html + `<tr style="background:#f0f2f5; font-weight:bold;"><td>TOTAL</td><td>${total} / ${max}</td></tr>
-            <tr style="background:#e8f5e9; font-weight:bold; color:green;"><td>GRADE</td><td>${per.toFixed(1)}% - ${gr}</td></tr></table>`;
-    } catch (e) { area.innerHTML = "Error"; }
+
+        const data = doc.data();
+        const subs = data.subjects || {};
+        
+        let reportText = `VGA REPORT: ${admNo} - ${exam}\n`;
+        reportText += `--------------------------\n`;
+
+        let total = 0;
+        let count = 0;
+
+        // Loop through subjects to calculate total
+        for (let s in subs) {
+            let m = parseFloat(subs[s]) || 0;
+            total += m;
+            count++;
+            reportText += `${s.padEnd(12)} : ${m}\n`;
+        }
+
+        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
+        const maxTotal = count * maxPerSub;
+        const percentage = ((total / maxTotal) * 100).toFixed(1);
+
+        // Determine Grade
+        let grade = percentage >= 90 ? "A1" : percentage >= 80 ? "A2" : percentage >= 70 ? "B1" : percentage >= 60 ? "B2" : percentage >= 50 ? "C1" : percentage >= 40 ? "C2" : "D";
+
+        reportText += `--------------------------\n`;
+        reportText += `GRAND TOTAL  : ${total} / ${maxTotal}\n`;
+        reportText += `GRADE        : ${percentage}% (${grade})`;
+
+        // Display as plain text in the dashed box
+        area.innerText = reportText;
+
+    } catch (e) {
+        console.error(e);
+        area.innerHTML = "Error loading report.";
+    }
 }
 
-// 2. DELETE MARKS - ADMIN ONLY SECURITY FEATURE
+// 2. DELETE MARKS RECORD (Principal Only)
 async function deleteMarksRecord() {
-    const adm = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
+    const admNo = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
     const exam = document.querySelector('select').value;
 
-    if (!adm || !exam) return alert("Enter Admission No and Exam first.");
+    if (!admNo || !exam) return alert("Identify the record first!");
 
-    const confirm1 = confirm(`⚠️ PERMANENT DELETE: Are you sure you want to remove ${exam} marks for ${adm}?`);
-    if (confirm1) {
-        const confirm2 = confirm("CRITICAL: This will remove ALL subject marks for this exam. Proceed?");
-        if (!confirm2) return;
+    const check = confirm(`⚠️ PRINCIPAL ACTION: Delete ${exam} marks for ${admNo} permanently?`);
+    if (check) {
+        const finalCheck = confirm("This will erase all subjects for this exam. Proceed?");
+        if (!finalCheck) return;
     } else { return; }
 
     try {
-        await db.collection("marks").doc(`${adm}_${exam}`).delete();
-        alert("✅ Record successfully deleted from VGA Cloud.");
-        viewMarksReport(); // Refresh view
+        await db.collection("marks").doc(`${admNo}_${exam}`).delete();
+        alert("✅ Record successfully deleted.");
+        fetchAdminMarks(); // Clear the view
     } catch (e) {
-        alert("Error deleting record: " + e.message);
+        alert("Deletion failed: " + e.message);
     }
 }
 
