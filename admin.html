@@ -364,58 +364,52 @@ function generateSalary(){
 // =====================
 // ✅ MARKS (FINAL)
 // =====================
-async function viewMarks(){
+async function viewMarksReport() {
+    const adm = document.querySelector('input[placeholder="VGA-2026-0001"]').value.trim();
+    const exam = document.querySelector('select').value;
+    const output = document.querySelector('.card pre') || document.querySelector('#marksOutput'); // Adjust selector to your code
 
-    let adm=document.getElementById("searchAdmNo").value.trim();
-    let ex=document.getElementById("searchExam").value;
-    let box=document.getElementById("marksOutput");
+    if(!adm || !exam) return alert("Please enter Admission No and select Exam.");
 
-    if(!adm) return alert("Enter ID");
+    try {
+        const doc = await db.collection("marks").doc(`${adm}_${exam}`).get();
+        
+        if(!doc.exists) {
+            output.innerText = "No marks found for this student.";
+            return;
+        }
 
-    let map={
-        "FA 1 (Formative)":"FA1",
-        "FA 2 (Formative)":"FA2",
-        "FA 3 (Formative)":"FA3",
-        "FA 4 (Formative)":"FA4",
-        "SA 1 (Summative)":"SA1",
-        "SA 2 (Summative)":"SA2"
-    };
+        const data = doc.data();
+        const subjects = data.subjects || {};
+        
+        let report = `VGA REPORT\n`;
+        report += `${adm} - ${exam}\n`;
+        report += `------------------\n`;
 
-    let exam=map[ex];
+        let total = 0;
+        let count = 0;
 
-    let snap=await db.collection("marks").get();
-
-    let out=`VGA REPORT\n${adm} - ${exam}\n----------------\n`;
-
-    let total=0,count=0,found=false;
-
-    snap.forEach(doc=>{
-        let d=doc.data();
-
-        if(doc.id.startsWith(adm) && d.examType==exam){
-
-            found=true;
-
-            let m=parseInt(d.total||0);
-
-            out+=`${d.subject} : ${m}\n`;
-
-            total+=m;
+        // Loop through the subjects object correctly
+        for (let sub in subjects) {
+            let marks = parseFloat(subjects[sub]) || 0;
+            report += `${sub} : ${marks}\n`;
+            total += marks;
             count++;
         }
-    });
 
-    if(!found){
-        box.innerText="No records found";
-        return;
+        const maxMarks = count * (exam.startsWith("SA") ? 100 : 50);
+        const percentage = ((total / maxMarks) * 100).toFixed(1);
+
+        report += `------------------\n`;
+        report += `Total: ${total}/${maxMarks}\n`;
+        report += `${percentage}%`;
+
+        output.innerText = report;
+
+    } catch (e) {
+        console.error(e);
+        alert("Error fetching report: " + e.message);
     }
-
-    let max=count*(exam.startsWith("SA")?100:50);
-    let per=((total/max)*100).toFixed(1);
-
-    out+=`----------------\nTotal:${total}/${max}\n${per}%`;
-
-    box.innerText=out;
 }
 
 
