@@ -225,43 +225,84 @@ function resolveName(d){
 // =====================
 // ✅ ATTENDANCE LOAD (FINAL FIX)
 // =====================
+
 function load(){
 
     if(unsubscribe) unsubscribe();
 
     unsubscribe = db.collection("attendance")
-    .orderBy("dateOnly","desc")
+    .orderBy("time","desc")
+
     .onSnapshot(snap=>{
 
-        let list = document.getElementById("list");
+        let list =
+        document.getElementById("list");
+
         list.innerHTML = "";
 
         snap.forEach(doc=>{
+
             let d = doc.data();
 
             let name = resolveName(d);
 
-            let dt = new Date(d.fullTimestamp || new Date());
+            // ✅ FIRESTORE TIMESTAMP FIX
+            let dt = d.time
+                ? d.time.toDate()
+                : new Date();
 
-            let late = d.autoLate === true;
+            let late =
+                d.autoLate === true ||
+                d.late === true;
 
             list.innerHTML += `
+
             <tr>
-            <td><b>${name}</b></td>
-            <td>${d.campus || '-'}</td>
+
             <td>
-            ${d.type || '-'}
-            ${late ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>' : ''}
+            <b>${name}</b>
             </td>
-            <td>${dt.toLocaleString()}</td>
+
+            <td>
+            ${d.campus || '-'}
+            </td>
+
+            <td>
+
+            ${d.type || '-'}
+
+            ${late
+                ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>'
+                : ''
+            }
+
+            </td>
+
+            <td>
+
+            ${dt.toLocaleDateString('en-IN')}
+
+            <br>
+
+            ${dt.toLocaleTimeString('en-IN')}
+
+            </td>
+
             </tr>`;
         });
 
-        if(list.innerHTML===""){
-            list.innerHTML="<tr><td colspan='4'>No records found</td></tr>";
+        if(list.innerHTML === ""){
+
+            list.innerHTML = `
+            <tr>
+            <td colspan="4">
+            No records found
+            </td>
+            </tr>`;
         }
     });
 }
+
 
 
 
