@@ -388,7 +388,7 @@ async function fetchAdminMarks() {
         }
 
         const data = doc.data();
-        const subs = data.subjects || {};
+        const subs = data.subjects || {}; // We defined it as 'subs' here
         const studentName = data.studentName || "Name Not Found";
         
         let report = `VGA ACADEMY - MARKS REPORT\n`;
@@ -402,7 +402,6 @@ async function fetchAdminMarks() {
         let total = 0;
         let count = 0;
 
-        // Helper function for individual grades
         const getGrade = (per) => {
             if (per >= 90) return "A1";
             if (per >= 80) return "A2";
@@ -416,11 +415,10 @@ async function fetchAdminMarks() {
         const maxPerSub = exam.startsWith("SA") ? 100 : 50;
 
         for (let s in subs) {
-            let m = parseFloat(subjects[s]) || 0;
+            let m = parseFloat(subs[s]) || 0; // Fixed: using 'subs' correctly now
             let subPer = (m / maxPerSub) * 100;
             let subGrade = getGrade(subPer);
             
-            // Formatting the line: Subject Name (12 chars), Mark (5 chars), Grade
             report += `${s.padEnd(12)} : ${m.toString().padEnd(5)} [${subGrade}]\n`;
             
             total += m;
@@ -428,7 +426,7 @@ async function fetchAdminMarks() {
         }
 
         const totalMax = count * maxPerSub;
-        const totalPer = ((total / totalMax) * 100).toFixed(1);
+        const totalPer = count > 0 ? ((total / totalMax) * 100).toFixed(1) : 0;
         const finalGrade = getGrade(totalPer);
 
         report += `--------------------------------\n`;
