@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VGA | Teacher Marks Entry</title>
-    <!-- HTML2CANVAS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary-color: #1a237e; --secondary-color: #c62828; --success-color: #2e7d32; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
@@ -20,6 +18,10 @@
 
         .card { background: white; max-width: 700px; margin: 20px auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
+        /* Header Style with Logo */
+        .header { text-align: center; border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .logo-img { width: 90px; margin-bottom: 10px; }
+
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         input, select { padding: 12px; border: 1px solid #ddd; border-radius: 6px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 14px; }
         label { font-size: 11px; font-weight: bold; color: #666; text-transform: uppercase; }
@@ -45,36 +47,36 @@
 </div>
 
 <div class="card">
-    <h2 style="text-align:center; color:var(--primary-color); margin-top: 0;">EXAM MARKS ENTRY</h2>
+    <div class="header">
+        <img src="logo.png" alt="VGA Logo" class="logo-img">
+        <h2 style="margin:0; color:var(--primary-color);">EXAM MARKS ENTRY</h2>
+    </div>
     
     <div class="grid">
-        <div><label>Admission No</label><input type="text" id="mAdmNo" placeholder="Enter ID" onchange="fetchStudent()"></div>
-        <div><label>Student Name</label><input type="text" id="mStuName" readonly style="background: #f0f0f0;"></div>
+        <div>
+            <label>Admission No</label>
+            <input type="text" id="mAdmNo" placeholder="VGA-2026-0001" onchange="fetchStudent()">
+        </div>
+        <div>
+            <label>Student Name</label>
+            <input type="text" id="mStuName" readonly style="background: #f5f5f5;">
+        </div>
         
         <div>
             <label>Exam Assessment</label>
             <select id="examType" onchange="updateScale()">
-                <option value="FA1">FA 1 (Formative)</option>
-                <option value="FA2">FA 2 (Formative)</option>
-                <option value="FA3">FA 3 (Formative)</option>
-                <option value="FA4">FA 4 (Formative)</option>
-                <option value="SA1">SA 1 (Summative)</option>
-                <option value="SA2">SA 2 (Summative)</option>
+                <option value="FA1">FA 1</option><option value="FA2">FA 2</option>
+                <option value="FA3">FA 3</option><option value="FA4">FA 4</option>
+                <option value="SA1">SA 1</option><option value="SA2">SA 2</option>
             </select>
         </div>
         
         <div>
             <label>Subject</label>
             <select id="subject" onchange="updateScale()">
-                <option>Telugu</option>
-                <option>Hindi</option>
-                <option>English</option>
-                <option>Mathematics</option>
-                <option>Science</option>
-                <option>Social</option>
-                <option value="GK">GK</option>
-                <option value="Computer">Computer</option>
-                <option value="Drawing">Drawing</option>
+                <option>Telugu</option><option>Hindi</option><option>English</option>
+                <option>Mathematics</option><option>Science</option><option>Social</option>
+                <option value="GK">GK</option><option value="Computer">Computer</option><option value="Drawing">Drawing</option>
             </select>
         </div>
     </div>
@@ -90,12 +92,12 @@
         <tbody>
             <tr id="internalRow">
                 <td><b>Internal</b></td>
-                <td><input type="number" id="intM" placeholder="0" oninput="calculate()"></td>
+                <td><input type="number" id="intM" value="0" oninput="calculate()"></td>
                 <td id="maxI">15</td>
             </tr>
             <tr>
                 <td><b>External</b></td>
-                <td><input type="number" id="extM" placeholder="0" oninput="calculate()"></td>
+                <td><input type="number" id="extM" value="0" oninput="calculate()"></td>
                 <td id="maxE">35</td>
             </tr>
             <tr class="total-row">
@@ -107,7 +109,7 @@
     </table>
 
     <div style="text-align:center; margin-top:20px; border: 1px solid #eee; padding: 15px; border-radius: 8px;">
-        <label>CALCULATED GRADE</label>
+        <label>GRADE</label>
         <div id="gradeRes" class="grade-display">-</div>
     </div>
 
@@ -116,37 +118,46 @@
 
 <script>
     const firebaseConfig = {
-  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-  authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-  projectId: "veeramalluerp-6cac5",
-  storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-  messagingSenderId: "379339569496",
-  appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
-};
+        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+        projectId: "veeramalluerp-6cac5",
+        storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+        messagingSenderId: "379339569496",
+        appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+    };
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+    async function fetchStudent() {
+        const adm = document.getElementById('mAdmNo').value.trim();
+        if(!adm) return;
+        try {
+            const doc = await db.collection("admissions").doc(adm).get();
+            if(doc.exists) {
+                // FIXED: Use 'name' to match your Admission database exactly
+                document.getElementById('mStuName').value = doc.data().name || doc.data().studentName;
+            } else {
+                alert("ID Not Found!");
+                document.getElementById('mStuName').value = "";
+            }
+        } catch(e) { console.error(e); }
+    }
+
     function updateScale() {
         const sub = document.getElementById('subject').value;
         const exam = document.getElementById('examType').value;
-        const intRow = document.getElementById('internalRow');
-        
-        const isSpecialSub = ["GK", "Computer", "Drawing"].includes(sub);
         const isSA = exam.startsWith("SA");
+        const isSpec = ["GK", "Computer", "Drawing"].includes(sub);
 
-        if (isSpecialSub) {
-            // Special subjects: No Internal, Total is 50 for FA and 100 for SA
-            intRow.style.display = 'none';
+        if (isSpec) {
+            document.getElementById('internalRow').style.display = 'none';
             document.getElementById('intM').value = 0;
             document.getElementById('maxE').innerText = isSA ? 100 : 50;
         } else {
-            // Main academic subjects
-            intRow.style.display = 'table-row';
+            document.getElementById('internalRow').style.display = 'table-row';
             document.getElementById('maxI').innerText = isSA ? 20 : 15;
             document.getElementById('maxE').innerText = isSA ? 80 : 35;
         }
-        
         document.getElementById('maxT').innerText = isSA ? 100 : 50;
         calculate();
     }
@@ -156,7 +167,6 @@ const auth = firebase.auth();
         const extM = parseFloat(document.getElementById('extM').value) || 0;
         const total = intM + extM;
         const max = parseFloat(document.getElementById('maxT').innerText);
-        
         document.getElementById('totM').innerText = total;
         
         const per = (total / max) * 100;
@@ -167,70 +177,41 @@ const auth = firebase.auth();
         else if (per >= 60) grade = "B2";
         else if (per >= 50) grade = "C1";
         else if (per >= 40) grade = "C2";
-        else grade = "Needs Imp.";
+        else grade = "D";
         
         document.getElementById('gradeRes').innerText = grade;
     }
 
-    async function fetchStudent() {
-        const adm = document.getElementById('mAdmNo').value;
-        if(!adm) return;
-        const doc = await db.collection("admissions").doc(adm).get();
-        if(doc.exists) {
-            document.getElementById('mStuName').value = doc.data().studentName;
-        } else {
-            alert("Student ID not found!");
-            document.getElementById('mStuName').value = "";
-        }
-    }
-
     async function saveToFirebase() {
-    const adm = document.getElementById('mAdmNo').value;
-    const sub = document.getElementById('subject').value;
-    const exam = document.getElementById('examType').value;
-    
-    if(!adm || !document.getElementById('mStuName').value) {
-        alert("Please enter a valid Admission Number first!");
-        return;
-    }
-
-    // Define the unique Document ID (e.g., 23456_FA1_Telugu)
-    const docID = `${adm}_${exam}_${sub}`;
-
-    try {
-        // STEP 1: Check if this record already exists
-        const docRef = db.collection("marks").doc(docID);
-        const docSnap = await docRef.get();
-
-        if (docSnap.exists) {
-            // Ask the teacher for permission to overwrite
-            const confirmOverwrite = confirm(`Marks for ${sub} (${exam}) already exist. Do you want to update/overwrite them?`);
-            if (!confirmOverwrite) {
-                return; // Stop if they click 'Cancel'
-            }
-        }
-
-        // STEP 2: Prepare and save the data
-        const data = {
-            subject: sub,
-            examType: exam,
-            internal: document.getElementById('intM').value,
-            external: document.getElementById('extM').value,
-            total: document.getElementById('totM').innerText,
-            grade: document.getElementById('gradeRes').innerText,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        await docRef.set(data);
-        alert(`Success: ${exam} marks for ${sub} saved!`);
+        const adm = document.getElementById('mAdmNo').value.trim();
+        const stuName = document.getElementById('mStuName').value;
+        const sub = document.getElementById('subject').value;
+        const exam = document.getElementById('examType').value;
         
-    } catch (e) { 
-        alert("Error saving: " + e.message); 
-    }
-}
+        if(!adm || !stuName) return alert("Fetch student first!");
 
-    
-    // Run update scale on load to set initial values
+        const docID = `${adm}_${exam}`;
+
+        try {
+            const docRef = db.collection("marks").doc(docID);
+            const docSnap = await docRef.get();
+
+            let subjectsData = docSnap.exists ? (docSnap.data().subjects || {}) : {};
+
+            subjectsData[sub] = document.getElementById('totM').innerText;
+
+            await docRef.set({
+                studentId: adm,
+                studentName: stuName,
+                examType: exam,
+                subjects: subjectsData,
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            alert(`Saved ${sub} marks for ${stuName}`);
+        } catch (e) { alert("Error: " + e.message); }
+    }
+
     window.onload = updateScale;
 </script>
 </body>
