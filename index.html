@@ -4,370 +4,105 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Teacher Portal | Veeramallu Global Academy</title>
-
 <style>
-:root{
-    --primary:#1a237e;
-    --success:#28a745;
-    --warning:#fbc02d;
-    --light:#f0f2f5;
-}
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-body{
-    font-family:Segoe UI, sans-serif;
-    background:var(--light);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    padding:20px;
-    transition:.3s;
-}
-
-.card{
-    width:100%;
-    max-width:430px;
-    background:white;
-    padding:25px;
-    border-radius:18px;
-    box-shadow:0 10px 30px rgba(0,0,0,.12);
-    text-align:center;
-}
-
-.logo{
-    width:90px;
-    margin:auto;
-    display:block;
-    margin-bottom:15px;
-}
-
-h2{
-    color:var(--primary);
-    margin-bottom:15px;
-}
-
-.form-group{
-    margin-bottom:15px;
-    text-align:left;
-}
-
-label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:600;
-}
-
-input,select{
-    width:100%;
-    padding:12px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:15px;
-}
-
-button{
-    width:100%;
-    padding:13px;
-    border:none;
-    border-radius:8px;
-    margin-top:10px;
-    font-size:15px;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-.btn-login{
-    background:var(--primary);
-    color:white;
-}
-
-.btn-in{
-    background:var(--success);
-    color:white;
-    flex:1;
-}
-
-.btn-out{
-    background:#e65100;
-    color:white;
-    flex:1;
-}
-
-.btn-secondary{
-    background:white;
-    border:2px solid var(--primary);
-    color:var(--primary);
-}
-
-.btn-purple{
-    background:#6a1b9a;
-    color:white;
-}
-
-.btn-row{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-}
-
-#attendanceSection{
-    display:none;
-}
-
-.teacher-info{
-    background:#e3f2fd;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-    border:1px solid var(--primary);
-}
-
-.status-box{
-    padding:14px;
-    border-radius:8px;
-    margin:15px 0;
-    background:#fffde7;
-    border:1px solid var(--warning);
-    font-weight:bold;
-}
-
-.profile-wrapper{
-    position:relative;
-    display:inline-block;
-}
-
-.profile-pic{
-    width:100px;
-    height:100px;
-    border-radius:50%;
-    object-fit:cover;
-    border:4px solid var(--primary);
-}
-
-.camera-btn{
-    position:absolute;
-    bottom:0;
-    right:0;
-    background:var(--primary);
-    color:white;
-    width:32px;
-    height:32px;
-    border-radius:50%;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    cursor:pointer;
-    border:2px solid white;
-    font-size:14px;
-}
-
-.small{
-    font-size:12px;
-    margin-top:5px;
-}
-
-.darkMode{
-    background:#111 !important;
-}
-
-.darkMode .card{
-    background:#1e1e1e;
-    color:white;
-}
-
-.darkMode input,
-.darkMode select{
-    background:#333;
-    color:white;
-    border:1px solid #555;
-}
-
-.darkMode .teacher-info{
-    background:#222;
-}
-
-.darkMode .btn-secondary{
-    background:#222;
-    color:white;
-    border:1px solid white;
-}
+:root{ --primary:#1a237e; --success:#28a745; --warning:#fbc02d; --light:#f0f2f5; }
+*{ margin:0; padding:0; box-sizing:border-box; }
+body{ font-family:Segoe UI, sans-serif; background:var(--light); display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; transition:.3s; }
+.card{ width:100%; max-width:430px; background:white; padding:25px; border-radius:18px; box-shadow:0 10px 30px rgba(0,0,0,.12); text-align:center; }
+.logo{ width:90px; margin:auto; display:block; margin-bottom:15px; }
+h2{ color:var(--primary); margin-bottom:15px; }
+.form-group{ margin-bottom:15px; text-align:left; }
+label{ display:block; margin-bottom:6px; font-weight:600; }
+input,select{ width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; font-size:15px; }
+button{ width:100%; padding:13px; border:none; border-radius:8px; margin-top:10px; font-size:15px; font-weight:bold; cursor:pointer; }
+.btn-login{ background:var(--primary); color:white; }
+.btn-in{ background:var(--success); color:white; flex:1; }
+.btn-out{ background:#e65100; color:white; flex:1; }
+.btn-secondary{ background:white; border:2px solid var(--primary); color:var(--primary); }
+.btn-purple{ background:#6a1b9a; color:white; }
+.btn-row{ display:flex; gap:10px; margin-bottom:10px; }
+#attendanceSection{ display:none; }
+.teacher-info{ background:#e3f2fd; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid var(--primary); }
+.status-box{ padding:14px; border-radius:8px; margin:15px 0; background:#fffde7; border:1px solid var(--warning); font-weight:bold; }
+.profile-wrapper{ position:relative; display:inline-block; }
+.profile-pic{ width:100px; height:100px; border-radius:50%; object-fit:cover; border:4px solid var(--primary); }
+.camera-btn{ position:absolute; bottom:0; right:0; background:var(--primary); color:white; width:32px; height:32px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; border:2px solid white; font-size:14px; }
+.small{ font-size:12px; margin-top:5px; }
+.darkMode{ background:#111 !important; }
+.darkMode .card{ background:#1e1e1e; color:white; }
+.darkMode input, .darkMode select{ background:#333; color:white; border:1px solid #555; }
+.darkMode .teacher-info{ background:#222; }
+.darkMode .btn-secondary{ background:#222; color:white; border:1px solid white; }
 </style>
 </head>
-
 <body>
 
 <div class="card">
+<img src="logo.png" class="logo" onerror="this.src='https://via.placeholder.com/100?text=VGA'">
+<button onclick="toggleDarkMode()" style="background:#111;color:white;margin-bottom:15px;">🌙 Toggle Dark Mode</button>
 
-<img src="logo.png"
-class="logo"
-onerror="this.src='https://via.placeholder.com/100?text=VGA'">
-
-<button onclick="toggleDarkMode()"
-style="background:#111;color:white;margin-bottom:15px;">
-🌙 Toggle Dark Mode
-</button>
-
-<!-- LOGIN -->
 <div id="loginSection">
-
-<h2>Teacher Login</h2>
-
-<div class="form-group">
-<label>Select Campus</label>
-<select id="campus">
-<option value="Relangi">Relangi</option>
-<option value="Velpur">Velpur</option>
-<option value="Undrajavaram">Undrajavaram</option>
-</select>
+    <h2>Teacher Login</h2>
+    <div class="form-group">
+        <label>Select Campus</label>
+        <select id="campus">
+            <option value="Relangi">Relangi</option>
+            <option value="Velpur">Velpur</option>
+            <option value="Undrajavaram">Undrajavaram</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="teacher@vga.com">
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
+    <button class="btn-login" onclick="handleLogin()">Sign In</button>
+    <button class="btn-secondary" onclick="registerTeacher()">Create Account</button>
+    <p id="loginError" style="color:red;margin-top:10px;display:none;"></p>
 </div>
 
-<div class="form-group">
-<label>Email</label>
-<input type="email" id="email" placeholder="teacher@vga.com">
-</div>
-
-<div class="form-group">
-<label>Password</label>
-<input type="password" id="password" placeholder="••••••••">
-</div>
-
-<button class="btn-login" onclick="handleLogin()">
-Sign In
-</button>
-
-<button class="btn-secondary" onclick="registerTeacher()">
-Create Account
-</button>
-
-<p id="loginError"
-style="color:red;margin-top:10px;display:none;"></p>
-
-</div>
-
-<!-- ATTENDANCE -->
 <div id="attendanceSection">
+    <div class="teacher-info">
+        <div class="profile-wrapper">
+            <img id="profilePic" class="profile-pic" src="https://via.placeholder.com/150?text=User">
+            <label for="photoUpload" class="camera-btn">📷</label>
+            <input type="file" id="photoUpload" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+        </div>
+        <h2 id="welcomeMsg" style="margin-top:10px;">Welcome!</h2>
+        <p id="teacherEmailDisplay" class="small"></p>
+        <p id="campusDisplay" class="small" style="font-weight:bold;color:var(--primary);"></p>
+        <p id="onlineStatus" style="color:green;font-weight:bold;margin-top:5px;">🟢 Online</p>
+        <p id="currentTime" class="small"></p>
+    </div>
 
-<div class="teacher-info">
+    <div class="status-box" id="gpsStatus">Checking GPS...</div>
 
-<div class="profile-wrapper">
+    <div class="btn-row">
+        <button id="btnIn" class="btn-in" disabled onclick="markAttendance('IN')">Check IN</button>
+        <button id="btnOut" class="btn-out" disabled onclick="markAttendance('OUT')">Check OUT</button>
+    </div>
 
-<img id="profilePic"
-class="profile-pic"
-src="https://via.placeholder.com/150?text=User">
-
-<label for="photoUpload" class="camera-btn">
-📷
-</label>
-
-<input
-type="file"
-id="photoUpload"
-accept="image/*"
-style="display:none"
-onchange="uploadPhoto(this)"
->
-
-</div>
-
-<h2 id="welcomeMsg" style="margin-top:10px;">
-Welcome!
-</h2>
-
-<p id="teacherEmailDisplay" class="small"></p>
-
-<p id="campusDisplay"
-class="small"
-style="font-weight:bold;color:var(--primary);">
-</p>
-
-<p id="onlineStatus"
-style="color:green;font-weight:bold;margin-top:5px;">
-🟢 Online
-</p>
-
-<p id="currentTime" class="small"></p>
-
-</div>
-
-<div class="status-box" id="gpsStatus">
-Checking GPS...
-</div>
-
-<div class="btn-row">
-<button id="btnIn"
-class="btn-in"
-disabled
-onclick="markAttendance('IN')">
-Check IN
-</button>
-
-<button id="btnOut"
-class="btn-out"
-disabled
-onclick="markAttendance('OUT')">
-Check OUT
-</button>
-</div>
-
-<button class="btn-secondary"
-onclick="window.location.href='admissions.html'">
-New Admission Portal
-</button>
-
-<button onclick="goToAdmin()">Admin Dashboard</button>
-
-<button class="btn-secondary"
-onclick="window.location.href='homework.html'">
-Homework Upload
-</button>
-
-<button class="btn-secondary"
-onclick="window.location.href='salary-slip.html'">
-Salary Slip
-</button>
-
-<button class="btn-secondary"
-onclick="generateIDCard()">
-Generate ID Card
-</button>
-
-<button class="btn-secondary"
-onclick="window.location.href='bus-tracker.html'">
-Bus Tracking
-</button>
-
-<button class="btn-purple"
-onclick="viewTodayAttendance()">
-Today's Attendance
-</button>
-
-<button
-onclick="logoutUser()"
-style="background:#6c757d;color:white;">
-Logout
-</button>
-
+    <button class="btn-secondary" onclick="window.location.href='admissions.html'">New Admission Portal</button>
+    <button class="btn-secondary" onclick="goToAdmin()">Admin Dashboard</button>
+    <button class="btn-secondary" onclick="window.location.href='marks-entry.html'">📝 Marks Entry</button>
+    <button class="btn-secondary" onclick="window.location.href='homework.html'">Homework Upload</button>
+    <button class="btn-secondary" onclick="window.location.href='salary-slip.html'">Salary Slip</button>
+    <button class="btn-secondary" onclick="generateIDCard()">Generate ID Card</button>
+    <button class="btn-secondary" onclick="window.location.href='bus-tracker.html'">Bus Tracking</button>
+    <button class="btn-purple" onclick="viewTodayAttendance()">Today's Attendance</button>
+    <button onclick="logoutUser()" style="background:#6c757d;color:white;">Logout</button>
 </div>
 </div>
 
-<!-- SCRIPTS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-
-// FIREBASE CONFIG
 const firebaseConfig = {
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -376,558 +111,177 @@ const firebaseConfig = {
     messagingSenderId: "379339569496",
     appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
-
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 const LATE_THRESHOLD = "08:30:00";
-    const campusCoords = {
-        "Relangi": { lat: 16.702710, lng: 81.644140 },
-        "Velpur": { lat: 16.719772, lng: 81.662377 },
-        "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
-    };
+const campusCoords = {
+    "Relangi": { lat: 16.702710, lng: 81.644140 },
+    "Velpur": { lat: 16.719772, lng: 81.662377 },
+    "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
+};
 
-// AUTO LOGIN
 auth.onAuthStateChanged(async(user)=>{
-
     if(!user){
         document.getElementById("loginSection").style.display="block";
         document.getElementById("attendanceSection").style.display="none";
         return;
     }
-
     document.getElementById("loginSection").style.display="none";
     document.getElementById("attendanceSection").style.display="block";
-
-    const campus =
-    sessionStorage.getItem("activeCampus") || "";
-
-    document.getElementById("welcomeMsg").innerText =
-    "Welcome, " + user.email.split("@")[0].toUpperCase();
-
-    document.getElementById("teacherEmailDisplay").innerText =
-    user.email;
-
-    document.getElementById("campusDisplay").innerText =
-    "Campus: " + campus;
-
+    const campus = sessionStorage.getItem("activeCampus") || "";
+    document.getElementById("welcomeMsg").innerText = "Welcome, " + user.email.split("@")[0].toUpperCase();
+    document.getElementById("teacherEmailDisplay").innerText = user.email;
+    document.getElementById("campusDisplay").innerText = "Campus: " + campus;
     loadTeacherPhoto();
-
     startGPSCheck(campus);
 });
 
-// LOGIN
 function handleLogin(){
-
-    const email =
-    document.getElementById("email").value.trim();
-
-    const password =
-    document.getElementById("password").value;
-
-    const campus =
-    document.getElementById("campus").value;
-
-    auth.signInWithEmailAndPassword(email,password)
-
-    .then(()=>{
-
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const campus = document.getElementById("campus").value;
+    auth.signInWithEmailAndPassword(email,password).then(()=>{
         sessionStorage.setItem("activeCampus",campus);
-
         location.reload();
-
-    })
-
-    .catch(err=>{
-
+    }).catch(err=>{
         document.getElementById("loginError").style.display="block";
-
-        document.getElementById("loginError").innerText =
-        err.message;
+        document.getElementById("loginError").innerText = err.message;
     });
 }
 
-// REGISTER
 async function registerTeacher(){
-
-    const email =
-    document.getElementById("email").value.trim();
-
-    const password =
-    document.getElementById("password").value;
-
-    if(!email || !password){
-        alert("Enter email & password");
-        return;
-    }
-
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    if(!email || !password) return alert("Enter email & password");
     try{
-
-        const userCred =
-        await auth.createUserWithEmailAndPassword(email,password);
-
-        await db.collection("teachers")
-        .doc(userCred.user.uid)
-        .set({
-            uid:userCred.user.uid,
-            email:email,
-            createdAt:new Date()
-        },{merge:true});
-
+        const userCred = await auth.createUserWithEmailAndPassword(email,password);
+        await db.collection("teachers").doc(userCred.user.uid).set({ uid:userCred.user.uid, email:email, createdAt:new Date() },{merge:true});
         alert("Account Created");
-
-    }catch(err){
-
-        alert(err.message);
-    }
+    }catch(err){ alert(err.message); }
 }
 
-// LOAD PHOTO
 async function loadTeacherPhoto(){
-
-    try{
-
-        const user = auth.currentUser;
-
-        if(!user) return;
-
-        const doc =
-        await db.collection("teachers")
-        .doc(user.uid)
-        .get();
-
-        if(doc.exists && doc.data().photo){
-
-            document.getElementById("profilePic").src =
-            doc.data().photo;
-
-        }
-
-    }catch(err){
-
-        console.log(err);
-    }
+    const user = auth.currentUser;
+    if(!user) return;
+    const doc = await db.collection("teachers").doc(user.uid).get();
+    if(doc.exists && doc.data().photo) document.getElementById("profilePic").src = doc.data().photo;
 }
 
-// UPLOAD PHOTO
 async function uploadPhoto(input){
-
     const file = input.files[0];
-
     if(!file) return;
-
     const reader = new FileReader();
-
     reader.onload = async(e)=>{
-
         const img = new Image();
-
         img.onload = async()=>{
-
-            const canvas =
-            document.createElement("canvas");
-
-            const ctx =
-            canvas.getContext("2d");
-
-            let width = img.width;
-            let height = img.height;
-
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            let width = img.width, height = img.height;
             const MAX = 250;
-
-            if(width > height){
-
-                if(width > MAX){
-
-                    height *= MAX/width;
-                    width = MAX;
-                }
-
-            }else{
-
-                if(height > MAX){
-
-                    width *= MAX/height;
-                    height = MAX;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-
+            if(width > height) { if(width > MAX) { height *= MAX/width; width = MAX; } }
+            else { if(height > MAX) { width *= MAX/height; height = MAX; } }
+            canvas.width = width; canvas.height = height;
             ctx.drawImage(img,0,0,width,height);
-
-            const compressedImage =
-            canvas.toDataURL("image/jpeg",0.7);
-
+            const compressedImage = canvas.toDataURL("image/jpeg",0.7);
             const user = auth.currentUser;
-
-            await db.collection("teachers")
-            .doc(user.uid)
-            .set({
-                uid:user.uid,
-                email:user.email,
-                photo:compressedImage,
-                updatedAt:new Date()
-            },{merge:true});
-
-            document.getElementById("profilePic").src =
-            compressedImage;
-
+            await db.collection("teachers").doc(user.uid).set({ photo:compressedImage }, {merge:true});
+            document.getElementById("profilePic").src = compressedImage;
             alert("✅ Photo Uploaded Successfully");
-
         };
-
         img.src = e.target.result;
     };
-
     reader.readAsDataURL(file);
 }
 
-
-// ================= GPS CHECK =================
-function startGPSCheck(selectedCampus) {
-
-    if (!navigator.geolocation) {
-
-        document.getElementById("gpsStatus").innerHTML =
-        "<span style='color:red;'>GPS Not Supported</span>";
-
-        return;
-    }
-
-    navigator.geolocation.watchPosition(
-
-        (pos) => {
-
-            const userLat = pos.coords.latitude;
-            const userLng = pos.coords.longitude;
-
-            console.log("LIVE GPS:", userLat, userLng);
-
-            let nearestCampus = "";
-            let nearestDistance = Infinity;
-
-            // FIND NEAREST CAMPUS
-            for (const [name, coords] of Object.entries(campusCoords)) {
-
-                const distance = calculateDistance(
-                    userLat,
-                    userLng,
-                    coords.lat,
-                    coords.lng
-                );
-
-                console.log(name + " Distance:", distance);
-
-                if (distance < nearestDistance) {
-
-                    nearestDistance = distance;
-                    nearestCampus = name;
-                }
-            }
-
-            // UPDATE CURRENT CAMPUS
-            sessionStorage.setItem(
-                "activeCampus",
-                nearestCampus
-            );
-
-            document.getElementById("campusDisplay").innerText =
-            "Campus: " + nearestCampus;
-
-            // GPS STATUS
-            const gpsStatus =
-            document.getElementById("gpsStatus");
-
-            const btnIn =
-            document.getElementById("btnIn");
-
-            const btnOut =
-            document.getElementById("btnOut");
-
-            // 150 METERS RANGE
-            if (nearestDistance <= 150) {
-
-                gpsStatus.innerHTML =
-                `<span style="color:green;">
-                ✔ Inside ${nearestCampus} Campus
-                <br>
-                Distance: ${Math.round(nearestDistance)} meters
-                </span>`;
-
-                btnIn.disabled = false;
-                btnOut.disabled = false;
-
-            } else {
-
-                gpsStatus.innerHTML =
-                `<span style="color:red;">
-                ✖ Outside Campus
-                <br>
-                Nearest: ${nearestCampus}
-                <br>
-                Distance: ${Math.round(nearestDistance)} meters
-                </span>`;
-
-                btnIn.disabled = true;
-                btnOut.disabled = true;
-            }
-
-        },
-
-        (error) => {
-
-            console.log(error);
-
-            document.getElementById("gpsStatus").innerHTML =
-            "<span style='color:red;'>GPS Permission Denied</span>";
-        },
-
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        }
-    );
-}
-
-// DISTANCE
 function calculateDistance(lat1,lon1,lat2,lon2){
-
     const R = 6371e3;
-
-    const dLat = (lat2-lat1)*Math.PI/180;
-    const dLon = (lon2-lon1)*Math.PI/180;
-
-    const a =
-    Math.sin(dLat/2)*Math.sin(dLat/2)+
-    Math.cos(lat1*Math.PI/180)*
-    Math.cos(lat2*Math.PI/180)*
-    Math.sin(dLon/2)*Math.sin(dLon/2);
-
+    const dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
-// ATTENDANCE
-async function markAttendance(type){
-// UPDATED ATTENDANCE FUNCTION TO PREVENT DOUBLE-CLICKING
+function startGPSCheck(selectedCampus) {
+    if (!navigator.geolocation) return document.getElementById("gpsStatus").innerHTML = "<span style='color:red;'>GPS Not Supported</span>";
+    navigator.geolocation.watchPosition((pos) => {
+        const userLat = pos.coords.latitude, userLng = pos.coords.longitude;
+        let nearestCampus = "", nearestDistance = Infinity;
+        for (const [name, coords] of Object.entries(campusCoords)) {
+            const distance = calculateDistance(userLat, userLng, coords.lat, coords.lng);
+            if (distance < nearestDistance) { nearestDistance = distance; nearestCampus = name; }
+        }
+        sessionStorage.setItem("activeCampus", nearestCampus);
+        document.getElementById("campusDisplay").innerText = "Campus: " + nearestCampus;
+        const gpsStatus = document.getElementById("gpsStatus"), btnIn = document.getElementById("btnIn"), btnOut = document.getElementById("btnOut");
+        if (nearestDistance <= 150) {
+            gpsStatus.innerHTML = `<span style="color:green;">✔ Inside ${nearestCampus} (${Math.round(nearestDistance)}m)</span>`;
+            btnIn.disabled = false; btnOut.disabled = false;
+        } else {
+            gpsStatus.innerHTML = `<span style="color:red;">✖ Outside Campus (${Math.round(nearestDistance)}m)</span>`;
+            btnIn.disabled = true; btnOut.disabled = true;
+        }
+    }, (err) => { document.getElementById("gpsStatus").innerHTML = "<span style='color:red;'>GPS Error</span>"; }, { enableHighAccuracy: true });
+}
+
+// FIXED ATTENDANCE FUNCTION (NO NESTING ERRORS)
 async function markAttendance(type) {
-    // Select the buttons to disable them during processing
-    const btnIn = document.getElementById("btnIn");
-    const btnOut = document.getElementById("btnOut");
+    const btnIn = document.getElementById("btnIn"), btnOut = document.getElementById("btnOut");
+    if (btnIn.disabled && btnOut.disabled && btnIn.innerText === "Processing...") return;
 
-    // 1. Prevent double clicks if already processing
-    if (btnIn.disabled && btnOut.disabled) return;
-
-    // 2. Lock the UI
-    btnIn.disabled = true;
-    btnOut.disabled = true;
-    const originalInText = btnIn.innerText;
-    const originalOutText = btnOut.innerText;
-    
-    if(type === "IN") btnIn.innerText = "Processing...";
-    else btnOut.innerText = "Processing...";
+    btnIn.disabled = true; btnOut.disabled = true;
+    if(type === "IN") btnIn.innerText = "Processing..."; else btnOut.innerText = "Processing...";
 
     try {
         const teacher = auth.currentUser.email;
         const campus = sessionStorage.getItem("activeCampus");
         const now = new Date();
-        const today = now.toLocaleDateString("en-IN");
         const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
 
-        // 3. Submit to Firebase
         await db.collection("attendance").add({
-            teacher,
-            teacherEmail: teacher,
-            campus,
-            type,
+            teacher, teacherEmail: teacher, campus, type,
             late: type === "IN" && timeStr > LATE_THRESHOLD,
             time: firebase.firestore.Timestamp.fromDate(now),
-            dateOnly: today,
+            dateOnly: now.toLocaleDateString("en-IN"),
             method: "Teacher App"
         });
-
         alert("✅ " + type + " Marked Successfully");
-
-    } catch (err) {
-        alert("❌ Error: " + err.message);
-    } finally {
-        // 4. Re-enable buttons after a 3-second delay to prevent spamming
+    } catch (err) { alert(err.message); }
+    finally {
         setTimeout(() => {
-            btnIn.innerText = "Check IN";
-            btnOut.innerText = "Check OUT";
-            // The GPS checker will automatically re-enable them if they are inside campus
-            // But we call updateScale or similar logic here if needed
-            startGPSCheck(campus); 
+            btnIn.innerText = "Check IN"; btnOut.innerText = "Check OUT";
+            startGPSCheck(sessionStorage.getItem("activeCampus"));
         }, 3000);
     }
 }
 
-// VIEW ATTENDANCE
 async function viewTodayAttendance(){
-
-    const today =
-    new Date().toLocaleDateString("en-IN");
-
-    const snap =
-    await db.collection("attendance")
-    .where("teacher","==",auth.currentUser.email)
-    .where("dateOnly","==",today)
-    .get();
-
+    const today = new Date().toLocaleDateString("en-IN");
+    const snap = await db.collection("attendance").where("teacherEmail","==",auth.currentUser.email).where("dateOnly","==",today).get();
     let msg = "Today's Attendance\n\n";
-
-    snap.forEach(doc=>{
-
-        msg +=
-        doc.data().type + " - " +
-        new Date(doc.data().time.seconds*1000)
-        .toLocaleTimeString() + "\n";
-    });
-
+    snap.forEach(doc=>{ msg += doc.data().type + " - " + new Date(doc.data().time.seconds*1000).toLocaleTimeString() + "\n"; });
     alert(msg);
 }
 
-// ID CARD
 function generateIDCard(){
-
-    const profileImg =
-    document.getElementById("profilePic").src;
-
-    const name =
-    auth.currentUser.email.split("@")[0].toUpperCase();
-
-    const campus =
-    sessionStorage.getItem("activeCampus");
-
-    const html = `
-    <div id="tempID"
-    style="
-    width:320px;
-    padding:20px;
-    background:white;
-    border:5px solid #1a237e;
-    border-radius:20px;
-    text-align:center;
-    font-family:Arial;
-    ">
-
-    <h2 style="color:#1a237e;">
-    VEERAMALLU GLOBAL ACADEMY
-    </h2>
-
-    <img src="${profileImg}"
-    style="
-    width:140px;
-    height:140px;
-    border-radius:50%;
-    object-fit:cover;
-    border:5px solid #1a237e;
-    margin-top:15px;
-    ">
-
-    <h3 style="margin-top:20px;font-size:30px;">
-    ${name}
-    </h3>
-
-    <p style="font-size:22px;font-weight:bold;">
-    ${campus}
-    </p>
-
-    </div>
-    `;
-
-    const div =
-    document.createElement("div");
-
-    div.style.position="fixed";
-    div.style.left="-9999px";
-
-    div.innerHTML = html;
-
+    const profileImg = document.getElementById("profilePic").src;
+    const name = auth.currentUser.email.split("@")[0].toUpperCase();
+    const campus = sessionStorage.getItem("activeCampus");
+    const div = document.createElement("div");
+    div.style.position="fixed"; div.style.left="-9999px";
+    div.innerHTML = `<div id="tempID" style="width:320px;padding:20px;background:white;border:5px solid #1a237e;border-radius:20px;text-align:center;font-family:Arial;"><h2 style="color:#1a237e;">VGA</h2><img src="${profileImg}" style="width:140px;height:140px;border-radius:50%;object-fit:cover;border:5px solid #1a237e;margin-top:15px;"><h3 style="margin-top:20px;font-size:30px;">${name}</h3><p style="font-size:22px;font-weight:bold;">${campus}</p></div>`;
     document.body.appendChild(div);
-
-    html2canvas(document.getElementById("tempID"),{
-        scale:3,
-        useCORS:true
-    }).then(canvas=>{
-
-        const link =
-        document.createElement("a");
-
-        link.download="VGA-ID-Card.png";
-
-        link.href =
-        canvas.toDataURL("image/png");
-
-        link.click();
-
+    html2canvas(document.getElementById("tempID"),{ scale:3, useCORS:true }).then(canvas=>{
+        const link = document.createElement("a"); link.download="VGA-ID.png"; link.href = canvas.toDataURL(); link.click();
         document.body.removeChild(div);
     });
 }
 
-// DARK MODE
-function toggleDarkMode(){
-
-    document.body.classList.toggle("darkMode");
-
-    localStorage.setItem(
-        "darkMode",
-        document.body.classList.contains("darkMode")
-        ? "ON"
-        : "OFF"
-    );
-}
-
-// CLOCK
-function updateClock(){
-
-    document.getElementById("currentTime").innerText =
-    new Date().toLocaleString();
-}
-
+function toggleDarkMode(){ document.body.classList.toggle("darkMode"); }
+function updateClock(){ document.getElementById("currentTime").innerText = new Date().toLocaleString(); }
 setInterval(updateClock,1000);
-
-updateClock();
-
-// LOGOUT
-function logoutUser(){
-
-    auth.signOut().then(()=>{
-
-        sessionStorage.clear();
-
-        location.reload();
-    });
-}
-
-// ONLINE OFFLINE
-window.addEventListener("offline",()=>{
-
-    onlineStatus.innerText="🔴 Offline";
-
-    onlineStatus.style.color="red";
-});
-
-window.addEventListener("online",()=>{
-
-    onlineStatus.innerText="🟢 Online";
-
-    onlineStatus.style.color="green";
-});
-    function goToAdmin() {
-    const user = auth.currentUser;
-    if (user && user.email === "admin@gmail.com") {
-        window.location.href = 'admin.html';
-    } else {
-        alert("Access Denied: Only Admins can enter here.");
-    }
-}
-
+function logoutUser(){ auth.signOut().then(()=>{ sessionStorage.clear(); location.reload(); }); }
+function goToAdmin() { if (auth.currentUser && auth.currentUser.email === "admin@gmail.com") window.location.href = 'admin.html'; else alert("Admin Only!"); }
 </script>
-
 </body>
 </html>
