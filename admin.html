@@ -237,87 +237,62 @@ function resolveName(d){
         || "Unknown";
 }
 
-
-
 // =====================
-// ✅ ATTENDANCE LOAD (FINAL FIX)
+// ✅ ATTENDANCE LOAD WITH ACTIVE FILTERS
 // =====================
+function load() {
+    // Get filter values from the UI
+    const searchQuery = document.getElementById("search").value.toLowerCase();
+    const selectedCampus = document.getElementById("filterCampus").value;
+    const startDate = document.getElementById("start").value;
+    const endDate = document.getElementById("end").value;
 
-function load(){
-
-    if(unsubscribe) unsubscribe();
+    if (unsubscribe) unsubscribe();
 
     unsubscribe = db.collection("attendance")
-    .orderBy("time","desc")
+        .orderBy("time", "desc")
+        .onSnapshot(snap => {
+            const list = document.getElementById("list");
+            list.innerHTML = "";
 
-    .onSnapshot(snap=>{
+            snap.forEach(doc => {
+                const d = doc.data();
+                const fullName = resolveName(d);
+                const campus = d.campus || "";
+                
+                // Firestore Timestamp conversion
+                const dt = d.time ? d.time.toDate() : new Date();
+                const dateStr = dt.toISOString().split('T')[0]; // Format: YYYY-MM-DD for date comparison
 
-        let list =
-        document.getElementById("list");
+                // ✅ APPLY FILTERS LOGIC
+                const matchesSearch = fullName.toLowerCase().includes(searchQuery);
+                const matchesCampus = (selectedCampus === "All" || campus === selectedCampus);
+                const matchesDate = (!startDate || dateStr >= startDate) && (!endDate || dateStr <= endDate);
 
-        list.innerHTML = "";
+                // Only show rows that pass all 3 filters
+                if (matchesSearch && matchesCampus && matchesDate) {
+                    const late = d.autoLate === true || d.late === true;
 
-        snap.forEach(doc=>{
+                    list.innerHTML += `
+                    <tr>
+                        <td><b>${fullName}</b></td>
+                        <td>${campus || '-'}</td>
+                        <td>
+                            ${d.type || '-'}
+                            ${late ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>' : ''}
+                        </td>
+                        <td>
+                            ${dt.toLocaleDateString('en-IN')}<br>
+                            ${dt.toLocaleTimeString('en-IN')}
+                        </td>
+                    </tr>`;
+                }
+            });
 
-            let d = doc.data();
-
-            let name = resolveName(d);
-
-            // ✅ FIRESTORE TIMESTAMP FIX
-            let dt = d.time
-                ? d.time.toDate()
-                : new Date();
-
-            let late =
-                d.autoLate === true ||
-                d.late === true;
-
-            list.innerHTML += `
-
-            <tr>
-
-            <td>
-            <b>${name}</b>
-            </td>
-
-            <td>
-            ${d.campus || '-'}
-            </td>
-
-            <td>
-
-            ${d.type || '-'}
-
-            ${late
-                ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>'
-                : ''
+            if (list.innerHTML === "") {
+                list.innerHTML = `<tr><td colspan="4">No matching records found</td></tr>`;
             }
-
-            </td>
-
-            <td>
-
-            ${dt.toLocaleDateString('en-IN')}
-
-            <br>
-
-            ${dt.toLocaleTimeString('en-IN')}
-
-            </td>
-
-            </tr>`;
         });
-
-        if(list.innerHTML === ""){
-
-            list.innerHTML = `
-            <tr>
-            <td colspan="4">
-            No records found
-            </td>
-            </tr>`;
-        }
-    });
 }
 
 // =====================
