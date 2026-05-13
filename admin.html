@@ -196,12 +196,15 @@ window.onload = () => {
 // =====================
 function loadTeachers(){
 
-    const ts = document.getElementById("teacherSelect");
+    const ts = document.getElementById("manualStaffSelect");
 
     db.collection("teachers").onSnapshot(snap=>{
 
         teachers = [];
-        ts.innerHTML = "<option value=''>Select Staff</option>";
+
+        ts.innerHTML = `
+        <option value="">Select Staff</option>
+        `;
 
         snap.forEach(doc=>{
 
@@ -214,15 +217,14 @@ function loadTeachers(){
             });
 
             ts.innerHTML += `
-            <option value="${doc.id}">
+            <option value="${d.email}">
                 ${d.name}
             </option>`;
         });
 
-        load(); // refresh attendance
+        load();
     });
 }
-
 
 
 // =====================
@@ -612,40 +614,7 @@ function saveWhatsAppImage(){
         a.click();
     });
 }
-    async function adminForceAttendance(type) {
-    const staffEmail = document.getElementById("manualStaffSelect").value;
-    const campus = document.getElementById("manualCampusSelect").value;
-
-    if (!staffEmail) {
-        return alert("Please select a staff member first!");
-    }
-
-    if (confirm(`Admin Action: Force ${type} for ${staffEmail}?`)) {
-        try {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
-            
-            // 8:30 AM is your threshold
-            const isLate = (type === "IN" && timeStr > "08:30:00");
-
-            await db.collection("attendance").add({
-                teacher: staffEmail,
-                teacherEmail: staffEmail,
-                campus: campus,
-                type: type,
-                late: isLate,
-                time: firebase.firestore.Timestamp.fromDate(now),
-                dateOnly: now.toLocaleDateString("en-IN"),
-                method: "Admin Manual Entry"
-            });
-
-            alert(`✅ Success: ${type} recorded for ${staffEmail}`);
-            loadAttendance(); // Refresh your log list at the top
-        } catch (error) {
-            alert("Error: " + error.message);
-        }
-    }
-}
+    
 async function adminForceAttendance(type) {
 
     const staffEmail = document.getElementById("manualStaffSelect").value;
