@@ -226,6 +226,15 @@ z-index:9999;
         <button class="btn btn-salary" onclick="generateSalary()">Process Staff Payroll</button>
         <button class="btn btn-wa" onclick="saveWhatsAppImage()">Export Summary Image</button>
         <div id="output">Salary results will appear here...</div>
+    <button class="btn btn-wa" onclick="sendPayrollWhatsApp()">
+📲 Send Payroll to WhatsApp
+</button>
+
+<button class="btn" 
+style="background:#6a1b9a;color:white;"
+onclick="printPayroll()">
+🖨️ Print Payroll Report
+</button>
     </div>
 
     <div class="section-header">Class-Wise Attendance Overview</div>
@@ -1149,7 +1158,104 @@ async function adminForceAttendance(type) {
             alert("Error: " + error.message);
         }
     }
+}// ===============================
+// ✅ WHATSAPP PAYROLL SHARE
+// ===============================
+
+function sendPayrollWhatsApp(){
+
+    const payrollText =
+    document.getElementById("output").innerText;
+
+    if(!payrollText ||
+       payrollText.includes("Salary results will appear here")){
+
+        return alert("Generate payroll first");
+
+    }
+
+    const encoded =
+    encodeURIComponent(payrollText);
+
+    window.open(
+        `https://wa.me/?text=${encoded}`,
+        '_blank'
+    );
+
 }
+
+
+
+// ===============================
+// ✅ PRINT PAYROLL
+// ===============================
+
+function printPayroll(){
+
+    const payroll =
+    document.getElementById("output").innerText;
+
+    if(!payroll ||
+       payroll.includes("Salary results will appear here")){
+
+        return alert("Generate payroll first");
+
+    }
+
+    const win = window.open('', '', 'width=900,height=700');
+
+    win.document.write(`
+
+    <html>
+
+    <head>
+
+    <title>
+    VGA Payroll Report
+    </title>
+
+    <style>
+
+    body{
+        font-family:Arial;
+        padding:30px;
+        white-space:pre-wrap;
+        line-height:1.6;
+    }
+
+    h1{
+        text-align:center;
+        color:#1a237e;
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <h1>
+    VEERAMALLU GLOBAL ACADEMY
+    <br>
+    PAYROLL REPORT
+    </h1>
+
+    <hr>
+
+    ${payroll.replace(/\n/g,"<br>")}
+
+    </body>
+
+    </html>
+
+    `);
+
+    win.document.close();
+
+    win.print();
+
+}
+    
 
 </script>
 </body>
