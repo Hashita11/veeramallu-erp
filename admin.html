@@ -120,9 +120,18 @@
     </select>
 
     <div style="display:flex; gap:10px;">
-        <button onclick="adminforceAttendance('IN')"" style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">FORCE IN</button>
-        <button onclick="adminforceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">FORCE OUT</button>
-    </div>
+    
+    <button onclick="adminForceAttendance('IN')" 
+    style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">
+    FORCE IN
+    </button>
+
+    <button onclick="adminForceAttendance('OUT')" 
+    style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">
+    FORCE OUT
+    </button>
+
+</div>
 </div>
 
 
@@ -226,18 +235,6 @@ function loadTeachers(){
     });
 }
 
-
-// =====================
-// ✅ NAME FIX (IMPORTANT)
-// =====================
-function resolveName(d){
-    return d.name
-        || teachers.find(t=>t.uid==d.teacherId)?.name
-        || teachers.find(t=>t.email==d.teacherEmail)?.name
-        || teachers.find(t=>t.email==d.teacher)?.name
-        || d.teacher
-        || "Unknown";
-}
 
 // =====================
 // ✅ ATTENDANCE LOAD WITH ACTIVE FILTERS
