@@ -742,37 +742,68 @@ async function deleteMarksRecord() {
 // =====================
 // ✅ CLASS ATTENDANCE
 // =====================
-async function checkClassAttendance(){
+async function checkClassAttendance() {
 
-    const campus=document.getElementById('viewCampus').value;
-    const cls=document.getElementById('viewClass').value;
-    const date=document.getElementById('viewDate').value;
+    const campus = document.getElementById('viewCampus').value;
+    const cls = document.getElementById('viewClass').value;
+    const dateInput = document.getElementById('viewDate').value;
 
-    if(!date) return alert("Select date");
-
-    const docID=`${campus}_${cls}_${date}`;
-
-    let doc=await db.collection("attendance").doc(docID).get();
-
-    let box=document.getElementById("classReport");
-
-    if(!doc.exists){
-        box.innerHTML="No data";
-        return;
+    if (!dateInput) {
+        return alert("Please select a date");
     }
 
-    let data=doc.data();
-    let present=data.records.filter(r=>r.status==="Present");
+    const docID = `${campus}_${cls}_${dateInput}`;
 
-    let html=`Present: ${present.length}/${data.records.length}<br><hr>`;
+    try {
 
-    present.forEach((s,i)=>{
-        html+=`${i+1}. ${s.studentName}<br>`;
-    });
+        const doc = await db.collection("daily_attendance").doc(docID).get();
 
-    box.innerHTML=html;
+        const box = document.getElementById("classReport");
+
+        if (!doc.exists) {
+
+            box.innerHTML = `
+            <span style='color:red;'>
+            No records found for:
+            ${docID}
+            </span>
+            `;
+
+            return;
+        }
+
+        const data = doc.data();
+
+        const records = data.records || [];
+
+        const presentMembers = records.filter(r => r.status === "Present");
+
+        let html = `
+        <b>
+        Total Present:
+        ${presentMembers.length} / ${records.length}
+        </b>
+        <br><hr>
+        `;
+
+        presentMembers.forEach((member, i) => {
+
+            html += `
+            ${i + 1}. ${member.name}<br>
+            `;
+
+        });
+
+        box.innerHTML = html;
+
+    } catch (error) {
+
+        console.error("Detailed Error:", error);
+
+        alert("Error loading attendance data");
+
+    }
 }
-
 
 
 // =====================
