@@ -253,20 +253,26 @@ z-index:9999;
    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
     
-<div style="margin-top:30px;">
-    
+<!-- LOGOUT BUTTON -->
+<div style="
+margin-top:30px;
+padding-top:20px;
+border-top:2px dashed #ccc;
+">
+
     <button onclick="logoutAdmin()" style="
-    background:#d32f2f;
+    width:100%;
+    background:linear-gradient(135deg,#d32f2f,#b71c1c);
     color:white;
     border:none;
-    padding:14px 25px;
-    border-radius:10px;
-    font-size:16px;
+    padding:16px;
+    border-radius:12px;
+    font-size:17px;
     font-weight:bold;
     cursor:pointer;
-    width:100%;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
     ">
-        🚪 LOGOUT ADMIN
+        🚪 LOGOUT ADMIN PANEL
     </button>
 
 </div>
@@ -342,7 +348,7 @@ function adminLogin(){
 }
     
 // =====================
-// ✅ LOGOUT
+// ✅ LOGOUT ADMIN
 // =====================
 
 function logoutAdmin(){
@@ -351,13 +357,17 @@ function logoutAdmin(){
 
     .then(()=>{
 
-        // hide dashboard
-        document.getElementById("capture").style.display = "none";
-
-        // show login page
+        // show login screen again
         document.getElementById("adminLoginPage").style.display = "flex";
 
-        alert("Logged Out");
+        // clear fields
+        document.getElementById("adminEmail").value = "";
+        document.getElementById("adminPassword").value = "";
+
+        // scroll top
+        window.scrollTo(0,0);
+
+        alert("✅ Logged Out Successfully");
 
     })
 
@@ -367,16 +377,19 @@ function logoutAdmin(){
 
     });
 }
-
 // =====================
-// ✅ CHECK LOGIN STATE
+// ✅ AUTH STATE CHECK
 // =====================
 
 auth.onAuthStateChanged((user)=>{
 
-    if(user && user.email==="admin@vga.com"){
+    if(user && user.email === "admin@vga.com"){
 
-        document.getElementById("adminLoginPage").style.display="none";
+        document.getElementById("adminLoginPage").style.display = "none";
+
+    } else {
+
+        document.getElementById("adminLoginPage").style.display = "flex";
 
     }
 
