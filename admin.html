@@ -252,7 +252,24 @@ z-index:9999;
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
 </div>
+    
+<div style="margin-top:30px;">
+    
+    <button onclick="logoutAdmin()" style="
+    background:#d32f2f;
+    color:white;
+    border:none;
+    padding:14px 25px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    width:100%;
+    ">
+        🚪 LOGOUT ADMIN
+    </button>
 
+</div>
 <script>
 
 
@@ -323,7 +340,33 @@ function adminLogin(){
 
 });
 }
+    
+// =====================
+// ✅ LOGOUT
+// =====================
 
+function logoutAdmin(){
+
+    auth.signOut()
+
+    .then(()=>{
+
+        // hide dashboard
+        document.getElementById("capture").style.display = "none";
+
+        // show login page
+        document.getElementById("adminLoginPage").style.display = "flex";
+
+        alert("Logged Out");
+
+    })
+
+    .catch((error)=>{
+
+        alert(error.message);
+
+    });
+}
 
 // =====================
 // ✅ CHECK LOGIN STATE
