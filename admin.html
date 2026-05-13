@@ -251,17 +251,18 @@ z-index:9999;
     <div class="section-header">NOTICE BOARD BROADCAST</div>
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
    <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
-</div>
-    
-<!-- LOGOUT BUTTON -->
+    <!-- LOGOUT BUTTON -->
 <div style="
+width:100%;
 margin-top:30px;
-padding-top:20px;
-border-top:2px dashed #ccc;
+display:flex;
+justify-content:center;
+align-items:center;
 ">
 
     <button onclick="logoutAdmin()" style="
     width:100%;
+    max-width:350px;
     background:linear-gradient(135deg,#d32f2f,#b71c1c);
     color:white;
     border:none;
@@ -274,7 +275,6 @@ border-top:2px dashed #ccc;
     ">
         🚪 LOGOUT ADMIN PANEL
     </button>
-
 </div>
 <script>
 
