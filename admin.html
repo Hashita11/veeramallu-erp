@@ -120,8 +120,8 @@
     </select>
 
     <div style="display:flex; gap:10px;">
-        <button onclick="adminForceAttendance('IN')" style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">FORCE IN</button>
-        <button onclick="adminForceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">FORCE OUT</button>
+        <button onclick="adminforceAttendance('IN')"" style="background:#4caf50; color:white; flex:1; padding:12px; border-radius:8px;">FORCE IN</button>
+        <button onclick="adminforceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px;">FORCE OUT</button>
     </div>
 </div>
 
@@ -646,7 +646,59 @@ function saveWhatsAppImage(){
         }
     }
 }
+async function adminForceAttendance(type) {
 
+    const staffEmail = document.getElementById("manualStaffSelect").value;
+    const campus = document.getElementById("manualCampusSelect").value;
+
+    if (!staffEmail) {
+        return alert("Please select a staff member first!");
+    }
+
+    if (confirm(`Admin Action: Force ${type} for ${staffEmail}?`)) {
+
+        try {
+
+            const now = new Date();
+
+            const timeStr = now.toLocaleTimeString("en-GB", {
+                hour12: false
+            });
+
+            const isLate = (
+                type === "IN" &&
+                timeStr > "08:30:00"
+            );
+
+            await db.collection("attendance").add({
+
+                teacher: staffEmail,
+                teacherEmail: staffEmail,
+
+                campus: campus,
+                type: type,
+
+                late: isLate,
+
+                time: firebase.firestore.Timestamp.fromDate(now),
+
+                fullTimestamp: now.toISOString(),
+
+                dateOnly: now.toISOString().split('T')[0],
+
+                method: "Admin Manual Entry"
+            });
+
+            alert(`✅ Success: ${type} recorded`);
+
+            load();
+
+        } catch (error) {
+
+            alert("Error: " + error.message);
+        }
+    }
+}
 
 </script>
 </body>
