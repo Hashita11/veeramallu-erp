@@ -1,357 +1,1144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Portal | Veeramallu Global Academy</title>
-    
-    <style>
-        :root { 
-            --primary: #1a237e; 
-            --success: #28a745; 
-            --error: #d32f2f; 
-            --warning: #fbc02d; 
-        }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f0f2f5; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Portal | Veeramallu Global Academy</title>
 
-        .card { 
-            background: white; 
-            padding: 2rem; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 400px; 
-            text-align: center; 
-        }
+<style>
+:root{
+    --primary:#1a237e;
+    --success:#28a745;
+    --danger:#e65100;
+    --warning:#fbc02d;
+    --light:#f0f2f5;
+}
 
-        .logo { max-width: 100px; margin-bottom: 1rem; }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .form-group { margin-bottom: 1.2rem; text-align: left; }
+body{
+    font-family:Segoe UI,sans-serif;
+    background:var(--light);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    padding:20px;
+    transition:.3s;
+}
 
-        label { 
-            display: block; 
-            margin-bottom: 0.4rem; 
-            font-weight: 600; 
-            color: #4a5568; 
-            font-size: 0.9rem; 
-        }
+.card{
+    width:100%;
+    max-width:430px;
+    background:white;
+    padding:25px;
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,.12);
+    text-align:center;
+}
 
-        select, input { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            outline: none; 
-        }
+.logo{
+    width:90px;
+    margin:auto;
+    display:block;
+    margin-bottom:15px;
+}
 
-        select:focus, input:focus { border-color: var(--primary); }
+h2{
+    color:var(--primary);
+    margin-bottom:15px;
+}
 
-        .btn-container { display: flex; gap: 10px; margin-top: 15px; flex-direction: column; }
+.form-group{
+    margin-bottom:15px;
+    text-align:left;
+}
 
-        button { 
-            width: 100%;
-            padding: 14px; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: 0.3s; 
-        }
+label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+}
 
-        .btn-login { background: var(--primary); }
-        .btn-in { background: var(--success); }
-        .btn-out { background: #e65100; }
+input,select{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:15px;
+}
 
-        .btn-secondary { 
-            display: block; 
-            width: 100%; 
-            background-color: transparent; 
-            color: var(--primary); 
-            padding: 12px; 
-            border: 2px solid var(--primary); 
-            border-radius: 8px; 
-            font-weight: bold; 
-            text-align: center; 
-            text-decoration: none; 
-            margin-top: 10px;
-            box-sizing: border-box; 
-            transition: 0.3s; 
-        }
+button{
+    width:100%;
+    padding:13px;
+    border:none;
+    border-radius:8px;
+    margin-top:10px;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+}
 
-        .btn-secondary:hover { background-color: var(--primary); color: white; }
+.btn-login{
+    background:var(--primary);
+    color:white;
+}
 
-        button:disabled { background: #cbd5e0 !important; cursor: not-allowed; }
+.btn-in{
+    background:var(--success);
+    color:white;
+    flex:1;
+}
 
-        #attendanceSection { display: none; }
+.btn-out{
+    background:var(--danger);
+    color:white;
+    flex:1;
+}
 
-        .status-box { 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            font-weight: bold; 
-            background: #fffde7; 
-            border: 1px solid var(--warning); 
-            font-size: 0.9rem; 
-        }
+.btn-secondary{
+    background:white;
+    border:2px solid var(--primary);
+    color:var(--primary);
+}
 
-        .teacher-info { 
-            margin-bottom: 15px; 
-            padding: 12px; 
-            background: #e3f2fd; 
-            border-radius: 10px; 
-            border: 1px solid var(--primary); 
-        }
-    </style>
+.btn-purple{
+    background:#6a1b9a;
+    color:white;
+}
+
+.btn-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+#attendanceSection{
+    display:none;
+}
+
+.teacher-info{
+    background:#e3f2fd;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    border:1px solid var(--primary);
+}
+
+.status-box{
+    padding:14px;
+    border-radius:8px;
+    margin:15px 0;
+    background:#fffde7;
+    border:1px solid var(--warning);
+    font-weight:bold;
+}
+
+.profile-wrapper{
+    position:relative;
+    display:inline-block;
+}
+
+.profile-pic{
+    width:100px;
+    height:100px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid var(--primary);
+}
+
+.camera-btn{
+    position:absolute;
+    bottom:0;
+    right:0;
+    background:var(--primary);
+    color:white;
+    width:32px;
+    height:32px;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    border:2px solid white;
+    font-size:14px;
+}
+
+.small{
+    font-size:12px;
+    margin-top:5px;
+}
+
+.darkMode{
+    background:#111 !important;
+}
+
+.darkMode .card{
+    background:#1e1e1e;
+    color:white;
+}
+
+.darkMode input,
+.darkMode select{
+    background:#333;
+    color:white;
+    border:1px solid #555;
+}
+
+.darkMode .teacher-info{
+    background:#222;
+}
+
+.darkMode .btn-secondary{
+    background:#222;
+    color:white;
+    border:1px solid white;
+}
+</style>
 </head>
+
 <body>
 
 <div class="card">
-    <img src="logo.png" alt="VGA Logo" class="logo" onerror="this.src='https://via.placeholder.com/100?text=VGA'">
-    
-    <div id="loginSection">
-        <h2 style="color: var(--primary); margin-top: 0;">Teacher Login</h2>
-        <div class="form-group">
-            <label>Select Campus</label>
-            <select id="campus">
-                <option value="Relangi">Relangi</option>
-                <option value="Velpur">Velpur</option>
-                <option value="Undrajavaram">Undrajavaram</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Email ID</label>
-            <input type="email" id="email" placeholder="teacher@vga.com">
-        </div>
-        <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="password" placeholder="••••••••">
-        </div>
-        <button class="btn-login" onclick="handleLogin()">Sign In</button>
-        <button class="btn-secondary" onclick="registerTeacher()">Create Account</button>
-        <p id="loginError" style="color:var(--error); display:none; font-size:0.8rem; margin-top:10px;"></p>
+
+<img src="logo.png"
+class="logo"
+onerror="this.src='https://via.placeholder.com/100?text=VGA'">
+
+<button onclick="toggleDarkMode()"
+style="background:#111;color:white;margin-bottom:15px;">
+🌙 Toggle Dark Mode
+</button>
+
+<!-- LOGIN SECTION -->
+
+<div id="loginSection">
+
+    <h2>Teacher Login</h2>
+
+    <div class="form-group">
+        <label>Select Campus</label>
+
+        <select id="campus">
+            <option value="Relangi">Relangi</option>
+            <option value="Velpur">Velpur</option>
+            <option value="Undrajavaram">Undrajavaram</option>
+        </select>
     </div>
 
-    <div id="attendanceSection">
-        <div class="teacher-info">
-            <h2 id="welcomeMsg" style="margin:0; color: var(--primary); font-size: 1.1rem;">Hello!</h2>
-            <p id="teacherEmailDisplay" style="margin:5px 0 0 0; font-size: 0.8rem; color: #444;"></p>
-        </div>
-        <p id="campusDisplay" style="color: var(--primary); font-weight: bold; margin: 10px 0;"></p>
-        
-        <div class="status-box" id="gpsStatus">Initializing GPS...</div>
-        
-        <div class="btn-container">
-            <button id="btnIn" class="btn-in" onclick="markAttendance('IN')" disabled>Check IN</button>
-            <button id="btnOut" class="btn-out" onclick="markAttendance('OUT')" disabled>Check OUT</button>
-            <button class="btn-secondary" onclick="goToAdmission()">New Admission Portal</button>
-        </div>
-        
-        <button onclick="location.reload()" style="background:#6c757d; width:100%; margin-top:20px; padding: 10px; font-size: 0.8rem;">Logout / Reset</button>
+    <div class="form-group">
+        <label>Email</label>
+
+        <input type="email"
+        id="email"
+        placeholder="teacher@vga.com">
     </div>
+
+    <div class="form-group">
+        <label>Password</label>
+
+        <input type="password"
+        id="password"
+        placeholder="••••••••">
+    </div>
+
+    <button class="btn-login"
+    onclick="handleLogin()">
+    Sign In
+    </button>
+
+    <button class="btn-secondary"
+    onclick="registerTeacher()">
+    Create Account
+    </button>
+
+    <p id="loginError"
+    style="color:red;margin-top:10px;display:none;">
+    </p>
+
 </div>
 
+<!-- ATTENDANCE SECTION -->
+
+<div id="attendanceSection">
+
+    <div class="teacher-info">
+
+        <div class="profile-wrapper">
+
+            <img id="profilePic"
+            class="profile-pic"
+            src="https://via.placeholder.com/150?text=User">
+
+            <label for="photoUpload"
+            class="camera-btn">📷</label>
+
+            <input type="file"
+            id="photoUpload"
+            accept="image/*"
+            style="display:none"
+            onchange="uploadPhoto(this)">
+
+        </div>
+
+        <h2 id="welcomeMsg"
+        style="margin-top:10px;">
+        Welcome!
+        </h2>
+
+        <p id="teacherEmailDisplay" class="small"></p>
+
+        <p id="campusDisplay"
+        class="small"
+        style="font-weight:bold;color:var(--primary);">
+        </p>
+
+        <p id="onlineStatus"
+        style="color:green;font-weight:bold;margin-top:5px;">
+        🟢 Online
+        </p>
+
+        <p id="currentTime" class="small"></p>
+
+    </div>
+
+    <div class="status-box"
+    id="gpsStatus">
+    Checking GPS...
+    </div>
+
+    <div class="btn-row">
+
+        <button id="btnIn"
+        class="btn-in"
+        disabled
+        onclick="markAttendance('IN')">
+        Check IN
+        </button>
+
+        <button id="btnOut"
+        class="btn-out"
+        disabled
+        onclick="markAttendance('OUT')">
+        Check OUT
+        </button>
+
+    </div>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='admissions.html'">
+    New Admission Portal
+    </button>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='attendance.html'">
+    Student Attendance
+    </button>
+
+    <button class="btn-secondary"
+    onclick="goToAdmin()">
+    Admin Dashboard
+    </button>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='marks-entry.html'">
+    📝 Marks Entry
+    </button>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='homework.html'">
+    Homework Upload
+    </button>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='salary-slip.html'">
+    Salary Slip
+    </button>
+
+    <button class="btn-secondary"
+    onclick="generateIDCard()">
+    Generate ID Card
+    </button>
+
+    <button class="btn-secondary"
+    onclick="window.location.href='bus-tracker.html'">
+    Bus Tracking
+    </button>
+
+    <button class="btn-purple"
+    onclick="viewTodayAttendance()">
+    Today's Attendance
+    </button>
+
+    <button onclick="logoutUser()"
+    style="background:#6c757d;color:white;">
+    Logout
+    </button>
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // --- CONFIGURATION ---
-    const LATE_THRESHOLD = "08:30:00";
-    const campusCoords = {
-        "Relangi": { lat: 16.702710, lng: 81.644140 },
-        "Velpur": { lat: 16.719772, lng: 81.662377 },
-        "Undrajavaram": { lat: 16.791772, lng: 81.701022 }
-    };
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-        authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-        projectId: "veeramalluerp-6cac5",
-        storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-        messagingSenderId: "379339569496",
-        appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
-    };
+const firebaseConfig = {
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+    projectId: "veeramalluerp-6cac5",
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
+    messagingSenderId: "379339569496",
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
 
-    // 1. LOGIN LOGIC
-    function handleLogin() {
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const campus = document.getElementById('campus').value;
-        const errDisplay = document.getElementById('loginError');
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-        if(!email || !password) {
-            errDisplay.innerText = "Please enter credentials";
-            errDisplay.style.display = "block";
-            return;
-        }
+const LATE_THRESHOLD = "08:30:00";
 
-        auth.signInWithEmailAndPassword(email, password).then((u) => {
-            sessionStorage.setItem('activeCampus', campus);
-            document.getElementById('loginSection').style.display = 'none';
-            document.getElementById('attendanceSection').style.display = 'block';
-            
-            const namePart = u.user.email.split('@')[0].toUpperCase();
-            document.getElementById('welcomeMsg').innerText = "Welcome, " + namePart;
-            document.getElementById('teacherEmailDisplay').innerText = u.user.email;
-            document.getElementById('campusDisplay').innerText = "Campus: " + campus;
-            
-            startGPSCheck(campus);
-        }).catch(err => {
-            errDisplay.innerText = "Error: " + err.message;
-            errDisplay.style.display = 'block';
-        });
+const campusCoords = {
+
+    "Relangi": {
+        lat: 16.702710,
+        lng: 81.644140
+    },
+
+    "Velpur": {
+        lat: 16.719772,
+        lng: 81.662377
+    },
+
+    "Undrajavaram": {
+        lat: 16.791772,
+        lng: 81.701022
+    }
+};
+
+
+
+// AUTO LOGIN CHECK
+
+auth.onAuthStateChanged(async(user)=>{
+
+    if(!user){
+
+        document.getElementById("loginSection").style.display = "block";
+
+        document.getElementById("attendanceSection").style.display = "none";
+
+        return;
     }
 
-    // 2. GEOLOCATION LOGIC
-    function startGPSCheck(cName) {
-        if (navigator.geolocation) {
-            navigator.geolocation.watchPosition((pos) => {
-                const dist = calculateDistance(
-                    pos.coords.latitude, 
-                    pos.coords.longitude, 
-                    campusCoords[cName].lat, 
-                    campusCoords[cName].lng
-                );
-                
-                const statusBox = document.getElementById('gpsStatus');
-                const bIn = document.getElementById('btnIn');
-                const bOut = document.getElementById('btnOut');
+    document.getElementById("loginSection").style.display = "none";
 
-                // 50 meter radius for school boundary
-                if (dist <= 50) {
-                    statusBox.innerHTML = "<span style='color:green;'>✔ Verified: Inside Campus</span>";
-                    statusBox.style.borderColor = "green";
-                    bIn.disabled = false;
-                    bOut.disabled = false;
-                } else {
-                    statusBox.innerHTML = `<span style='color:red;'>✖ Outside Campus (${Math.round(dist)}m)</span><br><small>Move closer to ${cName} campus</small>`;
-                    statusBox.style.borderColor = "red";
-                    bIn.disabled = true;
-                    bOut.disabled = true;
+    document.getElementById("attendanceSection").style.display = "block";
+
+    const campus =
+    sessionStorage.getItem("activeCampus") || "";
+
+    document.getElementById("welcomeMsg").innerText =
+    "Welcome, " +
+    user.email.split("@")[0].toUpperCase();
+
+    document.getElementById("teacherEmailDisplay").innerText =
+    user.email;
+
+    document.getElementById("campusDisplay").innerText =
+    "Campus: " + campus;
+
+    loadTeacherPhoto();
+
+    startGPSCheck(campus);
+});
+
+
+
+// LOGIN
+
+async function handleLogin(){
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const campus =
+        document.getElementById("campus").value;
+
+    const errorBox =
+        document.getElementById("loginError");
+
+    errorBox.style.display = "none";
+
+    if(!email || !password){
+
+        errorBox.style.display = "block";
+        errorBox.innerText = "Enter Email and Password";
+
+        return;
+    }
+
+    try{
+
+        // LOGIN
+        const userCredential =
+            await auth.signInWithEmailAndPassword(
+                email,
+                password
+            );
+
+        // SAVE CAMPUS
+        sessionStorage.setItem(
+            "activeCampus",
+            campus
+        );
+
+        // HIDE LOGIN
+        document.getElementById(
+            "loginSection"
+        ).style.display = "none";
+
+        // SHOW DASHBOARD
+        document.getElementById(
+            "attendanceSection"
+        ).style.display = "block";
+
+        // USER DETAILS
+        const user = userCredential.user;
+
+        document.getElementById(
+            "welcomeMsg"
+        ).innerText =
+            "Welcome, " +
+            user.email.split("@")[0].toUpperCase();
+
+        document.getElementById(
+            "teacherEmailDisplay"
+        ).innerText = user.email;
+
+        document.getElementById(
+            "campusDisplay"
+        ).innerText =
+            "Campus: " + campus;
+
+        // LOAD PHOTO
+        loadTeacherPhoto();
+
+        // START GPS
+        startGPSCheck(campus);
+
+        alert("✅ Login Successful");
+
+    } catch(error){
+
+        errorBox.style.display = "block";
+
+        errorBox.innerText =
+            error.message;
+    }
+}
+// REGISTER TEACHER
+
+async function registerTeacher(){
+
+    const email =
+    document.getElementById("email").value.trim();
+
+    const password =
+    document.getElementById("password").value;
+
+    if(!email || !password){
+
+        alert("Enter email & password");
+
+        return;
+    }
+
+    try{
+
+        const userCred =
+        await auth.createUserWithEmailAndPassword(
+            email,
+            password
+        );
+
+        await db.collection("teachers")
+        .doc(userCred.user.uid)
+        .set({
+
+            uid: userCred.user.uid,
+
+            email: email,
+
+            createdAt: new Date()
+
+        },{ merge:true });
+
+        alert("✅ Account Created Successfully");
+
+    }catch(err){
+
+        alert(err.message);
+    }
+}
+
+
+
+// LOAD PHOTO
+
+async function loadTeacherPhoto(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const doc =
+    await db.collection("teachers")
+    .doc(user.uid)
+    .get();
+
+    if(doc.exists && doc.data().photo){
+
+        document.getElementById("profilePic").src =
+        doc.data().photo;
+    }
+}
+
+
+
+// UPLOAD PHOTO
+
+async function uploadPhoto(input){
+
+    const file = input.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async(e)=>{
+
+        const img = new Image();
+
+        img.onload = async()=>{
+
+            const canvas =
+            document.createElement("canvas");
+
+            const ctx =
+            canvas.getContext("2d");
+
+            let width = img.width;
+            let height = img.height;
+
+            const MAX = 250;
+
+            if(width > height){
+
+                if(width > MAX){
+
+                    height *= MAX/width;
+
+                    width = MAX;
                 }
-            }, (err) => {
-                document.getElementById('gpsStatus').innerText = "GPS Error: Please enable location services.";
-            }, { enableHighAccuracy: true });
-        } else {
-            alert("Geolocation is not supported by this browser.");
-        }
-    }
 
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth radius in meters
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
+            }else{
 
-    // 3. ATTENDANCE SUBMISSION
-    async function markAttendance(type) {
-        const campus = sessionStorage.getItem('activeCampus');
-        const teacherEmail = auth.currentUser.email;
-        const now = new Date();
-        const todayStr = now.toLocaleDateString('en-IN'); // Format matches admin portal date strings
+                if(height > MAX){
 
-        try {
-            const btn = type === 'IN' ? document.getElementById('btnIn') : document.getElementById('btnOut');
-            btn.disabled = true; 
+                    width *= MAX/height;
 
-            // Check if teacher already submitted this 'type' today
-            const snapshot = await db.collection("attendance")
-                .where("teacher", "==", teacherEmail)
-                .where("type", "==", type)
-                .where("dateOnly", "==", todayStr)
-                .get();
-
-            if (!snapshot.empty) {
-                alert(`Error: ${type} already recorded for today (${todayStr}).`);
-                btn.disabled = false;
-                return;
+                    height = MAX;
+                }
             }
 
-            const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
-            const isLate = (type === 'IN' && timeStr > LATE_THRESHOLD);
+            canvas.width = width;
+            canvas.height = height;
 
-            await db.collection("attendance").add({
-                teacher: teacherEmail,
-                teacherEmail: teacherEmail,
-                name: teacherEmail.split('@')[0],
-                campus: campus,
-                type: type,
-                time: firebase.firestore.Timestamp.fromDate(now),
-                dateOnly: todayStr,
-                dateISO: now.toISOString(),
-                late: isLate,
-                method: "VGA-Teacher-App"
-            });
+            ctx.drawImage(img,0,0,width,height);
 
-            alert(`Success! ${type} recorded at ${timeStr}${isLate ? " (LATE ENTRY)" : ""}`);
-        } catch (err) {
-            console.error("Firestore Error:", err);
-            alert("Submission Failed: " + err.message);
-            document.getElementById(type === 'IN' ? 'btnIn' : 'btnOut').disabled = false;
-        }
+            const compressedImage =
+            canvas.toDataURL("image/jpeg",0.7);
+
+            const user =
+            auth.currentUser;
+
+            await db.collection("teachers")
+            .doc(user.uid)
+            .set({
+                photo: compressedImage
+            }, { merge:true });
+
+            document.getElementById("profilePic").src =
+            compressedImage;
+
+            alert("✅ Photo Uploaded");
+        };
+
+        img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
+}
+
+
+
+// DISTANCE CALCULATOR
+
+function calculateDistance(lat1,lon1,lat2,lon2){
+
+    const R = 6371e3;
+
+    const dLat =
+    (lat2-lat1)*Math.PI/180;
+
+    const dLon =
+    (lon2-lon1)*Math.PI/180;
+
+    const a =
+    Math.sin(dLat/2)*Math.sin(dLat/2)+
+    Math.cos(lat1*Math.PI/180)*
+    Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)*
+    Math.sin(dLon/2);
+
+    return R*2*Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1-a)
+    );
+}
+
+
+
+// GPS CHECK
+
+function startGPSCheck(){
+
+    if(!navigator.geolocation){
+
+        document.getElementById("gpsStatus").innerHTML =
+        "<span style='color:red;'>GPS Not Supported</span>";
+
+        return;
     }
 
-    // 4. REGISTRATION LOGIC
-    async function registerTeacher() {
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
+    navigator.geolocation.watchPosition(
 
-        if (!email || !password) {
-            alert("Enter email & password first");
-            return;
-        }
+    (pos)=>{
 
-        try {
-            const snap = await db.collection("teachers")
-                .where("email", "==", email)
-                .get();
+        const userLat =
+        pos.coords.latitude;
 
-            if (snap.empty) {
-                alert("❌ You are not registered in the system by the admin.");
-                return;
+        const userLng =
+        pos.coords.longitude;
+
+        let nearestCampus = "";
+
+        let nearestDistance = Infinity;
+
+        for(const [name,coords]
+        of Object.entries(campusCoords)){
+
+            const distance =
+            calculateDistance(
+                userLat,
+                userLng,
+                coords.lat,
+                coords.lng
+            );
+
+            if(distance < nearestDistance){
+
+                nearestDistance = distance;
+
+                nearestCampus = name;
             }
-
-            const userCred = await auth.createUserWithEmailAndPassword(email, password);
-            const docId = snap.docs[0].id;
-            
-            // Link the Auth UID to the Teacher document
-            await db.collection("teachers").doc(docId).update({ uid: userCred.user.uid });
-            
-            alert("✅ Account Created! You can now Sign In.");
-        } catch (err) {
-            alert("Error: " + err.message);
         }
+
+        sessionStorage.setItem(
+            "activeCampus",
+            nearestCampus
+        );
+
+        document.getElementById("campusDisplay").innerText =
+        "Campus: " + nearestCampus;
+
+        const gpsStatus =
+        document.getElementById("gpsStatus");
+
+        const btnIn =
+        document.getElementById("btnIn");
+
+        const btnOut =
+        document.getElementById("btnOut");
+
+        if(nearestDistance <= 50){
+
+            gpsStatus.innerHTML =
+            `✔ Inside ${nearestCampus}
+            (${Math.round(nearestDistance)}m)`;
+
+            gpsStatus.style.color = "green";
+
+            btnIn.disabled = false;
+
+            btnOut.disabled = false;
+
+        }else{
+
+            gpsStatus.innerHTML =
+            `✖ Outside Campus
+            (${Math.round(nearestDistance)}m)`;
+
+            gpsStatus.style.color = "red";
+
+            btnIn.disabled = true;
+
+            btnOut.disabled = true;
+        }
+
+    },
+
+    (err)=>{
+
+        document.getElementById("gpsStatus").innerHTML =
+        "GPS Error";
+    },
+
+    {
+        enableHighAccuracy:true
+    });
+}
+
+
+
+// MARK ATTENDANCE
+
+async function markAttendance(type) {
+
+    const btnIn = document.getElementById("btnIn");
+    const btnOut = document.getElementById("btnOut");
+
+    btnIn.disabled = true;
+    btnOut.disabled = true;
+
+    if(type === "IN"){
+        btnIn.innerText = "Processing...";
+    } else {
+        btnOut.innerText = "Processing...";
     }
 
-    function goToAdmission() {
+    try {
+
         const user = auth.currentUser;
-        if (!user) {
+
+        if(!user){
             alert("Please login first");
             return;
         }
-        sessionStorage.setItem("teacherEmail", user.email);
-        window.location.href = "admissions.html";
+
+        const teacher = user.email;
+
+        const campus =
+            sessionStorage.getItem("activeCampus");
+
+        const now = new Date();
+
+        const today =
+            now.toLocaleDateString("en-IN");
+
+        const timeStr =
+            now.toLocaleTimeString("en-GB", {
+                hour12:false
+            });
+
+        // CHECK TODAY RECORDS
+        const snapshot = await db.collection("attendance")
+            .where("teacherEmail","==",teacher)
+            .where("dateOnly","==",today)
+            .get();
+
+        let alreadyIN = false;
+        let alreadyOUT = false;
+
+        snapshot.forEach(doc => {
+
+            const data = doc.data();
+
+            if(data.type === "IN"){
+                alreadyIN = true;
+            }
+
+            if(data.type === "OUT"){
+                alreadyOUT = true;
+            }
+        });
+
+        // RULES
+
+        // DUPLICATE IN
+        if(type === "IN" && alreadyIN){
+
+            alert("✅ IN already marked today");
+
+            return;
+        }
+
+        // OUT BEFORE IN
+        if(type === "OUT" && !alreadyIN){
+
+            alert("❌ First mark IN attendance");
+
+            return;
+        }
+
+        // DUPLICATE OUT
+        if(type === "OUT" && alreadyOUT){
+
+            alert("✅ OUT already marked today");
+
+            return;
+        }
+
+        // SAVE ATTENDANCE
+        await db.collection("attendance").add({
+
+            teacher: teacher,
+
+            teacherEmail: teacher,
+
+            campus: campus,
+
+            type: type,
+
+            late:
+                type === "IN" &&
+                timeStr > LATE_THRESHOLD,
+
+            time:
+                firebase.firestore.Timestamp.fromDate(now),
+
+            dateOnly: today,
+
+            method: "Teacher App"
+
+        });
+
+        alert("✅ " + type + " Marked Successfully");
+
+    } catch(error){
+
+        alert("❌ " + error.message);
+
+    } finally {
+
+        btnIn.disabled = false;
+        btnOut.disabled = false;
+
+        btnIn.innerText = "Check IN";
+        btnOut.innerText = "Check OUT";
     }
+}
+
+// TODAY ATTENDANCE
+
+async function viewTodayAttendance(){
+
+    const today =
+    new Date().toLocaleDateString("en-IN");
+
+    const snap =
+    await db.collection("attendance")
+
+    .where(
+        "teacherEmail",
+        "==",
+        auth.currentUser.email
+    )
+
+    .where(
+        "dateOnly",
+        "==",
+        today
+    )
+
+    .get();
+
+    let msg =
+    "Today's Attendance\n\n";
+
+    snap.forEach(doc=>{
+
+        msg +=
+        doc.data().type +
+        " - " +
+        new Date(
+            doc.data().time.seconds*1000
+        ).toLocaleTimeString() +
+        "\n";
+    });
+
+    alert(msg);
+}
+
+
+
+// ID CARD
+
+function generateIDCard(){
+
+    const profileImg =
+    document.getElementById("profilePic").src;
+
+    const name =
+    auth.currentUser.email
+    .split("@")[0]
+    .toUpperCase();
+
+    const campus =
+    sessionStorage.getItem("activeCampus");
+
+    const div =
+    document.createElement("div");
+
+    div.style.position = "fixed";
+
+    div.style.left = "-9999px";
+
+    div.innerHTML = `
+
+    <div id="tempID"
+    style="
+    width:320px;
+    padding:20px;
+    background:white;
+    border:5px solid #1a237e;
+    border-radius:20px;
+    text-align:center;
+    font-family:Arial;">
+
+    <h2 style="color:#1a237e;">
+    VGA
+    </h2>
+
+    <img src="${profileImg}"
+    style="
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid #1a237e;
+    margin-top:15px;">
+
+    <h3 style="
+    margin-top:20px;
+    font-size:30px;">
+    ${name}
+    </h3>
+
+    <p style="
+    font-size:22px;
+    font-weight:bold;">
+    ${campus}
+    </p>
+
+    </div>`;
+
+    document.body.appendChild(div);
+
+    html2canvas(
+        document.getElementById("tempID"),
+        {
+            scale:3,
+            useCORS:true
+        }
+
+    ).then(canvas=>{
+
+        const link =
+        document.createElement("a");
+
+        link.download =
+        "VGA-ID.png";
+
+        link.href =
+        canvas.toDataURL();
+
+        link.click();
+
+        document.body.removeChild(div);
+    });
+}
+
+
+
+// DARK MODE
+
+function toggleDarkMode(){
+
+    document.body.classList.toggle("darkMode");
+}
+
+
+
+// LIVE CLOCK
+
+function updateClock(){
+
+    document.getElementById("currentTime").innerText =
+    new Date().toLocaleString();
+}
+
+setInterval(updateClock,1000);
+
+
+
+// LOGOUT
+
+function logoutUser(){
+
+    auth.signOut().then(()=>{
+
+        sessionStorage.clear();
+
+        location.reload();
+    });
+}
+
+
+
+// ADMIN PAGE
+
+function goToAdmin(){
+
+    if(
+        auth.currentUser &&
+        auth.currentUser.email === "admin@gmail.com"
+    ){
+
+        window.location.href =
+        "admin.html";
+
+    }else{
+
+        alert("Admin Only!");
+    }
+}
+
 </script>
 
 </body>
