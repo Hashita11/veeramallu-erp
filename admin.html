@@ -590,59 +590,304 @@ function checkLate(type, dt){
     return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
 }
 
-// =====================
-// ✅ SALARY (WORKING)
-// =====================
+// ===============================
+// ✅ ADVANCED PAYROLL SYSTEM
+// ===============================
+
 function generateSalary(){
 
     let s_val = document.getElementById("start").value;
     let e_val = document.getElementById("end").value;
 
-    if(!s_val || !e_val) return alert("Select date range");
+    if(!s_val || !e_val){
+        return alert("Select Start & End Date");
+    }
 
-    let start=new Date(s_val);
-    let end=new Date(e_val);
+    let start = new Date(s_val);
+    let end = new Date(e_val);
 
-    db.collection("attendance").get().then(snap=>{
+    // ===============================
+    // ✅ AP GOVT HOLIDAYS 2026-27
+    // ===============================
 
-        let map={};
+    const GOVT_HOLIDAYS = [
 
-        snap.forEach(doc=>{
-            let d=doc.data();
-            let dt=new Date(d.fullTimestamp);
+        "2026-01-01",
+        "2026-01-14",
+        "2026-01-15",
+        "2026-01-26",
+        "2026-03-25",
+        "2026-04-02",
+        "2026-04-14",
+        "2026-05-01",
+        "2026-08-15",
+        "2026-08-27",
+        "2026-10-02",
+        "2026-10-20",
+        "2026-11-08",
+        "2026-12-25",
+
+        "2027-01-01",
+        "2027-01-14",
+        "2027-01-26",
+        "2027-03-08",
+        "2027-03-25",
+        "2027-04-14",
+        "2027-05-01",
+        "2027-08-15",
+        "2027-10-02",
+        "2027-11-05",
+        "2027-12-25"
+    ];
+
+    // ===============================
+    // ✅ ALL SUNDAYS
+    // ===============================
+
+    function isSunday(date){
+
+        return date.getDay() === 0;
+
+    }
+
+    // ===============================
+    // ✅ HOLIDAY CHECK
+    // ===============================
+
+    function isHoliday(date){
+
+        const d = date.toISOString().split('T')[0];
+
+        return GOVT_HOLIDAYS.includes(d) || isSunday(date);
+
+    }
+
+    db.collection("attendance").get().then((snap)=>{
+
+        let attendanceMap = {};
+
+        // ===============================
+        // ✅ PROCESS ATTENDANCE
+        // ===============================
+
+        snap.forEach((doc)=>{
+
+            const d = doc.data();
+
+            if(!d.fullTimestamp) return;
+
+            const dt = new Date(d.fullTimestamp);
 
             if(dt < start || dt > end) return;
 
-            let name = resolveName(d);
+            const name = resolveName(d);
 
-            if(!map[name]) map[name]={p:new Set(), l:0};
+            const dayKey = dt.toISOString().split('T')[0];
 
-            if(d.type=="IN"){
-                map[name].p.add(dt.toDateString());
-                if(d.autoLate) map[name].l++;
+            if(!attendanceMap[name]){
+
+                attendanceMap[name] = {
+
+                    presentDays : new Set(),
+                    lateCount : 0
+
+                };
+
             }
+
+            // PRESENT
+
+            if(d.type === "IN"){
+
+                attendanceMap[name].presentDays.add(dayKey);
+
+                if(d.late === true || d.autoLate === true){
+
+                    attendanceMap[name].lateCount++;
+
+                }
+
+            }
+
         });
 
-        let out="PAYROLL REPORT\n\n";
+        // ===============================
+        // ✅ CALCULATE TOTAL WORKING DAYS
+        // ===============================
 
-        for(let n in map){
+        let totalWorkingDays = 0;
 
-            let teacher=teachers.find(x=>x.name==n);
-            let salary=teacher?.salary||0;
+        let allDates = [];
 
-            let present=map[n].p.size;
-            let late=map[n].l;
+        let current = new Date(start);
 
-            let lateCut=Math.floor(late/3);
-            let final=salary - (lateCut*(salary/30));
+        while(current <= end){
 
-            out+=`${n}\nPresent:${present} Late:${late}\nSalary: ₹${final.toFixed(0)}\n\n`;
+            const clone = new Date(current);
+
+            allDates.push(clone);
+
+            if(!isHoliday(clone)){
+
+                totalWorkingDays++;
+
+            }
+
+            current.setDate(current.getDate()+1);
+
         }
 
-        document.getElementById("output").innerText=out;
-    });
-}
+        // ===============================
+        // ✅ FINAL PAYROLL
+        // ===============================
 
+        let report = `
+VEERAMALLU GLOBAL ACADEMY
+ADVANCED PAYROLL REPORT
+
+`;
+
+        for(let teacherName in attendanceMap){
+
+            const teacher = teachers.find(t => t.name === teacherName);
+
+            const monthlySalary = teacher?.salary || 0;
+
+            const perDaySalary = monthlySalary / 30;
+
+            const presentDays = attendanceMap[teacherName].presentDays;
+
+            const lateCount = attendanceMap[teacherName].lateCount;
+
+            // ===============================
+            // ✅ ABSENT DAYS
+            // ===============================
+
+            let absentDays = 0;
+
+            allDates.forEach((date)=>{
+
+                const key = date.toISOString().split('T')[0];
+
+                if(isHoliday(date)) return;
+
+                if(!presentDays.has(key)){
+
+                    absentDays++;
+
+                }
+
+            });
+
+            // ===============================
+            // ✅ SANDWICH HOLIDAY RULE
+            // ===============================
+
+            let sandwichLoss = 0;
+
+            for(let i=1; i<allDates.length-1; i++){
+
+                const prev = allDates[i-1];
+                const curr = allDates[i];
+                const next = allDates[i+1];
+
+                const prevKey = prev.toISOString().split('T')[0];
+                const currKey = curr.toISOString().split('T')[0];
+                const nextKey = next.toISOString().split('T')[0];
+
+                if(
+
+                    isHoliday(curr)
+
+                    &&
+
+                    !presentDays.has(prevKey)
+
+                    &&
+
+                    !presentDays.has(nextKey)
+
+                ){
+
+                    sandwichLoss++;
+
+                }
+
+            }
+
+            // ===============================
+            // ✅ LATE CUT
+            // ===============================
+
+            const latePenaltyDays = Math.floor(lateCount / 3);
+
+            // ===============================
+            // ✅ ABSENT PENALTY
+            // 1 absent = 2 days salary loss
+            // ===============================
+
+            const absentPenaltyDays = absentDays * 2;
+
+            // ===============================
+            // ✅ TOTAL LOSS
+            // ===============================
+
+            const totalPenaltyDays =
+
+                latePenaltyDays
+                + absentPenaltyDays
+                + sandwichLoss;
+
+            const salaryCut = totalPenaltyDays * perDaySalary;
+
+            let finalSalary = monthlySalary - salaryCut;
+
+            if(finalSalary < 0){
+
+                finalSalary = 0;
+
+            }
+
+            // ===============================
+            // ✅ REPORT
+            // ===============================
+
+            report += `
+================================
+
+STAFF : ${teacherName}
+
+Monthly Salary : ₹${monthlySalary.toFixed(0)}
+
+Present Days : ${presentDays.size}
+
+Absent Days : ${absentDays}
+
+Late Count : ${lateCount}
+
+Late Penalty : ${latePenaltyDays} Day(s)
+
+Absent Penalty : ${absentPenaltyDays} Day(s)
+
+Holiday Sandwich Loss : ${sandwichLoss} Day(s)
+
+--------------------------------
+
+TOTAL CUT DAYS : ${totalPenaltyDays}
+
+FINAL SALARY : ₹${finalSalary.toFixed(0)}
+
+================================
+
+`;
+
+        }
+
+        document.getElementById("output").innerText = report;
+
+    });
+
+}
 
 
 // =====================
