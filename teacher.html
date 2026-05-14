@@ -1147,51 +1147,100 @@ function getStatusColor(status) {
 }
 
 async function getMonthlyAttendance() {
+
     const user = firebase.auth().currentUser;
+
     if (!user) return [];
 
-    const monthInput = document.getElementById('selectedMonth').value;
-    if (!monthInput) return [];
+    const monthInput =
+        document.getElementById('selectedMonth').value;
 
+    if (!monthInput) {
+
+        alert("Please select a month");
+
+        return [];
+
+    }
+
+    // FORMAT: 2026-05
     const [year, month] = monthInput.split("-");
-    const monthInt = parseInt(month); // Converts "05" to 5
-    
-    // Patterns to match "12/5/2026" or "12/05/2026"
-    const pattern1 = `/${monthInt}/${year}`; 
-    const pattern2 = `/${month}/${year}`;
 
     try {
-        const querySnapshot = await db.collection("attendance")
+
+        const querySnapshot = await db
+            .collection("attendance")
             .where("teacherEmail", "==", user.email)
             .get();
 
         const logs = [];
+
         querySnapshot.forEach((doc) => {
+
             const data = doc.data();
+
+            // dateOnly format: 2026-05-12
             const dateStr = data.dateOnly || "";
 
-            // Check if record is in the selected month
-            if (dateStr.includes(pattern1) || dateStr.includes(pattern2)) {
-                
-                // Get time for late check
-                const recordTime = data.time ? new Date(data.time.seconds * 1000).toLocaleTimeString('en-GB', {hour12:false}) : "00:00:00";
-                
-                // Show if Late, Absent, or Leave
-                // Fallback: If time is after 08:30:00, count as Late
-                if (data.late === true || recordTime > "08:30:00" || data.status === "Absent" || data.status === "Leave") {
+            // CHECK MONTH
+            if(dateStr.startsWith(`${year}-${month}`)){
+
+                // LATE CHECK
+                const isLate =
+                    data.type === "IN" &&
+                    (data.late === true ||
+                     data.autoLate === true);
+
+                // ABSENT / LEAVE
+                const isException =
+                    data.status === "Absent" ||
+                    data.status === "Leave";
+
+                if(isLate || isException){
+
+                    let checkIn = "N/A";
+
+                    if(data.time){
+
+                        checkIn =
+                            data.time.toDate()
+                            .toLocaleTimeString('en-IN');
+
+                    }
+
                     logs.push({
-                        date: dateStr,
-                        checkIn: data.time ? new Date(data.time.seconds * 1000).toLocaleTimeString() : "N/A",
-                        status: (data.late === true || recordTime > "08:30:00") ? "Late" : data.status
+
+                        date : dateStr,
+
+                        checkIn : checkIn,
+
+                        status : isLate
+                            ? "Late"
+                            : data.status
+
                     });
+
                 }
+
             }
+
         });
+
+        // SORT DATE
+        logs.sort((a,b)=>
+            new Date(a.date) - new Date(b.date)
+        );
+
         return logs;
-    } catch (error) {
-        console.error(error);
+
+    } catch(error){
+
+        console.error("Error fetching logs:", error);
+
         return [];
+
     }
+
 }
 
 
