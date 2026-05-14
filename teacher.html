@@ -360,10 +360,10 @@ style="background:#111;color:white;margin-bottom:15px;">
     Homework Upload
     </button>
 
-    <button class="btn-secondary"
-    onclick="window.location.href='salary-slip.html'">
+<button class="btn-secondary" onclick="checkSalaryAccess()">
     Salary Slip
-    </button>
+</button>
+
 
     <button class="btn-secondary"
     onclick="generateIDCard()">
@@ -1230,6 +1230,17 @@ function goToAdmin(){
     }else{
 
         alert("Admin Only!");
+    }
+}
+    function checkSalaryAccess() {
+    const user = firebase.auth().currentUser;
+
+    // Check if the logged-in user is the Admin
+    if (user && user.email === "admin@gmail.com") {
+        window.location.href = 'salary-slip.html';
+    } else {
+        // Show the popup message instead of opening the page
+        alert("🔒 Access Denied: This feature is for Admin use only.");
     }
 }
 
