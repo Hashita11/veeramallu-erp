@@ -1114,6 +1114,15 @@ async function loadAttendance() {
     try {
         const logs = await getMonthlyAttendance(); 
         
+        const totalLate = logs.filter(l => l.status === 'Late').length;
+const statsGrid = document.getElementById('statsGrid');
+
+statsGrid.innerHTML = `
+    <div style="text-align:center; background:#fff3e0; padding:10px; border-radius:8px;">
+        <span style="display:block; font-size:10px; font-weight:bold; color:#e65100;">TOTAL LATE</span>
+        <span style="font-size:18px; font-weight:bold;">${totalLate}</span>
+    </div>
+`;
         portal.classList.remove('hidden'); // Ensure .hidden {display:none} is in your CSS
         portal.style.display = "block"; // Backup display fix
         
