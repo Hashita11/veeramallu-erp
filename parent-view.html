@@ -238,24 +238,20 @@ function downloadPDF() {
     // Function to load homework based on student's class
 async function loadParentHomework() {
 
-    const homeworkDisplay =
-        document.getElementById('homeworkDisplay');
+    const homeworkDisplay = document.getElementById('homeworkDisplay');
 
     try {
 
         const user = firebase.auth().currentUser;
 
         if (!user) {
-
-            homeworkDisplay.innerHTML = "User not logged in";
+            homeworkDisplay.innerHTML = "Parent not logged in";
             return;
-
         }
 
-        // ===============================
-        // GET STUDENT PROFILE
-        // ===============================
-
+        // =========================
+        // ✅ GET STUDENT PROFILE
+        // =========================
         const studentDoc = await db
             .collection("students")
             .doc(user.uid)
@@ -263,64 +259,61 @@ async function loadParentHomework() {
 
         if (!studentDoc.exists) {
 
-            homeworkDisplay.innerHTML =
-                "Student profile not found.";
+            homeworkDisplay.innerHTML = `
+            <div style="color:red;">
+                Student profile not found
+            </div>`;
 
             return;
-
         }
 
         const studentData = studentDoc.data();
 
-        // CLASS
-        const studentClass =
-            studentData.class || "";
+        // IMPORTANT
+        const studentClass = studentData.class;
 
-        // ===============================
-        // TODAY DATE
-        // FORMAT: YYYY-MM-DD
-        // ===============================
+        // =========================
+        // ✅ TODAY DATE
+        // =========================
+        const today = new Date().toLocaleDateString('en-CA');
 
-        const today = new Date()
-            .toISOString()
-            .split('T')[0];
+        // DEBUG
+        console.log("Class:", studentClass);
+        console.log("Today:", today);
 
-        // ===============================
-        // LOAD HOMEWORK
-        // ===============================
-
+        // =========================
+        // ✅ LOAD HOMEWORK
+        // =========================
         const snapshot = await db
             .collection("homeworks")
             .where("class", "==", studentClass)
             .where("date", "==", today)
             .get();
 
-        // ===============================
-        // NO HOMEWORK
-        // ===============================
-
+        // =========================
+        // ✅ NO HOMEWORK
+        // =========================
         if (snapshot.empty) {
 
             homeworkDisplay.innerHTML = `
             <div style="
-                text-align:center;
                 padding:20px;
+                text-align:center;
                 color:gray;
-                background:white;
-                border-radius:12px;
+                border:1px dashed #999;
+                border-radius:10px;
             ">
-                No homework for ${studentClass} today.
+                No homework available for today
             </div>`;
 
             return;
-
         }
 
-        // ===============================
-        // UI
-        // ===============================
-
+        // =========================
+        // ✅ SHOW HOMEWORK
+        // =========================
         let html = `
+
         <div style="
             border:1px solid #1a237e;
             border-radius:12px;
@@ -328,73 +321,70 @@ async function loadParentHomework() {
             background:white;
         ">
 
-        <div style="
-            background:#1a237e;
-            color:white;
-            padding:12px;
-            font-weight:bold;
-            display:flex;
-            justify-content:space-between;
-        ">
+            <div style="
+                background:#1a237e;
+                color:white;
+                padding:12px;
+                font-weight:bold;
+                display:flex;
+                justify-content:space-between;
+            ">
+                <span>${studentClass}</span>
+                <span>${today}</span>
+            </div>
 
-            <span>${studentClass}</span>
-
-            <span>
-                ${new Date().toLocaleDateString('en-GB')}
-            </span>
-
-        </div>
-
-        <table style="
-            width:100%;
-            border-collapse:collapse;
-        ">`;
+            <table style="
+                width:100%;
+                border-collapse:collapse;
+            ">
+        `;
 
         snapshot.forEach(doc => {
 
             const d = doc.data();
 
             html += `
+
             <tr>
 
                 <td style="
                     padding:12px;
                     border-bottom:1px solid #eee;
-                    border-right:1px solid #eee;
                     width:35%;
                     font-weight:bold;
                     color:#1a237e;
+                    border-right:1px solid #eee;
                 ">
-                    ${d.subject || "-"}
+                    ${d.subject || '-'}
                 </td>
 
                 <td style="
                     padding:12px;
                     border-bottom:1px solid #eee;
                 ">
-                    ${d.homework || "-"}
+                    ${d.homework || '-'}
                 </td>
 
-            </tr>`;
+            </tr>
+            `;
         });
 
         html += `
-        </table>
-        </div>`;
+            </table>
+        </div>
+        `;
 
         homeworkDisplay.innerHTML = html;
 
     } catch (error) {
 
-        console.error(error);
+        console.error("Homework Error:", error);
 
         homeworkDisplay.innerHTML = `
         <div style="color:red;">
             Error loading homework
         </div>`;
-
     }
-
 }
 
 </script>
