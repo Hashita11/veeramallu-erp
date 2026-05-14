@@ -1096,82 +1096,78 @@ function generateIDCard(){
         document.body.removeChild(div);
     });
 }
+// This version uses the firebase object already in your code
 async function loadAttendance() {
     const btn = document.getElementById('viewBtn');
-    btn.innerText = "Loading...";
-    
-    const logs = await getMonthlyAttendance(); // Call the backend function
-    
-    // Display Logic
-    document.getElementById('portalContent').classList.remove('hidden');
+    const portal = document.getElementById('portalContent');
     const logList = document.getElementById('logList');
     
-    if (logs.length === 0) {
-        logList.innerHTML = "<li class='p-4 text-center text-green-600'>Perfect record! No late marks or absences.</li>";
-    } else {
-        logList.innerHTML = logs.map(log => `
-            <li class="py-3 flex justify-between items-center">
-                <div>
-                    <span class="font-bold">${log.date}</span>
-                    <span class="text-xs text-gray-500 block">${log.checkIn}</span>
-                </div>
-                <span class="px-2 py-1 text-xs rounded font-bold ${getStatusStyle(log.status)}">
-                    ${log.status} ${log.lateMinutes > 0 ? `(${log.lateMinutes}m)` : ''}
-                </span>
-            </li>
-        `).join('');
+    btn.innerText = "Loading...";
+    
+    try {
+        const logs = await getMonthlyAttendance(); 
+        
+        portal.classList.remove('hidden'); // Ensure .hidden {display:none} is in your CSS
+        portal.style.display = "block"; // Backup display fix
+        
+        if (logs.length === 0) {
+            logList.innerHTML = "<li class='p-4 text-center' style='color:green'>No late marks or absences found for this month.</li>";
+        } else {
+            logList.innerHTML = logs.map(log => `
+                <li style="padding:10px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left">
+                        <div style="font-weight:bold">${log.date}</div>
+                        <div style="font-size:11px; color:#666">${log.checkIn}</div>
+                    </div>
+                    <span style="padding:4px 8px; border-radius:5px; font-size:12px; font-weight:bold; ${getStatusColor(log.status)}">
+                        ${log.status}
+                    </span>
+                </li>
+            `).join('');
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Failed to load records.");
+    } finally {
+        btn.innerText = "Refresh Attendance";
     }
-    btn.innerText = "Refresh Attendance";
 }
 
-function getStatusStyle(status) {
-    if (status === 'Late') return 'bg-orange-100 text-orange-700';
-    if (status === 'Absent') return 'bg-red-100 text-red-700';
-    return 'bg-blue-100 text-blue-700';
+function getStatusColor(status) {
+    if (status === 'Late') return 'background:#fff3e0; color:#e65100;';
+    if (status === 'Absent') return 'background:#ffebee; color:#c62828;';
+    return 'background:#e3f2fd; color:#1565c0;';
 }
-    
-import { db, auth } from "./firebase-config";
-import { collection, query, where, getDocs } from "firebase/firestore";
-// CORRECTED FUNCTION FOR YOUR EXISTING CODE
+
 async function getMonthlyAttendance() {
     const user = firebase.auth().currentUser;
     if (!user) return [];
 
-    const teacherId = user.uid;
-    const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2026-05"
+    // Format today as YYYY-MM to match your records
+    const now = new Date();
+    const currentMonthYear = now.getMonth() + 1 + "/" + now.getFullYear(); // Adjust this to match your "dateOnly" format
 
     try {
-        // Using the "Compat" syntax already in your file
-        const querySnapshot = await firebase.firestore().collection("attendance")
+        const querySnapshot = await db.collection("attendance")
             .where("teacherEmail", "==", user.email)
-            .where("month", "==", currentMonth) // Make sure your DB has a 'month' field
             .get();
 
         const logs = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // We only show Late, Absent, or Leave
-            if (data.type === "IN" && data.late === true) {
-                logs.push({
-                    date: data.dateOnly,
-                    checkIn: new Date(data.time.seconds * 1000).toLocaleTimeString(),
-                    status: "Late",
-                    lateMinutes: "Check Record" // or calculate if you have the field
-                });
-            } else if (data.status === "Absent" || data.status === "Leave") {
-                logs.push({
-                    date: data.dateOnly,
-                    checkIn: "-",
-                    status: data.status,
-                    lateMinutes: 0
-                });
+            // Check if record is from this month (Simple check)
+            if (data.dateOnly && data.dateOnly.includes("/" + (now.getMonth() + 1).toString().padStart(2, '0') + "/")) {
+                if (data.late || data.status === "Absent" || data.status === "Leave") {
+                    logs.push({
+                        date: data.dateOnly,
+                        checkIn: data.time ? new Date(data.time.seconds * 1000).toLocaleTimeString() : "-",
+                        status: data.late ? "Late" : data.status
+                    });
+                }
             }
         });
-
         return logs;
     } catch (error) {
-        console.error("Error fetching attendance:", error);
-        alert("Error loading records");
         return [];
     }
 }
