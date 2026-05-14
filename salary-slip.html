@@ -10,7 +10,6 @@
         
         .card { background: white; padding: 25px; border-radius: 15px; max-width: 550px; margin: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center;}
         
-        /* LOGO STYLING */
         .logo { width: 100px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
         
         h2 { color: var(--primary); margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
@@ -22,12 +21,13 @@
         input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; }
         
         .fetch-btn { background: var(--success); margin-bottom: 20px; }
-        button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; }
-        button:hover { opacity: 0.9; }
+        button { width: 100%; padding: 15px; border-radius: 8px; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 15px; transition: 0.3s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
 
         /* SLIP DESIGN */
         #result { margin-top: 30px; }
-        .slip { background: white; border: 2px solid var(--primary); border-radius: 12px; padding: 25px; position: relative; }
+        .slip { background: white; border: 2px solid var(--primary); border-radius: 12px; padding: 25px; position: relative; max-width: 500px; margin: auto; }
         .slip-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 14px; }
         .loss { color: var(--danger); font-weight: bold; }
         .total-box { background: var(--primary); color: white; padding: 15px; margin-top: 20px; border-radius: 8px; font-size: 18px; display: flex; justify-content: space-between; }
@@ -37,6 +37,7 @@
             body { background: white; padding: 0; } 
             .card { box-shadow: none; border: none; }
             #result { margin-top: 0; }
+            .slip { border: 1px solid #000; width: 100%; max-width: 100%; }
         }
     </style>
 </head>
@@ -49,7 +50,7 @@
     <label>Teacher Email</label>
     <input type="text" id="teacherEmail" placeholder="teacher1@gmail.com">
     
-    <button class="fetch-btn" onclick="fetchAttendanceData()">
+    <button id="fetchBtn" class="fetch-btn" onclick="fetchAttendanceData()">
         🔍 Fetch Attendance from Firebase
     </button>
 
@@ -94,11 +95,13 @@
 
 <div id="result"></div>
 
+<!-- FIREBASE LIBRARIES (Critical: Added Auth) -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // FIREBASE CONFIG
+    // 1. FIREBASE INITIALIZATION
     const firebaseConfig = {
         apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
         authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -108,60 +111,75 @@
         appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
     };
 
-  firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-    async function fetchAttendanceData() {
-    const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
-    if (!email) return alert("Enter Teacher Email");
-
-    const today = new Date();
-    // Get current month/year for filtering
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const year = today.getFullYear();
-
-    try {
-        // Query by teacher email
-        const snap = await db.collection("attendance").where("teacherEmail", "==", email).get();
-        let count = 0; 
-        let lates = 0;
-
-        snap.forEach(doc => {
-            const d = doc.data();
-            let attendanceDate;
-            
-            // Handle both Firebase Timestamps and String dates
-            if (d.time && d.time.toDate) {
-                attendanceDate = d.time.toDate();
-            } else if (d.fullTimestamp) {
-                attendanceDate = new Date(d.fullTimestamp);
-            }
-
-            if (attendanceDate) {
-                const aMonth = (attendanceDate.getMonth() + 1).toString().padStart(2, '0');
-                const aYear = attendanceDate.getFullYear();
-
-                // Only count records for the current month and year
-                if (aMonth === month && aYear === year && d.type === "IN") {
-                    count++;
-                    // Late check based on 08:30:00 (VGA Standard)
-                    const timeStr = attendanceDate.toLocaleTimeString('en-GB', { hour12: false });
-                    if (timeStr > "08:30:00") lates++;
-                }
-            }
-        });
-
-        document.getElementById("presentDays").value = count;
-        document.getElementById("lateMarks").value = lates;
-        alert(`Records Found for ${month}/${year}:\nPresent: ${count} days\nLates: ${lates}`);
-    } catch (e) { 
-        alert("Error fetching data: " + e.message); 
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
     }
-}
+    const db = firebase.firestore();
 
+    // 2. FETCH ATTENDANCE LOGIC
+    async function fetchAttendanceData() {
+        const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+        const fetchBtn = document.getElementById("fetchBtn");
 
+        if (!email) return alert("Please enter the teacher's email address.");
+
+        fetchBtn.disabled = true;
+        fetchBtn.innerText = "⏳ Fetching Data...";
+
+        const today = new Date();
+        const month = (today.getMonth() + 1).toString().padStart(2, '0');
+        const year = today.getFullYear();
+
+        try {
+            // Using teacherEmail which is the standard field name in your ERP
+            const snap = await db.collection("attendance")
+                                 .where("teacherEmail", "==", email)
+                                 .get();
+            
+            let count = 0; 
+            let lates = 0;
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                let attendanceDate;
+                
+                // Convert Firestore Timestamp or String to JS Date
+                if (d.time && d.time.toDate) {
+                    attendanceDate = d.time.toDate();
+                } else if (d.fullTimestamp) {
+                    attendanceDate = new Date(d.fullTimestamp);
+                }
+
+                if (attendanceDate) {
+                    const aMonth = (attendanceDate.getMonth() + 1).toString().padStart(2, '0');
+                    const aYear = attendanceDate.getFullYear();
+
+                    // Only count "IN" records for the CURRENT month/year
+                    if (aMonth === month && aYear === year && d.type === "IN") {
+                        count++;
+                        // Standard VGA Late Policy: 08:30:00
+                        const timeStr = attendanceDate.toLocaleTimeString('en-GB', { hour12: false });
+                        if (timeStr > "08:30:00") lates++;
+                    }
+                }
+            });
+
+            document.getElementById("presentDays").value = count;
+            document.getElementById("lateMarks").value = lates;
+            
+            fetchBtn.disabled = false;
+            fetchBtn.innerHTML = "🔍 Fetch Attendance from Firebase";
+            alert(`✅ Found ${count} present days and ${lates} lates for ${month}/${year}.`);
+
+        } catch (e) { 
+            console.error(e);
+            alert("Error: " + e.message); 
+            fetchBtn.disabled = false;
+            fetchBtn.innerHTML = "🔍 Fetch Attendance from Firebase";
+        }
+    }
+
+    // 3. GENERATE SLIP LOGIC
     function generateSalarySlip() {
         const email = document.getElementById("teacherEmail").value;
         const gross = Number(document.getElementById("grossSalary").value);
@@ -171,11 +189,20 @@ const db = firebase.firestore();
         const holLoss = Number(document.getElementById("holidayLoss").value);
         const other = Number(document.getElementById("otherDeductions").value);
 
+        if (totalDays === 0) return alert("Total Days in Month cannot be zero.");
+
         const perDay = gross / totalDays;
+        
+        // VGA Rule: 3 Lates = 1 Day Loss
         const lateLossDays = Math.floor(lates / 3);
         const lateLossAmt = Math.round(lateLossDays * perDay);
+        
         const holLossAmt = Math.round(holLoss * perDay);
+        
+        // Earned based on actual present days
         const earned = Math.round(perDay * present);
+        
+        // Final math
         const net = earned - lateLossAmt - holLossAmt - other;
 
         document.getElementById("result").innerHTML = `
@@ -202,11 +229,13 @@ const db = firebase.firestore();
                     <span>₹${net < 0 ? 0 : net}</span>
                 </div>
 
-                <button class="no-print" style="background:#555; margin-top:15px;" onclick="window.print()">Print Salary Slip</button>
+                <div class="no-print" style="display:flex; gap:10px; margin-top:15px;">
+                    <button style="background:#555;" onclick="window.print()">🖨️ Print Slip</button>
+                    <button style="background:#d32f2f;" onclick="document.getElementById('result').innerHTML=''">❌ Close</button>
+                </div>
             </div>
         `;
         
-        // Scroll to result
         window.scrollTo({ top: document.getElementById("result").offsetTop, behavior: 'smooth' });
     }
 </script>
