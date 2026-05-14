@@ -240,30 +240,25 @@ async function loadParentHomework() {
     const homeworkDisplay = document.getElementById('homeworkDisplay');
     
     try {
-        // 1. GET STUDENT ID (VGA-2026-0001)
+        // 1. Get Student ID from storage (e.g., VGA-2026-0001)
         const studentId = localStorage.getItem("studentId");
-        if (!studentId) {
-            homeworkDisplay.innerHTML = "Please log in.";
-            return;
-        }
+        if (!studentId) return;
 
-        // 2. GET STUDENT CLASS (e.g., Class 1)
+        // 2. Fetch the student's assigned class
         const studentDoc = await db.collection("students").doc(studentId).get();
-        if (!studentDoc.exists) {
-            homeworkDisplay.innerHTML = "Profile not found.";
-            return;
-        }
+        if (!studentDoc.exists) return;
         const studentClass = studentDoc.data().class;
 
-        // 3. CREATE DATE PREFIX (Matches 15/05/2026)
+        // 3. Create the Date Prefix (e.g., "15/05/2026")
+        // Use padStart to ensure May is '05' to match your database format
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
         const month = String(now.getMonth() + 1).padStart(2, '0'); 
         const year = now.getFullYear();
         const datePrefix = `${day}/${month}/${year}`;
 
-        // 4. QUERY 'homeworks' COLLECTION
-        // Finds any record starting with today's date string
+        // 4. Query using a Range to bypass the timestamp
+        // This matches any string starting with the datePrefix
         const snapshot = await db.collection("homeworks")
             .where("class", "==", studentClass)
             .where("date", ">=", datePrefix)
@@ -271,17 +266,20 @@ async function loadParentHomework() {
             .get();
 
         if (snapshot.empty) {
-            homeworkDisplay.innerHTML = `<div style="text-align:center;color:gray;">No homework for ${studentClass} today.</div>`;
+            homeworkDisplay.innerHTML = `
+                <div style="text-align:center; padding:20px; color:gray;">
+                    No homework for ${studentClass} on ${datePrefix}
+                </div>`;
             return;
         }
 
-        // 5. DISPLAY HOMEWORK
+        // 5. Display the matching homework items
         let html = `
-        <div style="border:1px solid #1a237e; border-radius:12px; overflow:hidden; background:white;">
-            <div style="background:#1a237e; color:white; padding:10px; font-weight:bold;">
-                ${studentClass} Homework - ${datePrefix}
-            </div>
-            <table style="width:100%; border-collapse:collapse; text-align:left;">`;
+            <div style="border:1px solid #1a237e; border-radius:12px; overflow:hidden; background:white;">
+                <div style="background:#1a237e; color:white; padding:10px; font-weight:bold;">
+                    ${studentClass} Homework - ${datePrefix}
+                </div>
+                <table style="width:100%; border-collapse:collapse;">`;
 
         snapshot.forEach(doc => {
             const d = doc.data();
@@ -301,7 +299,7 @@ async function loadParentHomework() {
 
     } catch (error) {
         console.error("Error:", error);
-        homeworkDisplay.innerHTML = "<p style='color:red;'>Error loading homework list.</p>";
+        homeworkDisplay.innerHTML = "<p style='color:red; text-align:center;'>Error loading homework list.</p>";
     }
 }
 
