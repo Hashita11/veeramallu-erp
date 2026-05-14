@@ -241,25 +241,31 @@ async function loadParentHomework() {
     const homeworkDisplay = document.getElementById('homeworkDisplay');
     
     try {
-        // 1. Get the current student's ID (e.g., VGA-2026-0001)
+        // 1. GET STUDENT ID (VGA-2026-0001)
         const studentId = localStorage.getItem("studentId");
-        if (!studentId) return;
+        if (!studentId) {
+            homeworkDisplay.innerHTML = "Please log in again.";
+            return;
+        }
 
-        // 2. Fetch student profile to confirm their class
+        // 2. GET STUDENT PROFILE (Class 1)
         const studentDoc = await db.collection("students").doc(studentId).get();
-        if (!studentDoc.exists) return;
+        if (!studentDoc.exists) {
+            homeworkDisplay.innerHTML = "Student profile not found.";
+            return;
+        }
         const studentClass = studentDoc.data().class;
 
-        // 3. Create the Date Prefix (Matches DD/MM/YYYY)
-        // Today is 15/05/2026 based on your UI
+        // 3. CREATE TODAY'S DATE PREFIX (e.g., "15/05/2026")
+        // padStart ensures May is '05' to match your database format
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0'); 
         const year = now.getFullYear();
         const datePrefix = `${day}/${month}/${year}`;
 
-        // 4. USE A RANGE QUERY (Prefix Match)
-        // This finds any string starting with "15/05/2026" regardless of the time
+        // 4. QUERY 'homeworks' WITH PREFIX MATCH
+        // This finds any string starting with today's date
         const snapshot = await db.collection("homeworks")
             .where("class", "==", studentClass)
             .where("date", ">=", datePrefix)
@@ -267,18 +273,21 @@ async function loadParentHomework() {
             .get();
 
         if (snapshot.empty) {
-            homeworkDisplay.innerHTML = `<div style="text-align:center;color:gray;">No homework for ${studentClass} today.</div>`;
+            homeworkDisplay.innerHTML = `
+                <div style="text-align:center; padding:20px; color:gray;">
+                    No homework posted for ${studentClass} today.
+                </div>`;
             return;
         }
 
-        // 5. Display the matching items
+        // 5. DISPLAY HOMEWORK
         let html = `
-        <div style="border:1px solid #1a237e; border-radius:12px; overflow:hidden; background:white;">
-            <div style="background:#1a237e; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
-                <span>${studentClass}</span>
-                <span>${datePrefix}</span>
-            </div>
-            <table style="width:100%; border-collapse:collapse; text-align:left;">`;
+            <div style="border: 1px solid #1a237e; border-radius:12px; overflow:hidden; text-align:left;">
+                <div style="background:#1a237e; color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
+                    <span>${studentClass}</span>
+                    <span>${datePrefix}</span>
+                </div>
+                <table style="width:100%; border-collapse:collapse;">`;
 
         snapshot.forEach(doc => {
             const d = doc.data();
@@ -287,7 +296,7 @@ async function loadParentHomework() {
                     <td style="padding:10px; border-bottom:1px solid #eee; font-weight:bold; color:#1a237e; width:35%; border-right:1px solid #eee;">
                         ${d.subject}
                     </td>
-                    <td style="padding:10px; border-bottom:1px solid #eee;">
+                    <td style="padding:10px; border-bottom:1px solid #eee; font-size:14px;">
                         ${d.homework}
                     </td>
                 </tr>`;
@@ -297,11 +306,10 @@ async function loadParentHomework() {
         homeworkDisplay.innerHTML = html;
 
     } catch (error) {
-        console.error("Fetch Error:", error);
-        homeworkDisplay.innerHTML = "Error loading homework.";
+        console.error("Error loading homework:", error);
+        homeworkDisplay.innerHTML = "<p style='color:red; text-align:center;'>Error loading list. Please refresh.</p>";
     }
 }
-
 
 
 </script>
