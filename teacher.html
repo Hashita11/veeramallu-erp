@@ -1132,33 +1132,50 @@ function getStatusStyle(status) {
     
 import { db, auth } from "./firebase-config";
 import { collection, query, where, getDocs } from "firebase/firestore";
-
+// CORRECTED FUNCTION FOR YOUR EXISTING CODE
 async function getMonthlyAttendance() {
-    const teacherId = auth.currentUser.uid; // Get ID of logged-in teacher
+    const user = firebase.auth().currentUser;
+    if (!user) return [];
+
+    const teacherId = user.uid;
     const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2026-05"
 
-    const attendanceRef = collection(db, "attendance_logs");
-    
-    // Query: Only this teacher AND only records for the current month
-    const q = query(
-        attendanceRef, 
-        where("teacherId", "==", teacherId),
-        where("month", "==", currentMonth) 
-    );
+    try {
+        // Using the "Compat" syntax already in your file
+        const querySnapshot = await firebase.firestore().collection("attendance")
+            .where("teacherEmail", "==", user.email)
+            .where("month", "==", currentMonth) // Make sure your DB has a 'month' field
+            .get();
 
-    const querySnapshot = await getDocs(q);
-    const logs = [];
-    
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        // Filter out "Present" on the client side to only show exceptions
-        if (data.status !== "Present") {
-            logs.push(data);
-        }
-    });
+        const logs = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            // We only show Late, Absent, or Leave
+            if (data.type === "IN" && data.late === true) {
+                logs.push({
+                    date: data.dateOnly,
+                    checkIn: new Date(data.time.seconds * 1000).toLocaleTimeString(),
+                    status: "Late",
+                    lateMinutes: "Check Record" // or calculate if you have the field
+                });
+            } else if (data.status === "Absent" || data.status === "Leave") {
+                logs.push({
+                    date: data.dateOnly,
+                    checkIn: "-",
+                    status: data.status,
+                    lateMinutes: 0
+                });
+            }
+        });
 
-    return logs;
+        return logs;
+    } catch (error) {
+        console.error("Error fetching attendance:", error);
+        alert("Error loading records");
+        return [];
+    }
 }
+
 
 
 // DARK MODE
