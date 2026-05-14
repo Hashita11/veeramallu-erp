@@ -245,10 +245,10 @@ async function loadParentHomework() {
 
     try {
 
-        // Get student class directly from logged in student
+        // Student class from login
         const studentClass = currentStudent.class;
 
-        // Today's date format => 15/05/2026
+        // Today's date
         const now = new Date();
 
         const day = String(now.getDate()).padStart(2, '0');
@@ -257,51 +257,73 @@ async function loadParentHomework() {
 
         const todayDate = `${day}/${month}/${year}`;
 
-        // Fetch homework
-        const snapshot = await db.collection("homeworks")
-            .where("class", "==", studentClass)
-            .where("date", ">=", todayDate)
-            .where("date", "<=", todayDate + "\uf8ff")
-            .get();
+        // Fetch all homework
+        const snapshot = await db.collection("homeworks").get();
+
+        let html = "";
+        let found = false;
+
+        snapshot.forEach(doc => {
+
+            const data = doc.data();
+
+            // Match class + today's date
+            if (
+                data.class &&
+                data.class.toLowerCase().trim() === studentClass.toLowerCase().trim() &&
+                data.date &&
+                data.date.startsWith(todayDate)
+            ) {
+
+                found = true;
+
+                html += `
+                    <div style="
+                        background:white;
+                        border:1px solid #ddd;
+                        border-radius:12px;
+                        padding:15px;
+                        margin-bottom:10px;
+                    ">
+
+                        <div style="
+                            font-size:16px;
+                            font-weight:bold;
+                            color:#1a237e;
+                            margin-bottom:8px;
+                        ">
+                            📘 ${data.subject}
+                        </div>
+
+                        <div style="
+                            font-size:14px;
+                            color:#333;
+                            line-height:1.6;
+                        ">
+                            ${data.homework}
+                        </div>
+
+                    </div>
+                `;
+            }
+
+        });
 
         // No homework
-        if (snapshot.empty) {
+        if (!found) {
 
             homeworkDisplay.innerHTML = `
-                <div style="padding:20px;text-align:center;color:gray;">
+                <div style="
+                    text-align:center;
+                    padding:20px;
+                    color:gray;
+                ">
                     No homework posted today.
                 </div>
             `;
 
             return;
         }
-
-        // Display homework
-        let html = `
-        <div style="border:1px solid #ddd;border-radius:12px;overflow:hidden;">
-            <div style="background:#1a237e;color:white;padding:12px;font-weight:bold;">
-                📚 Homework - ${studentClass}
-            </div>
-        `;
-
-        snapshot.forEach(doc => {
-
-            const data = doc.data();
-
-            html += `
-                <div style="padding:15px;border-bottom:1px solid #eee;">
-                    <div style="font-weight:bold;color:#1a237e;margin-bottom:5px;">
-                        ${data.subject}
-                    </div>
-
-                    <div style="font-size:14px;color:#333;">
-                        ${data.homework}
-                    </div>
-                </div>
-            `;
-        });
-
-        html += `</div>`;
 
         homeworkDisplay.innerHTML = html;
 
@@ -310,13 +332,16 @@ async function loadParentHomework() {
         console.log(error);
 
         homeworkDisplay.innerHTML = `
-            <div style="color:red;text-align:center;padding:15px;">
+            <div style="
+                color:red;
+                text-align:center;
+                padding:20px;
+            ">
                 Error loading homework
             </div>
         `;
     }
 }
-
 
 
 </script>
