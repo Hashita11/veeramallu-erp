@@ -628,26 +628,35 @@ async function generateSalary() {
         let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
 
         teachers.forEach(t => {
-            // Fix for 'undefined' salary
-            const baseSalary = t.salary || t.Salary || 0;
             const staffLogs = allLogs.filter(l => l.teacherEmail === t.email || l.teacher === t.email);
             
+            // Get unique present dates
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             const presentCount = presentDates.length;
-            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
-            
-            const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
-            const absentDays = totalDays - presentCount;
 
-            // Calls the calculation logic below
-            const finalPay = generateFinalSalary(t.name, teachers, totalDays, {
-                lateCount: lateCount,
-                absentDays: absentDays,
-                holidaySandwichCount: 0 
-            });
+            // ✅ FIX: Only print if they were present at least 1 day
+            if (presentCount > 0) {
+                const baseSalary = t.salary || t.Salary || 0;
+                const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
+                
+                const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
+                const absentDays = totalDays - presentCount;
 
-            report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
+                const finalPay = generateFinalSalary(t.name, teachers, totalDays, {
+                    lateCount: lateCount,
+                    absentDays: absentDays,
+                    holidaySandwichCount: 0 
+                });
+
+                report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
+            }
         });
+
+        // If no one was found with attendance
+        if (report.endsWith("===============================\n\n")) {
+            report += "No attendance records found for this period.";
+        }
+
         output.innerText = report;
     } catch (e) { output.innerText = "Error: " + e.message; }
 }
