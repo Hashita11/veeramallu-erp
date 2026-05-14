@@ -239,26 +239,19 @@ function downloadPDF() {
 }
 
 // Function to load homework
+
 async function loadParentHomework() {
 
     const homeworkDisplay = document.getElementById("homeworkDisplay");
 
     try {
 
-        // Student class from login
-        const studentClass = currentStudent.class;
+        const studentClass = currentStudent.class.trim().toLowerCase();
 
-        // Today's date
-        const now = new Date();
-
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-
-        const todayDate = `${day}/${month}/${year}`;
-
-        // Fetch all homework
-        const snapshot = await db.collection("homeworks").get();
+        // Fetch latest homework
+        const snapshot = await db.collection("homeworks")
+            .orderBy("date", "desc")
+            .get();
 
         let html = "";
         let found = false;
@@ -267,32 +260,43 @@ async function loadParentHomework() {
 
             const data = doc.data();
 
-            // Match class + today's date
-            if (
-                data.class &&
-                data.class.toLowerCase().trim() === studentClass.toLowerCase().trim() &&
-                data.date &&
-                data.date.startsWith(todayDate)
-            ) {
+            const hwClass = (data.class || "").trim().toLowerCase();
+
+            // Match only class
+            if (hwClass === studentClass) {
 
                 found = true;
 
                 html += `
                     <div style="
-                        background:white;
+                        background:#fff;
                         border:1px solid #ddd;
                         border-radius:12px;
                         padding:15px;
-                        margin-bottom:10px;
+                        margin-bottom:12px;
                     ">
 
                         <div style="
-                            font-size:16px;
-                            font-weight:bold;
-                            color:#1a237e;
+                            display:flex;
+                            justify-content:space-between;
                             margin-bottom:8px;
                         ">
-                            📘 ${data.subject}
+
+                            <div style="
+                                font-size:16px;
+                                font-weight:bold;
+                                color:#1a237e;
+                            ">
+                                📘 ${data.subject || ""}
+                            </div>
+
+                            <div style="
+                                font-size:12px;
+                                color:gray;
+                            ">
+                                ${data.date || ""}
+                            </div>
+
                         </div>
 
                         <div style="
@@ -300,7 +304,7 @@ async function loadParentHomework() {
                             color:#333;
                             line-height:1.6;
                         ">
-                            ${data.homework}
+                            ${data.homework || ""}
                         </div>
 
                     </div>
@@ -309,7 +313,6 @@ async function loadParentHomework() {
 
         });
 
-        // No homework
         if (!found) {
 
             homeworkDisplay.innerHTML = `
@@ -318,7 +321,7 @@ async function loadParentHomework() {
                     padding:20px;
                     color:gray;
                 ">
-                    No homework posted today.
+                    No homework available for your class.
                 </div>
             `;
 
