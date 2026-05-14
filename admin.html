@@ -446,6 +446,7 @@ function loadTeachers(){
                 uid: doc.id,
                 name: d.name || "",
                 email: d.email || ""
+                salary: d.salary || 0 // Match the lowercase 'salary'
             });
 
             ts.innerHTML += `
@@ -583,7 +584,7 @@ async function createTeacher() {
             name: n,
             email: e,
             subject: s,
-            salary: Number(sa || 0),
+           salary: Number(sa) || 0, // Force as a number
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
