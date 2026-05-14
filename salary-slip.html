@@ -238,6 +238,25 @@
         
         window.scrollTo({ top: document.getElementById("result").offsetTop, behavior: 'smooth' });
     }
+    function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
+    const teacher = teachers.find(x => x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase());
+    if (!teacher) return 0;
+
+    // Clean salary strings (removes ₹ symbol)
+    const monthlySalary = parseFloat(String(teacher.salary || 0).replace(/[^0-9.]/g, '')) || 0;
+    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
+
+    // Penalty Rules
+    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3);
+    const absentPenaltyDays = (attendance.absentDays || 0) * 2; // 2x Absent Penalty
+    const sandwichPenaltyDays = attendance.holidaySandwichCount || 0;
+
+    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays + sandwichPenaltyDays;
+    let finalSalary = monthlySalary - (totalPenaltyDays * perDaySalary);
+
+    return finalSalary < 0 ? 0 : Math.round(finalSalary);
+}
+
 </script>
 
 </body>
