@@ -257,17 +257,16 @@ async function loadParentHomework() {
 
     homeworkDisplay.innerHTML =
         "Loading homework...";
-     // 1. Define colors with LOWERCASE keys
+     // 1. Define colors
     const subjectColors = {
-        "telugu": "#e3f2fd",
-        "hindi": "#fff3e0",
-        "english": "#f3e5f5",
-        "maths": "#e8f5e9",
-        "science": "#fffde7",
-        "social": "#efebe9",
-        "default": "#ffffff"
+        "telugu": "#e3f2fd", // Light Blue
+        "hindi": "#fff3e0",  // Light Orange
+        "english": "#f3e5f5", // Light Purple
+        "maths": "#e8f5e9",   // Light Green
+        "science": "#fffde7", // Light Yellow
+        "social": "#efebe9",  // Light Brown
+        "default": "#ffffff"  // White fallback
     };
-
     try {
 
         console.log("Student Class:",
