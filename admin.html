@@ -599,61 +599,84 @@ function checkLate(type, dt){
     return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
 }
 
+
 // ===============================
-// ✅ ADVANCED PAYROLL SYSTEM
+// ✅ GENERATE PAYROLL REPORT
 // ===============================
+async function generateSalary() {
+    const output = document.getElementById("output");
+    const startVal = document.getElementById("start").value;
+    const endVal = document.getElementById("end").value;
 
-/**
- * ✅ FINAL TEACHER SALARY CALCULATION (June 2026 - June 2028)
- * Rules: 
- * 1. 3 Lates = 1 Day Cut
- * 2. Absent = 2 Days Cut (per absent day)
- * 3. Sunday/Holiday Sandwich = Full salary loss for that day
- */
-function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
-    // 1. FIND TEACHER
-    const teacher = teachers.find(x => 
-        x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase()
-    );
+    // 1. Validate Date Range (Requirement shown in 220590.jpg)
+    if (!startVal || !endVal) {
+        return alert("Please select both Start and End dates in the Attendance Logs section above!");
+    }
 
-    if (!teacher) return 0;
+    output.innerText = "Calculating Payroll... Please wait.";
 
-    // 2. CLEAN SALARY (Handles ₹ and commas from 220527.jpg)
-    const monthlySalary = parseFloat(String(teacher.salary).replace(/[^0-9.]/g, '')) || 0;
-    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
+    try {
+        // 2. Fetch all attendance logs within the selected range
+        // Note: Using Date objects for Firestore comparison
+        const snap = await db.collection("attendance")
+            .where("time", ">=", firebase.firestore.Timestamp.fromDate(new Date(startVal)))
+            .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
+            .get();
 
-    // 3. AP GOVT HOLIDAYS (Fixed Dates)
-    const apGovHolidays = [
-        "2026-06-16", "2026-08-15", "2026-08-25", "2026-09-04", "2026-09-14", "2026-10-02", "2026-10-20", "2026-11-08", "2026-12-25",
-        "2027-01-14", "2027-01-15", "2027-01-26", "2027-03-08", "2027-03-25", "2027-04-08", "2027-04-15", "2027-05-01", "2027-08-15", "2027-09-04", "2027-10-02", "2027-10-09", "2027-10-29", "2027-12-25"
-    ];
+        let allLogs = [];
+        snap.forEach(doc => allLogs.push(doc.data()));
 
-    // 4. DYNAMIC SUNDAY & HOLIDAY CHECKER
-    const isHolidayOrSunday = (dateString) => {
-        const d = new Date(dateString);
-        return d.getDay() === 0 || apGovHolidays.includes(dateString);
-    };
+        let report = `VEERAMALLU GLOBAL ACADEMY\n`;
+        report += `PAYROLL REPORT: ${startVal} to ${endVal}\n`;
+        report += `===============================\n\n`;
 
-    // 5. CALCULATE PENALTIES
-    
-    // 3 Lates = 1 Day Cut
-    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3);
+        // 3. Process each registered teacher
+        teachers.forEach(t => {
+            // Filter logs for this specific teacher
+            const staffLogs = allLogs.filter(l => 
+                l.teacherEmail === t.email || l.teacher === t.email
+            );
 
-    // Absent = 2 Days Cut (As shown in 220527.jpg: 10 Absents = 20 Day Penalty)
-    const absentPenaltyDays = (attendance.absentDays || 0) * 2;
+            // Get unique present dates (Counting only "IN" entries)
+            const presentDates = [...new Set(staffLogs
+                .filter(l => l.type === "IN")
+                .map(l => l.time.toDate().toDateString())
+            )];
+            
+            const presentCount = presentDates.length;
+            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
 
-    // Holiday Sandwich Loss (e.g., Absent on Saturday AND Monday)
-    // This value should be calculated in your attendance tracker using isHolidayOrSunday()
-    const sandwichPenaltyDays = attendance.holidaySandwichCount || 0;
+            // Calculate total working days in the range
+            const diffTime = Math.abs(new Date(endVal) - new Date(startVal));
+            const totalWorkingDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            const absentDays = totalWorkingDaysInRange - presentCount;
 
-    // 6. FINAL CALCULATION
-    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays + sandwichPenaltyDays;
-    const totalCutAmount = totalPenaltyDays * perDaySalary;
+            // 4. Use your existing logic function for the final math
+            // Passing 0 for sandwich as a default unless you have specific logic for it
+            const finalPay = generateFinalSalary(t.name, teachers, totalWorkingDaysInRange, {
+                lateCount: lateCount,
+                absentDays: absentDays,
+                holidaySandwichCount: 0 
+            });
 
-    let finalSalary = monthlySalary - totalCutAmount;
+            // 5. Build the text output
+            report += `STAFF : ${t.name}\n`;
+            report += `Monthly Salary : ₹${t.salary}\n`;
+            report += `Present Days : ${presentCount}\n`;
+            report += `Absent Days  : ${absentDays}\n`;
+            report += `Late Count   : ${lateCount}\n`;
+            report += `-------------------------------\n`;
+            report += `FINAL SALARY : ₹${finalPay}\n`;
+            report += `===============================\n\n`;
+        });
 
-    // Safety: Result cannot be negative
-    return finalSalary < 0 ? 0 : Math.round(finalSalary);
+        output.innerText = report;
+
+    } catch (error) {
+        console.error("Payroll Error:", error);
+        output.innerText = "Error generating payroll: " + error.message;
+    }
 }
 
 
