@@ -237,36 +237,59 @@ function downloadPDF() {
 }
     // Function to load homework based on student's class
 async function loadParentHomework() {
+async function loadParentHomework() {
 
     const homeworkDisplay = document.getElementById('homeworkDisplay');
 
     try {
 
-        const user = firebase.auth().currentUser;
-
-        if (!user) return;
-
         // =========================
-        // GET STUDENT USING PARENT EMAIL
+        // GET LOGIN STUDENT ID
         // =========================
 
-        const studentSnap = await db.collection("students")
-            .where("parentEmail", "==", user.email)
-            .get();
+        const admNo = localStorage.getItem("studentId");
 
-        if(studentSnap.empty){
+        if(!admNo){
 
             homeworkDisplay.innerHTML = `
-            <div style="color:red;">
+            <div style="
+                color:red;
+                padding:15px;
+                text-align:center;
+            ">
+                Student not logged in
+            </div>`;
+
+            return;
+        }
+
+        // =========================
+        // GET STUDENT PROFILE
+        // =========================
+
+        const studentDoc = await db
+            .collection("students")
+            .doc(admNo)
+            .get();
+
+        if(!studentDoc.exists){
+
+            homeworkDisplay.innerHTML = `
+            <div style="
+                color:red;
+                padding:15px;
+                text-align:center;
+            ">
                 Student profile not found
             </div>`;
 
             return;
         }
 
-        const studentData = studentSnap.docs[0].data();
+        const studentData = studentDoc.data();
 
-        const studentClass = studentData.class;
+        // SAFE CLASS VALUE
+        const studentClass = String(studentData.class).trim();
 
         // =========================
         // TODAY DATE
@@ -275,27 +298,57 @@ async function loadParentHomework() {
         const today = new Date().toLocaleDateString('en-CA');
 
         // =========================
-        // LOAD HOMEWORK
+        // LOAD ALL HOMEWORK
         // =========================
 
-        const snapshot = await db.collection("homeworks")
-            .where("class", "==", studentClass)
-            .where("date", "==", today)
-            .get();
+        const snapshot = await db.collection("homeworks").get();
 
-        if(snapshot.empty){
+        let homeworkList = [];
+
+        snapshot.forEach(doc => {
+
+            const d = doc.data();
+
+            const hwClass = String(d.class || "").trim();
+
+            const hwDate = String(d.date || "").trim();
+
+            // MATCH CLASS + DATE
+            if(
+                hwClass === studentClass &&
+                hwDate === today
+            ){
+
+                homeworkList.push(d);
+
+            }
+
+        });
+
+        // =========================
+        // NO HOMEWORK
+        // =========================
+
+        if(homeworkList.length === 0){
 
             homeworkDisplay.innerHTML = `
             <div style="
+                background:white;
                 padding:20px;
+                border-radius:12px;
                 text-align:center;
                 color:gray;
+                border:1px solid #ddd;
             ">
-                No homework today
+                📚 No homework for today
             </div>`;
 
             return;
         }
+
+        // =========================
+        // DISPLAY HOMEWORK
+        // =========================
 
         let html = `
         <div style="
@@ -323,9 +376,7 @@ async function loadParentHomework() {
         ">
         `;
 
-        snapshot.forEach(doc => {
-
-            const d = doc.data();
+        homeworkList.forEach(d => {
 
             html += `
             <tr>
@@ -364,7 +415,11 @@ async function loadParentHomework() {
         console.log(error);
 
         homeworkDisplay.innerHTML = `
-        <div style="color:red;">
+        <div style="
+            color:red;
+            padding:15px;
+            text-align:center;
+        ">
             Error loading homework
         </div>`;
     }
