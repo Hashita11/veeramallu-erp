@@ -616,6 +616,7 @@ function checkLate(type, dt){
 // ===============================
 // ✅ GENERATE PAYROLL REPORT
 // ===============================
+// 1. THE MAIN PROCESSOR
 async function generateSalary() {
     const output = document.getElementById("output");
     const startVal = document.getElementById("start").value;
@@ -623,7 +624,7 @@ async function generateSalary() {
 
     if (!startVal || !endVal) return alert("Select Start and End dates first!");
     
-    // ✅ THE TRICK: Enter total Sundays + Holidays for the month
+    // THE TRICK: Manual Holiday Entry
     const extraDays = parseInt(prompt("Enter total Sundays/Holidays for this period:", "4")) || 0;
     
     output.innerText = "Processing VGA Payroll...";
@@ -640,16 +641,13 @@ async function generateSalary() {
         let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n(Paid Holidays Added: ${extraDays})\n===============================\n\n`;
 
         teachers.forEach(t => {
-            // ✅ SKIP EMPTY ENTRIES: Prevents extra dashes from printing
             if (!t.name || t.name === "-" || !t.email) return;
 
             const staffLogs = allLogs.filter(l => l.teacherEmail === t.email || l.teacher === t.email);
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             
-            // Apply Manual Holiday Logic
             const presentCount = presentDates.length + extraDays;
 
-            // Only process staff who have at least one attendance log or valid setup
             if (presentDates.length > 0) {
                 const baseSalary = t.salary || t.Salary || 0;
                 const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
@@ -657,6 +655,7 @@ async function generateSalary() {
                 const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
                 const absentDays = Math.max(0, totalDays - presentCount);
 
+                // This is the function that was "not defined" - it must be below!
                 const finalPay = generateFinalSalary(t.name, teachers, totalDays, {
                     lateCount: lateCount,
                     absentDays: absentDays
@@ -668,6 +667,23 @@ async function generateSalary() {
 
         output.innerText = report;
     } catch (e) { output.innerText = "Error: " + e.message; }
+}
+
+// 2. THE CALCULATION LOGIC (MUST BE IN THE SAME FILE)
+function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
+    const teacher = teachers.find(x => x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase());
+    if (!teacher) return 0;
+
+    const monthlySalary = parseFloat(String(teacher.salary || 0).replace(/[^0-9.]/g, '')) || 0;
+    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
+
+    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
+    const absentPenaltyDays = (attendance.absentDays || 0) * 2;          
+
+    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays;
+    let finalSalary = monthlySalary - (totalPenaltyDays * perDaySalary);
+
+    return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
 
