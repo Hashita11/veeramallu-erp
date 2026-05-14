@@ -604,283 +604,59 @@ function checkLate(type, dt){
 // ✅ ADVANCED PAYROLL SYSTEM
 // ===============================
 
-function generateSalary(){
+/**
+ * ✅ FINAL TEACHER SALARY CALCULATION (June 2026 - June 2028)
+ * Rules: 
+ * 1. 3 Lates = 1 Day Cut
+ * 2. Absent = 2 Days Cut (per absent day)
+ * 3. Sunday/Holiday Sandwich = Full salary loss for that day
+ */
+function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
+    // 1. FIND TEACHER
+    const teacher = teachers.find(x => 
+        x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase()
+    );
 
-    let s_val = document.getElementById("start").value;
-    let e_val = document.getElementById("end").value;
+    if (!teacher) return 0;
 
-    if(!s_val || !e_val){
-        return alert("Select Start & End Date");
-    }
+    // 2. CLEAN SALARY (Handles ₹ and commas from 220527.jpg)
+    const monthlySalary = parseFloat(String(teacher.salary).replace(/[^0-9.]/g, '')) || 0;
+    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
 
-    let start = new Date(s_val);
-    let end = new Date(e_val);
-
-    // ===============================
-    // ✅ AP GOVT HOLIDAYS 2026-27
-    // ===============================
-
-    const GOVT_HOLIDAYS = [
-
-        "2026-01-01",
-        "2026-01-14",
-        "2026-01-15",
-        "2026-01-26",
-        "2026-03-25",
-        "2026-04-02",
-        "2026-04-14",
-        "2026-05-01",
-        "2026-08-15",
-        "2026-08-27",
-        "2026-10-02",
-        "2026-10-20",
-        "2026-11-08",
-        "2026-12-25",
-
-        "2027-01-01",
-        "2027-01-14",
-        "2027-01-26",
-        "2027-03-08",
-        "2027-03-25",
-        "2027-04-14",
-        "2027-05-01",
-        "2027-08-15",
-        "2027-10-02",
-        "2027-11-05",
-        "2027-12-25"
+    // 3. AP GOVT HOLIDAYS (Fixed Dates)
+    const apGovHolidays = [
+        "2026-06-16", "2026-08-15", "2026-08-25", "2026-09-04", "2026-09-14", "2026-10-02", "2026-10-20", "2026-11-08", "2026-12-25",
+        "2027-01-14", "2027-01-15", "2027-01-26", "2027-03-08", "2027-03-25", "2027-04-08", "2027-04-15", "2027-05-01", "2027-08-15", "2027-09-04", "2027-10-02", "2027-10-09", "2027-10-29", "2027-12-25"
     ];
 
-    // ===============================
-    // ✅ ALL SUNDAYS
-    // ===============================
-
-    function isSunday(date){
-
-        return date.getDay() === 0;
-
-    }
-
-    // ===============================
-    // ✅ HOLIDAY CHECK
-    // ===============================
-
-    function isHoliday(date){
-
-        const d = date.toISOString().split('T')[0];
-
-        return GOVT_HOLIDAYS.includes(d) || isSunday(date);
-
-    }
-
-    db.collection("attendance").get().then((snap)=>{
-
-        let attendanceMap = {};
-
-        // ===============================
-        // ✅ PROCESS ATTENDANCE
-        // ===============================
-
-        snap.forEach((doc)=>{
-
-            const d = doc.data();
-
-            if(!d.fullTimestamp) return;
-
-            const dt = new Date(d.fullTimestamp);
-
-            if(dt < start || dt > end) return;
-
-            const name = resolveName(d);
-
-            const dayKey = dt.toISOString().split('T')[0];
-
-            if(!attendanceMap[name]){
-
-                attendanceMap[name] = {
-
-                    presentDays : new Set(),
-                    lateCount : 0
-
-                };
-
-            }
-
-            // PRESENT
-
-            if(d.type === "IN"){
-
-                attendanceMap[name].presentDays.add(dayKey);
-
-                if(d.late === true || d.autoLate === true){
-
-                    attendanceMap[name].lateCount++;
-
-                }
-
-            }
-
-        });
-
-        // ===============================
-        // ✅ CALCULATE TOTAL WORKING DAYS
-        // ===============================
-
-        let totalWorkingDays = 0;
-
-        let allDates = [];
-
-        let current = new Date(start);
-
-        while(current <= end){
-
-            const clone = new Date(current);
-
-            allDates.push(clone);
-
-            if(!isHoliday(clone)){
-
-                totalWorkingDays++;
-
-            }
-
-            current.setDate(current.getDate()+1);
-
-        }
-
-        // ===============================
-        // ✅ FINAL PAYROLL
-        // ===============================
-
-        let report = `
-VEERAMALLU GLOBAL ACADEMY
-ADVANCED PAYROLL REPORT
-
-`;
-
-        for(let teacherName in attendanceMap){
-
-            const teacher = teachers.find(t => t.name === teacherName);
-
-            const monthlySalary = teacher?.salary || 0;
-
-            const perDaySalary = monthlySalary / 30;
-
-            const presentDays = attendanceMap[teacherName].presentDays;
-
-            const lateCount = attendanceMap[teacherName].lateCount;
-
-            // ===============================
-            // ✅ ABSENT DAYS
-            // ===============================
-
-            let absentDays = 0;
-
-            allDates.forEach((date)=>{
-
-                const key = date.toISOString().split('T')[0];
-
-                if(isHoliday(date)) return;
-
-                if(!presentDays.has(key)){
-
-                    absentDays++;
-
-                }
-
-            });
-
-            // ===============================
-            // ✅ SANDWICH HOLIDAY RULE
-            // ===============================
-
-            let sandwichLoss = 0;
-
-            for(let i=1; i<allDates.length-1; i++){
-
-                const prev = allDates[i-1];
-                const curr = allDates[i];
-                const next = allDates[i+1];
-
-                const prevKey = prev.toISOString().split('T')[0];
-                const currKey = curr.toISOString().split('T')[0];
-                const nextKey = next.toISOString().split('T')[0];
-
-                if(
-
-                    isHoliday(curr)
-
-                    &&
-
-                    !presentDays.has(prevKey)
-
-                    &&
-
-                    !presentDays.has(nextKey)
-
-                ){
-
-                    sandwichLoss++;
-
-                }
-
-            }
-
-            // ===============================
-            // ✅ LATE CUT
-            // ===============================
-
-            const latePenaltyDays = Math.floor(lateCount / 3);
-
-            // ===============================
-            // ✅ ABSENT PENALTY
-            // 1 absent = 2 days salary loss
-            // ===============================
-
-            const absentPenaltyDays = absentDays * 2;
-
-            // ===============================
-            // ✅ TOTAL LOSS
-            // ===============================
-
-            const totalPenaltyDays =
-
-                latePenaltyDays
-                + absentPenaltyDays
-                + sandwichLoss;
- // ===============================
-// ✅ FIND TEACHER SALARY
-// ===============================
-
-let teacher = teachers.find(x =>
-    x.name &&
-    x.name.trim().toLowerCase() === teacherName.trim().toLowerCase()
-);
-
-// MONTHLY SALARY
-let monthlySalary = Number(teacher?.salary || 0);
-
-// SAFETY FIX
-if(monthlySalary <= 0){
-
-    monthlySalary = 0;
-
+    // 4. DYNAMIC SUNDAY & HOLIDAY CHECKER
+    const isHolidayOrSunday = (dateString) => {
+        const d = new Date(dateString);
+        return d.getDay() === 0 || apGovHolidays.includes(dateString);
+    };
+
+    // 5. CALCULATE PENALTIES
+    
+    // 3 Lates = 1 Day Cut
+    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3);
+
+    // Absent = 2 Days Cut (As shown in 220527.jpg: 10 Absents = 20 Day Penalty)
+    const absentPenaltyDays = (attendance.absentDays || 0) * 2;
+
+    // Holiday Sandwich Loss (e.g., Absent on Saturday AND Monday)
+    // This value should be calculated in your attendance tracker using isHolidayOrSunday()
+    const sandwichPenaltyDays = attendance.holidaySandwichCount || 0;
+
+    // 6. FINAL CALCULATION
+    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays + sandwichPenaltyDays;
+    const totalCutAmount = totalPenaltyDays * perDaySalary;
+
+    let finalSalary = monthlySalary - totalCutAmount;
+
+    // Safety: Result cannot be negative
+    return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
-// DAILY SALARY
-const perDaySalary = monthlySalary / totalWorkingDays;
-
-// TOTAL CUT
-const salaryCut = totalPenaltyDays * perDaySalary;
-
-// FINAL SALARY
-let finalSalary = monthlySalary - salaryCut;
-
-// NEGATIVE STOP
-if(finalSalary < 0){
-
-    finalSalary = 0;
-
-}
             // ===============================
             // ✅ REPORT
             // ===============================
