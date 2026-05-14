@@ -374,14 +374,15 @@ style="background:#111;color:white;margin-bottom:15px;">
     onclick="window.location.href='bus-tracker.html'">
     Bus Tracking
     </button>
-    <!-- The Trigger Button -->
+    <div class="form-group" style="margin-top: 15px;">
+    <label>Select Month</label>
+    <input type="month" id="selectedMonth" class="form-control" value="2026-05">
+</div>
 <div class="p-6 text-center">
     <button onclick="loadAttendance()" id="viewBtn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">
         View Monthly Exceptions
     </button>
 </div>
-
-<!-- The Hidden Portal (Visible after click) -->
 <div id="portalContent" class="hidden max-w-2xl mx-auto mt-4 p-4 border rounded shadow-lg bg-white">
     <h3 class="font-bold border-b pb-2 mb-4">My Attendance (Late/Leave/Absent)</h3>
     <div id="statsGrid" class="grid grid-cols-3 gap-2 mb-4"></div>
@@ -1149,9 +1150,16 @@ async function getMonthlyAttendance() {
     const user = firebase.auth().currentUser;
     if (!user) return [];
 
-    // Format today as YYYY-MM to match your records
-    const now = new Date();
-    const currentMonthYear = now.getMonth() + 1 + "/" + now.getFullYear(); // Adjust this to match your "dateOnly" format
+    // 1. Get value from the month picker (e.g., "2026-05")
+    const monthInput = document.getElementById('selectedMonth').value;
+    if (!monthInput) {
+        alert("Please select a month first");
+        return [];
+    }
+
+    // 2. Format the month and year to match your dateOnly format: /05/2026
+    const [year, month] = monthInput.split("-");
+    const matchPattern = `/${month}/${year}`; // This will find any date in that month
 
     try {
         const querySnapshot = await db.collection("attendance")
@@ -1161,19 +1169,27 @@ async function getMonthlyAttendance() {
         const logs = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Check if record is from this month (Simple check)
-            if (data.dateOnly && data.dateOnly.includes("/" + (now.getMonth() + 1).toString().padStart(2, '0') + "/")) {
-                if (data.late || data.status === "Absent" || data.status === "Leave") {
+            
+            // 3. Filter by date string and status
+            if (data.dateOnly && data.dateOnly.includes(matchPattern)) {
+                const isLate = (data.type === "IN" && data.late === true);
+                const isAbsentOrLeave = (data.status === "Absent" || data.status === "Leave");
+
+                if (isLate || isAbsentOrLeave) {
                     logs.push({
                         date: data.dateOnly,
-                        checkIn: data.time ? new Date(data.time.seconds * 1000).toLocaleTimeString() : "-",
-                        status: data.late ? "Late" : data.status
+                        checkIn: data.time ? new Date(data.time.seconds * 1000).toLocaleTimeString() : "---",
+                        status: isLate ? "Late" : data.status
                     });
                 }
             }
         });
-        return logs;
+        
+        // Sort by date so they appear in order
+        return logs.sort((a, b) => b.date.localeCompare(a.date));
+        
     } catch (error) {
+        console.error("Database Error:", error);
         return [];
     }
 }
