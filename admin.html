@@ -613,15 +613,10 @@ async function generateSalary() {
     const startVal = document.getElementById("start").value;
     const endVal = document.getElementById("end").value;
 
-    // Validate that dates are selected (as required by instructions in 220590.jpg)
-    if (!startVal || !endVal) {
-        return alert("Please select both Start and End dates in the Attendance section first!");
-    }
-
-    output.innerText = "Processing VGA Payroll... Please wait.";
+    if (!startVal || !endVal) return alert("Select Start and End dates first!");
+    output.innerText = "Processing VGA Payroll...";
 
     try {
-        // Fetch attendance logs within the selected range from Firestore
         const snap = await db.collection("attendance")
             .where("time", ">=", firebase.firestore.Timestamp.fromDate(new Date(startVal)))
             .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
@@ -630,56 +625,33 @@ async function generateSalary() {
         let allLogs = [];
         snap.forEach(doc => allLogs.push(doc.data()));
 
-        let report = `VEERAMALLU GLOBAL ACADEMY\n`;
-        report += `PAYROLL REPORT: ${startVal} to ${endVal}\n`;
-        report += `===============================\n\n`;
+        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
 
-        // Loop through each teacher in the global 'teachers' array
         teachers.forEach(t => {
-            // Filter logs specifically for this teacher
-            const staffLogs = allLogs.filter(l => 
-                l.teacherEmail === t.email || l.teacher === t.email
-            );
-
-            // Calculate attendance metrics
-            const presentDates = [...new Set(staffLogs
-                .filter(l => l.type === "IN")
-                .map(l => l.time.toDate().toDateString())
-            )];
+            // Fix for 'undefined' salary
+            const baseSalary = t.salary || t.Salary || 0;
+            const staffLogs = allLogs.filter(l => l.teacherEmail === t.email || l.teacher === t.email);
             
+            const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             const presentCount = presentDates.length;
             const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
             
-            // Calculate total working days in selected range
-            const diffTime = Math.abs(new Date(endVal) - new Date(startVal));
-            const totalWorkingDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-            const absentDays = totalWorkingDaysInRange - presentCount;
+            const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
+            const absentDays = totalDays - presentCount;
 
-            // CALL CALCULATION LOGIC (This fixes the "not defined" error)
-            const finalPay = generateFinalSalary(t.name, teachers, totalWorkingDaysInRange, {
+            // Calls the calculation logic below
+            const finalPay = generateFinalSalary(t.name, teachers, totalDays, {
                 lateCount: lateCount,
                 absentDays: absentDays,
-                holidaySandwichCount: 0 // Default placeholder
+                holidaySandwichCount: 0 
             });
 
-            // Format teacher result
-            report += `STAFF : ${t.name}\n`;
-            report += `Monthly Salary : ₹${t.salary}\n`;
-            report += `Present Days : ${presentCount}\n`;
-            report += `Absent Days  : ${absentDays}\n`;
-            report += `Late Count   : ${lateCount}\n`;
-            report += `-------------------------------\n`;
-            report += `FINAL SALARY : ₹${finalPay}\n`;
-            report += `===============================\n\n`;
+            report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
         });
-
         output.innerText = report;
-
-    } catch (error) {
-        console.error("Payroll Error:", error);
-        output.innerText = "Error: " + error.message;
-    }
+    } catch (e) { output.innerText = "Error: " + e.message; }
 }
+
 
 /**
  * 2. CALCULATION LOGIC FUNCTION
@@ -687,34 +659,24 @@ async function generateSalary() {
  * Coverage: June 2026 - June 2028.
  */
 function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
-    // Robust teacher search
-    const teacher = teachers.find(x => 
-        x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase()
-    );
-
+    const teacher = teachers.find(x => x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase());
     if (!teacher) return 0;
 
-    // Clean salary data to remove currency symbols (fixes ₹0 display issue)
-    const monthlySalary = parseFloat(String(teacher.salary).replace(/[^0-9.]/g, '')) || 0;
+    // Clean salary strings (removes ₹ symbol)
+    const monthlySalary = parseFloat(String(teacher.salary || 0).replace(/[^0-9.]/g, '')) || 0;
     const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
 
     // Penalty Rules
-    // 1. 3 Lates = 1 Day Cut
     const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3);
-
-    // 2. Absent = 2 Days Cut (per absent day)
-    const absentPenaltyDays = (attendance.absentDays || 0) * 2;
-
-    // 3. Holiday Sandwich (Sundays/AP Govt Holidays)
+    const absentPenaltyDays = (attendance.absentDays || 0) * 2; // 2x Absent Penalty
     const sandwichPenaltyDays = attendance.holidaySandwichCount || 0;
 
-    // Final Calculation
     const totalPenaltyDays = latePenaltyDays + absentPenaltyDays + sandwichPenaltyDays;
     let finalSalary = monthlySalary - (totalPenaltyDays * perDaySalary);
 
-    // Safety: Result cannot be negative
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
+
 
 // =====================
 // ✅ MARKS (FINAL)
