@@ -426,7 +426,7 @@ window.onload = () => {
 // =====================
 // ✅ TEACHERS
 // =====================
-let teachers = []; // Define this globally at the very top of your script
+
 
 function loadTeachers() {
 
@@ -534,7 +534,7 @@ function resolveName(d){
     }
 
     // teacherId match
-    let byId = teachers.find(t => t.uid === d.teacherId);
+    let byId = teachers.find(t => t.id === d.teacherId);
     if(byId && byId.name){
         return byId.name;
     }
