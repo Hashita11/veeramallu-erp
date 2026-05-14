@@ -118,60 +118,75 @@
 
     // 2. FETCH ATTENDANCE DATA
     async function fetchAttendanceData() {
-        const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
-        const fetchBtn = document.getElementById("fetchBtn");
+    const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+    const fetchBtn = document.getElementById("fetchBtn");
 
-        if (!email) return alert("Please enter the teacher's email.");
+    if (!email) return alert("Please enter the teacher's email.");
 
-        fetchBtn.disabled = true;
-        fetchBtn.innerText = "⏳ Fetching...";
+    fetchBtn.disabled = true;
+    fetchBtn.innerText = "⏳ Fetching...";
 
-        const today = new Date();
-        const month = (today.getMonth() + 1).toString().padStart(2, '0');
-        const year = today.getFullYear();
+    const today = new Date();
+    const month = today.getMonth(); // 0-11
+    const year = today.getFullYear();
 
-        try {
-            const snap = await db.collection("attendance")
-                                 .where("teacherEmail", "==", email)
-                                 .get();
+    try {
+        const snap = await db.collection("attendance")
+                             .where("teacherEmail", "==", email)
+                             .get();
+        
+        let presentCount = 0; 
+        let lates = 0;
+
+        // 1. COUNT ACTUAL ATTENDANCE FROM FIREBASE
+        snap.forEach(doc => {
+            const d = doc.data();
+            let attendanceDate;
             
-            let count = 0; 
-            let lates = 0;
+            if (d.time && d.time.toDate) {
+                attendanceDate = d.time.toDate();
+            } else if (d.fullTimestamp) {
+                attendanceDate = new Date(d.fullTimestamp);
+            }
 
-            snap.forEach(doc => {
-                const d = doc.data();
-                let attendanceDate;
-                
-                if (d.time && d.time.toDate) {
-                    attendanceDate = d.time.toDate();
-                } else if (d.fullTimestamp) {
-                    attendanceDate = new Date(d.fullTimestamp);
+            if (attendanceDate) {
+                const aMonth = attendanceDate.getMonth();
+                const aYear = attendanceDate.getFullYear();
+
+                // Match current month and year for "IN" records
+                if (aMonth === month && aYear === year && d.type === "IN") {
+                    presentCount++;
+                    const timeStr = attendanceDate.toLocaleTimeString('en-GB', { hour12: false });
+                    if (timeStr > "08:30:00") lates++; // VGA Late Standard
                 }
+            }
+        });
 
-                if (attendanceDate) {
-                    const aMonth = (attendanceDate.getMonth() + 1).toString().padStart(2, '0');
-                    const aYear = attendanceDate.getFullYear();
-
-                    if (aMonth === month && aYear === year && d.type === "IN") {
-                        count++;
-                        const timeStr = attendanceDate.toLocaleTimeString('en-GB', { hour12: false });
-                        if (timeStr > "08:30:00") lates++; // VGA Late Standard
-                    }
-                }
-            });
-
-            document.getElementById("presentDays").value = count;
-            document.getElementById("lateMarks").value = lates;
-            
-            fetchBtn.disabled = false;
-            fetchBtn.innerHTML = "🔍 Fetch Attendance from Firebase";
-            alert(`✅ Found ${count} days and ${lates} lates.`);
-
-        } catch (e) { 
-            alert("Error: " + e.message); 
-            fetchBtn.disabled = false;
+        // 2. AUTOMATICALLY ADD SUNDAYS AS PRESENT DAYS
+        // Loop through all days of the current month
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const checkDate = new Date(year, month, day);
+            // If the day is a Sunday (0)
+            if (checkDate.getDay() === 0) {
+                presentCount++;
+            }
         }
+
+        // 3. UPDATE UI
+        document.getElementById("presentDays").value = presentCount;
+        document.getElementById("lateMarks").value = lates;
+        
+        fetchBtn.disabled = false;
+        fetchBtn.innerHTML = "🔍 Fetch Attendance from Firebase";
+        alert(`✅ Calculated for ${month + 1}/${year}:\nTotal Present (including Sundays): ${presentCount}\nLates: ${lates}`);
+
+    } catch (e) { 
+        alert("Error: " + e.message); 
+        fetchBtn.disabled = false;
     }
+}
+
 
     // 3. GENERATE SLIP (With 2x Absent Penalty)
     function generateSalarySlip() {
