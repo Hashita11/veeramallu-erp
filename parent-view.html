@@ -352,13 +352,13 @@ async function loadParentHomework() {
 }
 function downloadHomeworkPDF() {
     const element = document.getElementById('homeworkDisplay');
-    const studentId = localStorage.getItem("studentId") || "Student";
     
-    // Capture as Image (Best for mobile parents to share on WhatsApp)
-    html2canvas(element, { backgroundColor: null, scale: 2 }).then(canvas => {
+    // Use html2canvas to capture the colored cards
+    html2canvas(element, { scale: 2, useCORS: true }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `Homework_${studentId}.png`;
-        link.href = canvas.toDataURL("image/png");
+        link.download = `Homework_${new Date().toLocaleDateString()}.png`;
+        link.href = imgData;
         link.click();
     });
 }
