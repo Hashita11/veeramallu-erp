@@ -355,14 +355,14 @@ function downloadHomeworkPDF() {
     const element = document.getElementById('homeworkDisplay');
     const studentId = localStorage.getItem("studentId") || "Student";
     
-    html2canvas(element).then(canvas => {
+    // Capture as Image (Best for mobile parents to share on WhatsApp)
+    html2canvas(element, { backgroundColor: null, scale: 2 }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Homework_${studentId}.png`;
         link.href = canvas.toDataURL("image/png");
         link.click();
     });
 }
-
 
 </script>
 </body>
