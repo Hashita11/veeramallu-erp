@@ -244,20 +244,17 @@ async function loadParentHomework() {
 
         const user = firebase.auth().currentUser;
 
-        if (!user) {
-            homeworkDisplay.innerHTML = "Parent not logged in";
-            return;
-        }
+        if (!user) return;
 
         // =========================
-        // ✅ GET STUDENT PROFILE
+        // GET STUDENT USING PARENT EMAIL
         // =========================
-        const studentDoc = await db
-            .collection("students")
-            .doc(user.uid)
+
+        const studentSnap = await db.collection("students")
+            .where("parentEmail", "==", user.email)
             .get();
 
-        if (!studentDoc.exists) {
+        if(studentSnap.empty){
 
             homeworkDisplay.innerHTML = `
             <div style="color:red;">
@@ -267,53 +264,40 @@ async function loadParentHomework() {
             return;
         }
 
-        const studentData = studentDoc.data();
+        const studentData = studentSnap.docs[0].data();
 
-        // IMPORTANT
         const studentClass = studentData.class;
 
         // =========================
-        // ✅ TODAY DATE
+        // TODAY DATE
         // =========================
+
         const today = new Date().toLocaleDateString('en-CA');
 
-        // DEBUG
-        console.log("Class:", studentClass);
-        console.log("Today:", today);
+        // =========================
+        // LOAD HOMEWORK
+        // =========================
 
-        // =========================
-        // ✅ LOAD HOMEWORK
-        // =========================
-        const snapshot = await db
-            .collection("homeworks")
+        const snapshot = await db.collection("homeworks")
             .where("class", "==", studentClass)
             .where("date", "==", today)
             .get();
 
-        // =========================
-        // ✅ NO HOMEWORK
-        // =========================
-        if (snapshot.empty) {
+        if(snapshot.empty){
 
             homeworkDisplay.innerHTML = `
             <div style="
                 padding:20px;
                 text-align:center;
                 color:gray;
-                border:1px dashed #999;
-                border-radius:10px;
             ">
-                No homework available for today
+                No homework today
             </div>`;
 
             return;
         }
 
-        // =========================
-        // ✅ SHOW HOMEWORK
-        // =========================
         let html = `
-
         <div style="
             border:1px solid #1a237e;
             border-radius:12px;
@@ -321,22 +305,22 @@ async function loadParentHomework() {
             background:white;
         ">
 
-            <div style="
-                background:#1a237e;
-                color:white;
-                padding:12px;
-                font-weight:bold;
-                display:flex;
-                justify-content:space-between;
-            ">
-                <span>${studentClass}</span>
-                <span>${today}</span>
-            </div>
+        <div style="
+            background:#1a237e;
+            color:white;
+            padding:12px;
+            font-weight:bold;
+            display:flex;
+            justify-content:space-between;
+        ">
+            <span>${studentClass}</span>
+            <span>${today}</span>
+        </div>
 
-            <table style="
-                width:100%;
-                border-collapse:collapse;
-            ">
+        <table style="
+            width:100%;
+            border-collapse:collapse;
+        ">
         `;
 
         snapshot.forEach(doc => {
@@ -344,7 +328,6 @@ async function loadParentHomework() {
             const d = doc.data();
 
             html += `
-
             <tr>
 
                 <td style="
@@ -355,14 +338,14 @@ async function loadParentHomework() {
                     color:#1a237e;
                     border-right:1px solid #eee;
                 ">
-                    ${d.subject || '-'}
+                    ${d.subject}
                 </td>
 
                 <td style="
                     padding:12px;
                     border-bottom:1px solid #eee;
                 ">
-                    ${d.homework || '-'}
+                    ${d.homework}
                 </td>
 
             </tr>
@@ -370,15 +353,15 @@ async function loadParentHomework() {
         });
 
         html += `
-            </table>
+        </table>
         </div>
         `;
 
         homeworkDisplay.innerHTML = html;
 
-    } catch (error) {
+    } catch(error){
 
-        console.error("Homework Error:", error);
+        console.log(error);
 
         homeworkDisplay.innerHTML = `
         <div style="color:red;">
@@ -386,7 +369,6 @@ async function loadParentHomework() {
         </div>`;
     }
 }
-
 </script>
 </body>
 </html>
