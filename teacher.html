@@ -1147,101 +1147,66 @@ function getStatusColor(status) {
 }
 
 async function getMonthlyAttendance() {
-
     const user = firebase.auth().currentUser;
-
     if (!user) return [];
 
-    const monthInput =
-        document.getElementById('selectedMonth').value;
-
+    const monthInput = document.getElementById('selectedMonth').value;
     if (!monthInput) {
-
         alert("Please select a month");
-
         return [];
-
     }
 
-    // FORMAT: 2026-05
+    // monthInput is "2026-05"
     const [year, month] = monthInput.split("-");
+    const monthInt = parseInt(month); // Turns "05" into 5
+
+    // Patterns to match "12/5/2026" or "12/05/2026"
+    const match1 = `/${monthInt}/${year}`; 
+    const match2 = `/${month}/${year}`;
 
     try {
-
-        const querySnapshot = await db
-            .collection("attendance")
+        const querySnapshot = await db.collection("attendance")
             .where("teacherEmail", "==", user.email)
             .get();
 
         const logs = [];
-
         querySnapshot.forEach((doc) => {
-
             const data = doc.data();
-
-            // dateOnly format: 2026-05-12
             const dateStr = data.dateOnly || "";
 
-            // CHECK MONTH
-            if(dateStr.startsWith(`${year}-${month}`)){
+            // Check if date belongs to the selected month/year
+            if (dateStr.includes(match1) || dateStr.includes(match2)) {
+                
+                // Identify Late marks or Absence/Leave exceptions
+                const isLate = (data.type === "IN" && data.late === true);
+                const isException = (data.status === "Absent" || data.status === "Leave");
 
-                // LATE CHECK
-                const isLate =
-                    data.type === "IN" &&
-                    (data.late === true ||
-                     data.autoLate === true);
-
-                // ABSENT / LEAVE
-                const isException =
-                    data.status === "Absent" ||
-                    data.status === "Leave";
-
-                if(isLate || isException){
-
-                    let checkIn = "N/A";
-
-                    if(data.time){
-
-                        checkIn =
-                            data.time.toDate()
-                            .toLocaleTimeString('en-IN');
-
+                if (isLate || isException) {
+                    let checkInTime = "N/A";
+                    if (data.time) {
+                        // Handle both Firestore Timestamp and JS Date
+                        const d = data.time.toDate ? data.time.toDate() : new Date(data.time.seconds * 1000);
+                        checkInTime = d.toLocaleTimeString('en-IN');
                     }
 
                     logs.push({
-
-                        date : dateStr,
-
-                        checkIn : checkIn,
-
-                        status : isLate
-                            ? "Late"
-                            : data.status
-
+                        date: dateStr,
+                        checkIn: checkInTime,
+                        status: isLate ? "Late" : data.status
                     });
-
                 }
-
             }
-
         });
 
-        // SORT DATE
-        logs.sort((a,b)=>
-            new Date(a.date) - new Date(b.date)
-        );
+        // Simple sort by date string
+        return logs.sort((a, b) => b.date.localeCompare(a.date));
 
-        return logs;
-
-    } catch(error){
-
+    } catch (error) {
         console.error("Error fetching logs:", error);
-
         return [];
-
     }
-
 }
+
 
 
 // DARK MODE
@@ -1299,14 +1264,14 @@ function goToAdmin(){
     function checkSalaryAccess() {
     const user = firebase.auth().currentUser;
 
-    // Check if the logged-in user is the Admin
     if (user && user.email === "admin@gmail.com") {
         window.location.href = 'salary-slip.html';
     } else {
-        // Show the popup message instead of opening the page
-        alert("🔒 Access Denied: This feature is for Admin use only.");
+        // This creates the popup you requested
+        alert("🔒 Admin Only: You do not have permission to view salary slips.");
     }
 }
+
 
 </script>
 
