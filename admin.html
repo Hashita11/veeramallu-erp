@@ -440,7 +440,8 @@ function loadTeachers(){
             teachers.push({
                 uid: doc.id,
                 name: d.name || "",
-                email: d.email || ""
+                email: d.email || "",
+                salary:d.salary || 0
             });
 
             ts.innerHTML += `
