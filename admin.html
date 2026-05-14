@@ -426,38 +426,28 @@ window.onload = () => {
 // =====================
 // ✅ TEACHERS
 // =====================
-function loadTeachers(){
+let teachers = []; // Define this globally at the very top of your script
 
-    const ts = document.getElementById("manualStaffSelect");
-
-    db.collection("teachers").onSnapshot(snap=>{
-
-        teachers = [];
-
-        ts.innerHTML = `
-        <option value="">Select Staff</option>
-        `;
-
-        snap.forEach(doc=>{
-
+function loadTeachers() {
+    // Using onSnapshot ensures the data is always fresh
+    db.collection("teachers").onSnapshot(snap => {
+        teachers = []; // Clear array before refilling
+        snap.forEach(doc => {
             let d = doc.data();
-
             teachers.push({
-                uid: doc.id,
-                name: d.name || "",
-                email: d.email || ""
-                salary: d.salary || 0 // Match the lowercase 'salary'
+                id: doc.id,
+                name: d.name || "Unknown",
+                email: d.email || "",
+                salary: d.salary || 0 // ✅ Correct: Matches lowercase 'salary' in DB
             });
-
-            ts.innerHTML += `
-            <option value="${d.email}">
-                ${d.name}
-            </option>`;
         });
-
-        load();
+        console.log("Teachers Synchronized");
+        // Remove any "Loading" spinners here if you have them
+    }, (error) => {
+        console.error("Sync Error:", error);
     });
 }
+
 
 
 // =====================
@@ -562,41 +552,28 @@ function resolveName(d){
 // ✅ ADMIN ENTRY
 // ====================
     
+// ✅ Correct Implementation for saving a teacher
 async function createTeacher() {
-    console.log("Function started");
-
     const n = document.getElementById("t_name").value.trim();
     const e = document.getElementById("t_email").value.trim();
-    const s = document.getElementById("t_subject").value.trim();
-    const sa = document.getElementById("t_salary").value;
+    const sa = document.getElementById("t_salary").value; // Ensure this ID exists in HTML
 
-    console.log(n, e, s, sa);
-
-    if (!n || !e) {
-        alert("Enter Name and Email");
-        return;
-    }
+    if (!n || !e) return alert("Enter Name and Email");
 
     try {
-        console.log("Saving to Firestore...");
-
         await db.collection("teachers").add({
             name: n,
             email: e,
-            subject: s,
-           salary: Number(sa) || 0, // Force as a number
+            salary: Number(sa) || 0, // ✅ Correct: Forces numerical value
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        console.log("Saved सफल");
-
-        alert("✅ Teacher Saved Successfully");
-
+        alert("Teacher Added Successfully");
+        location.reload(); // Refresh to update the list
     } catch (err) {
-        console.error("FULL ERROR:", err);
-        alert("Error: " + err.message);
+        console.error("Save Error:", err);
     }
 }
+
 
 // =====================
 // ✅ LATE CHECK (FIXED)
