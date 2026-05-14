@@ -93,17 +93,23 @@
             <div id="feeArea"></div>
             <div class="section-title">📚 HOMEWORK</div>
 
-<div id="homeworkDisplay">
-
-    <div style="
-        text-align:center;
-        padding:20px;
-        color:gray;
-    ">
-        Loading homework...
+<div class="card" id="homeworkSection">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin: 0;">📚 Homework</h3>
+        <button onclick="downloadHomeworkPDF()" style="width: auto; padding: 5px 10px; background: #d32f2f; font-size: 12px;">
+            Download PDF
+        </button>
     </div>
 
+    <div style="margin-bottom: 15px; text-align: left;">
+        <label style="font-size: 12px;">Search by Date:</label>
+        <input type="date" id="hwSearchDate" onchange="loadParentHomework()" style="padding: 8px;">
+    </div>
+
+    <div id="homeworkDisplay">
+        </div>
 </div>
+
 
             <button class="btn-action no-print" style="margin-top:20px; background: #4527a0;" onclick="downloadPDF()">📥 DOWNLOAD PDF REPORT</button>
             <button class="btn-action no-print" style="margin-top:10px; background:#555;" onclick="location.reload()">LOGOUT</button>
@@ -241,6 +247,16 @@ function downloadPDF() {
         pdf.save(`${currentStudent.name}_Report.pdf`);
     });
 }
+    // subject colors
+    const subjectColors = {
+    "Telugu": "#e3f2fd", // Light Blue
+    "Hindi": "#fff3e0",  // Light Orange
+    "English": "#f3e5f5", // Light Purple
+    "Maths": "#e8f5e9",   // Light Green
+    "Science": "#fffde7", // Light Yellow
+    "Social": "#efebe9",  // Light Brown
+    "Default": "#f5f5f5"
+};
 
 // Function to load homework
 
@@ -334,6 +350,17 @@ async function loadParentHomework() {
             </div>
         `;
     }
+}
+function downloadHomeworkPDF() {
+    const element = document.getElementById('homeworkDisplay');
+    const studentId = localStorage.getItem("studentId") || "Student";
+    
+    html2canvas(element).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Homework_${studentId}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    });
 }
 
 
