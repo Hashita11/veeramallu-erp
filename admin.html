@@ -847,17 +847,40 @@ ADVANCED PAYROLL REPORT
                 latePenaltyDays
                 + absentPenaltyDays
                 + sandwichLoss;
+ // ===============================
+// ✅ FIND TEACHER SALARY
+// ===============================
 
-            const salaryCut = totalPenaltyDays * perDaySalary;
+let teacher = teachers.find(x =>
+    x.name &&
+    x.name.trim().toLowerCase() === teacherName.trim().toLowerCase()
+);
 
-            let finalSalary = monthlySalary - salaryCut;
+// MONTHLY SALARY
+let monthlySalary = Number(teacher?.salary || 0);
 
-            if(finalSalary < 0){
+// SAFETY FIX
+if(monthlySalary <= 0){
 
-                finalSalary = 0;
+    monthlySalary = 0;
 
-            }
+}
 
+// DAILY SALARY
+const perDaySalary = monthlySalary / totalWorkingDays;
+
+// TOTAL CUT
+const salaryCut = totalPenaltyDays * perDaySalary;
+
+// FINAL SALARY
+let finalSalary = monthlySalary - salaryCut;
+
+// NEGATIVE STOP
+if(finalSalary < 0){
+
+    finalSalary = 0;
+
+}
             // ===============================
             // ✅ REPORT
             // ===============================
