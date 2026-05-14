@@ -91,14 +91,18 @@
 
             <div class="section-title">💰 FEE SUMMARY</div>
             <div id="feeArea"></div>
-            
-            <div class="card mt-4" id="homeworkSection">
-            <div class="p-3 bg-primary text-white rounded-t-lg">
-            <h3 class="font-bold">📚 Today's Homework</h3>
-          </div>
-            <div id="homeworkDisplay" class="p-4 bg-white border rounded-b-lg shadow">
-            <p class="text-gray-500 italic">Fetching homework for your class...</p>
+            <div class="section-title">📚 HOMEWORK</div>
+
+<div id="homeworkDisplay">
+
+    <div style="
+        text-align:center;
+        padding:20px;
+        color:gray;
+    ">
+        Loading homework...
     </div>
+
 </div>
 
             <button class="btn-action no-print" style="margin-top:20px; background: #4527a0;" onclick="downloadPDF()">📥 DOWNLOAD PDF REPORT</button>
@@ -242,90 +246,76 @@ function downloadPDF() {
 
 async function loadParentHomework() {
 
-    const homeworkDisplay = document.getElementById("homeworkDisplay");
+    const homeworkDisplay =
+        document.getElementById("homeworkDisplay");
+
+    homeworkDisplay.innerHTML =
+        "Loading homework...";
 
     try {
 
-        const studentClass = currentStudent.class.trim().toLowerCase();
+        console.log("Student Class:",
+            currentStudent.class);
 
-        // Fetch latest homework
-        const snapshot = await db.collection("homeworks")
-            .orderBy("date", "desc")
-            .get();
+        const snapshot =
+            await db.collection("homeworks").get();
 
         let html = "";
-        let found = false;
 
         snapshot.forEach(doc => {
 
             const data = doc.data();
 
-            const hwClass = (data.class || "").trim().toLowerCase();
+            console.log(data);
 
-            // Match only class
-            if (hwClass === studentClass) {
+            html += `
 
-                found = true;
+            <div style="
+                background:white;
+                border:1px solid #ddd;
+                border-radius:10px;
+                padding:15px;
+                margin-bottom:10px;
+            ">
 
-                html += `
-                    <div style="
-                        background:#fff;
-                        border:1px solid #ddd;
-                        border-radius:12px;
-                        padding:15px;
-                        margin-bottom:12px;
-                    ">
-
-                        <div style="
-                            display:flex;
-                            justify-content:space-between;
-                            margin-bottom:8px;
-                        ">
-
-                            <div style="
-                                font-size:16px;
-                                font-weight:bold;
-                                color:#1a237e;
-                            ">
-                                📘 ${data.subject || ""}
-                            </div>
-
-                            <div style="
-                                font-size:12px;
-                                color:gray;
-                            ">
-                                ${data.date || ""}
-                            </div>
-
-                        </div>
-
-                        <div style="
-                            font-size:14px;
-                            color:#333;
-                            line-height:1.6;
-                        ">
-                            ${data.homework || ""}
-                        </div>
-
-                    </div>
-                `;
-            }
-
-        });
-
-        if (!found) {
-
-            homeworkDisplay.innerHTML = `
                 <div style="
-                    text-align:center;
-                    padding:20px;
+                    font-weight:bold;
+                    color:#1a237e;
+                    margin-bottom:5px;
+                ">
+                    📘 ${data.subject || ""}
+                </div>
+
+                <div style="
+                    font-size:14px;
+                    margin-bottom:8px;
+                ">
+                    ${data.homework || ""}
+                </div>
+
+                <div style="
+                    font-size:11px;
                     color:gray;
                 ">
-                    No homework available for your class.
+                    ${data.class || ""} •
+                    ${data.date || ""}
+                </div>
+
+            </div>
+            `;
+        });
+
+        if (html === "") {
+
+            html = `
+                <div style="
+                    text-align:center;
+                    color:red;
+                    padding:20px;
+                ">
+                    No homework found in Firebase
                 </div>
             `;
-
-            return;
         }
 
         homeworkDisplay.innerHTML = html;
