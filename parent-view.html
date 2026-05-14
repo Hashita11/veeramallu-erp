@@ -237,192 +237,77 @@ function downloadPDF() {
 }
     // Function to load homework based on student's class
 async function loadParentHomework() {
-
     const homeworkDisplay = document.getElementById('homeworkDisplay');
-
+    
     try {
-
-        // =========================
-        // GET LOGIN STUDENT ID
-        // =========================
-
+        // 1. GET LOGIN STUDENT ID (Ensure this key is set at Login)
         const admNo = localStorage.getItem("studentId");
-
         if(!admNo){
-
-            homeworkDisplay.innerHTML = `
-            <div style="
-                color:red;
-                padding:15px;
-                text-align:center;
-            ">
-                Student not logged in
-            </div>`;
-
+            homeworkDisplay.innerHTML = `<div style="color:red; padding:15px; text-align:center;">Student not logged in</div>`;
             return;
         }
 
-        // =========================
-        // GET STUDENT PROFILE
-        // =========================
-
-        const studentDoc = await db
-            .collection("students")
-            .doc(admNo)
-            .get();
-
+        // 2. GET STUDENT PROFILE
+        const studentDoc = await db.collection("students").doc(admNo).get();
         if(!studentDoc.exists){
-
-            homeworkDisplay.innerHTML = `
-            <div style="
-                color:red;
-                padding:15px;
-                text-align:center;
-            ">
-                Student profile not found
-            </div>`;
-
+            homeworkDisplay.innerHTML = `<div style="color:red; padding:15px; text-align:center;">Student profile not found</div>`;
             return;
         }
 
         const studentData = studentDoc.data();
+        const studentClass = String(studentData.class || "").trim();
 
-        // SAFE CLASS VALUE
-        const studentClass = String(studentData.class).trim();
-
-        // =========================
-        // TODAY DATE
-        // =========================
-
+        // 3. TODAY DATE (YYYY-MM-DD)
         const today = new Date().toLocaleDateString('en-CA');
 
-        // =========================
-        // LOAD ALL HOMEWORK
-        // =========================
+        // 4. LOAD FILTERED HOMEWORK (Optimized Query)
+        // Using .where() is much faster than fetching the whole collection
+        const snapshot = await db.collection("homeworks")
+            .where("class", "==", studentClass)
+            .where("date", "==", today)
+            .get();
 
-        const snapshot = await db.collection("homeworks").get();
-
-        let homeworkList = [];
-
-        snapshot.forEach(doc => {
-
-            const d = doc.data();
-
-            const hwClass = String(d.class || "").trim();
-
-            const hwDate = String(d.date || "").trim();
-
-            // MATCH CLASS + DATE
-            if(
-                hwClass === studentClass &&
-                hwDate === today
-            ){
-
-                homeworkList.push(d);
-
-            }
-
-        });
-
-        // =========================
-        // NO HOMEWORK
-        // =========================
-
-        if(homeworkList.length === 0){
-
+        // 5. NO HOMEWORK
+        if(snapshot.empty){
             homeworkDisplay.innerHTML = `
-            <div style="
-                background:white;
-                padding:20px;
-                border-radius:12px;
-                text-align:center;
-                color:gray;
-                border:1px solid #ddd;
-            ">
-                📚 No homework for today
+            <div style="background:white; padding:20px; border-radius:12px; text-align:center; color:gray; border:1px solid #ddd;">
+                📚 No homework for ${studentClass} today
             </div>`;
-
             return;
         }
 
-        // =========================
-        // DISPLAY HOMEWORK
-        // =========================
-
+        // 6. DISPLAY HOMEWORK
         let html = `
-        <div style="
-            border:1px solid #1a237e;
-            border-radius:12px;
-            overflow:hidden;
-            background:white;
-        ">
-
-        <div style="
-            background:#1a237e;
-            color:white;
-            padding:12px;
-            font-weight:bold;
-            display:flex;
-            justify-content:space-between;
-        ">
-            <span>${studentClass}</span>
-            <span>${today}</span>
-        </div>
-
-        <table style="
-            width:100%;
-            border-collapse:collapse;
-        ">
+        <div style="border:1px solid #1a237e; border-radius:12px; overflow:hidden; background:white;">
+            <div style="background:#1a237e; color:white; padding:12px; font-weight:bold; display:flex; justify-content:space-between;">
+                <span>${studentClass}</span>
+                <span>${new Date().toLocaleDateString('en-GB')}</span>
+            </div>
+            <table style="width:100%; border-collapse:collapse;">
         `;
 
-        homeworkList.forEach(d => {
-
+        snapshot.forEach(doc => {
+            const d = doc.data();
             html += `
             <tr>
-
-                <td style="
-                    padding:12px;
-                    border-bottom:1px solid #eee;
-                    width:35%;
-                    font-weight:bold;
-                    color:#1a237e;
-                    border-right:1px solid #eee;
-                ">
+                <td style="padding:12px; border-bottom:1px solid #eee; width:35%; font-weight:bold; color:#1a237e; border-right:1px solid #eee;">
                     ${d.subject}
                 </td>
-
-                <td style="
-                    padding:12px;
-                    border-bottom:1px solid #eee;
-                ">
+                <td style="padding:12px; border-bottom:1px solid #eee;">
                     ${d.homework}
                 </td>
-
-            </tr>
-            `;
+            </tr>`;
         });
 
-        html += `
-        </table>
-        </div>
-        `;
-
+        html += `</table></div>`;
         homeworkDisplay.innerHTML = html;
 
     } catch(error){
-
-        console.log(error);
-
-        homeworkDisplay.innerHTML = `
-        <div style="
-            color:red;
-            padding:15px;
-            text-align:center;
-        ">
-            Error loading homework
-        </div>`;
+        console.error("Homework Load Error:", error);
+        homeworkDisplay.innerHTML = `<div style="color:red; padding:15px; text-align:center;">Error connecting to server</div>`;
     }
 }
+
 </script>
 </body>
 </html>
