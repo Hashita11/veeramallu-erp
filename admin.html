@@ -622,6 +622,10 @@ async function generateSalary() {
     const endVal = document.getElementById("end").value;
 
     if (!startVal || !endVal) return alert("Select Start and End dates first!");
+
+    // ✅ THE TRICK: Prompt for Sundays/Holidays once for the whole batch
+    const extraDays = parseInt(prompt("How many Sundays/Holidays to add for this period?", "4")) || 0;
+    
     output.innerText = "Processing VGA Payroll...";
 
     try {
@@ -633,62 +637,56 @@ async function generateSalary() {
         let allLogs = [];
         snap.forEach(doc => allLogs.push(doc.data()));
 
-        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
+        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n(Paid Holidays Added: ${extraDays})\n===============================\n\n`;
 
         teachers.forEach(t => {
             const staffLogs = allLogs.filter(l => l.teacherEmail === t.email || l.teacher === t.email);
             
-            // Get unique present dates
+            // Get unique dates from Firebase logs
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
-            const presentCount = presentDates.length;
+            
+            // ✅ APPLY TRICK: Firebase Presence + Manual Holidays
+            const presentCount = presentDates.length + extraDays;
 
-            // ✅ FIX: Only print if they were present at least 1 day
-            if (presentCount > 0) {
+            // Only print if they have at least 1 actual attendance mark
+            if (presentDates.length > 0) {
                 const baseSalary = t.salary || t.Salary || 0;
                 const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
                 
                 const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
-                const absentDays = totalDays - presentCount;
+                
+                // Ensure absent days don't go below 0
+                const absentDays = Math.max(0, totalDays - presentCount);
 
                 const finalPay = generateFinalSalary(t.name, teachers, totalDays, {
                     lateCount: lateCount,
-                    absentDays: absentDays,
-                    holidaySandwichCount: 0 
+                    absentDays: absentDays
                 });
 
                 report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
             }
         });
 
-        // If no one was found with attendance
         if (report.endsWith("===============================\n\n")) {
-            report += "No attendance records found for this period.";
+            report += "No attendance records found.";
         }
 
         output.innerText = report;
     } catch (e) { output.innerText = "Error: " + e.message; }
 }
 
-
-/**
- * 2. CALCULATION LOGIC FUNCTION
- * Applies 3-late rule, 2x absent penalty, and AP Govt Holidays.
- * Coverage: June 2026 - June 2028.
- */
 function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance) {
     const teacher = teachers.find(x => x.name?.toString().trim().toLowerCase() === teacherName?.trim().toLowerCase());
     if (!teacher) return 0;
 
-    // Clean salary strings (removes ₹ symbol)
     const monthlySalary = parseFloat(String(teacher.salary || 0).replace(/[^0-9.]/g, '')) || 0;
     const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
 
-    // Penalty Rules
-    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3);
-    const absentPenaltyDays = (attendance.absentDays || 0) * 2; // 2x Absent Penalty
-    const sandwichPenaltyDays = attendance.holidaySandwichCount || 0;
+    // Penalty Rules (VGA Standard)
+    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); // 3 Lates = 1 Day
+    const absentPenaltyDays = (attendance.absentDays || 0) * 2;          // 2x Absent Penalty
 
-    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays + sandwichPenaltyDays;
+    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays;
     let finalSalary = monthlySalary - (totalPenaltyDays * perDaySalary);
 
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
