@@ -655,6 +655,59 @@ async function generateSalary() {
             // 4. Use your existing logic function for the final math
             // Passing 0 for sandwich as a default unless you have specific logic for it
             const finalPay = generateFinalSalary(t.name, teachers, totalWorkingDaysInRange, {
+// ===============================
+// ✅ GENERATE PAYROLL REPORT
+// ===============================
+async function generateSalary() {
+    const output = document.getElementById("output");
+    const startVal = document.getElementById("start").value;
+    const endVal = document.getElementById("end").value;
+
+    // 1. Validate Date Range (Requirement shown in 220590.jpg)
+    if (!startVal || !endVal) {
+        return alert("Please select both Start and End dates in the Attendance Logs section above!");
+    }
+
+    output.innerText = "Calculating Payroll... Please wait.";
+
+    try {
+        // 2. Fetch all attendance logs within the selected range
+        const snap = await db.collection("attendance")
+            .where("time", ">=", firebase.firestore.Timestamp.fromDate(new Date(startVal)))
+            .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
+            .get();
+
+        let allLogs = [];
+        snap.forEach(doc => allLogs.push(doc.data()));
+
+        let report = `VEERAMALLU GLOBAL ACADEMY\n`;
+        report += `PAYROLL REPORT: ${startVal} to ${endVal}\n`;
+        report += `===============================\n\n`;
+
+        // 3. Process each registered teacher
+        teachers.forEach(t => {
+            // Filter logs for this specific teacher
+            const staffLogs = allLogs.filter(l => 
+                l.teacherEmail === t.email || l.teacher === t.email
+            );
+
+            // Get unique present dates (Counting only "IN" entries)
+            const presentDates = [...new Set(staffLogs
+                .filter(l => l.type === "IN")
+                .map(l => l.time.toDate().toDateString())
+            )];
+            
+            const presentCount = presentDates.length;
+            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
+
+            // Calculate total working days in the range
+            const diffTime = Math.abs(new Date(endVal) - new Date(startVal));
+            const totalWorkingDaysInRange = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            
+            const absentDays = totalWorkingDaysInRange - presentCount;
+
+            // 4. Use your existing logic function for the final math
+            const finalPay = generateFinalSalary(t.name, teachers, totalWorkingDaysInRange, {
                 lateCount: lateCount,
                 absentDays: absentDays,
                 holidaySandwichCount: 0 
