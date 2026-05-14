@@ -429,23 +429,38 @@ window.onload = () => {
 let teachers = []; // Define this globally at the very top of your script
 
 function loadTeachers() {
-    // Using onSnapshot ensures the data is always fresh
-    db.collection("teachers").onSnapshot(snap => {
-        teachers = []; // Clear array before refilling
-        snap.forEach(doc => {
-            let d = doc.data();
+
+    // CHECK DB
+    if (!db) {
+        console.error("Firestore DB not initialized");
+        return;
+    }
+
+    db.collection("teachers").onSnapshot((snap) => {
+
+        teachers = [];
+
+        snap.forEach((doc) => {
+
+            const d = doc.data();
+
             teachers.push({
                 id: doc.id,
                 name: d.name || "Unknown",
                 email: d.email || "",
-                salary: d.salary || 0 // ✅ Correct: Matches lowercase 'salary' in DB
+                salary: Number(d.salary) || 0
             });
+
         });
-        console.log("Teachers Synchronized");
-        // Remove any "Loading" spinners here if you have them
+
+        console.log("Teachers Loaded:", teachers);
+
     }, (error) => {
-        console.error("Sync Error:", error);
+
+        console.error("Firestore Error:", error);
+
     });
+
 }
 
 
@@ -554,27 +569,42 @@ function resolveName(d){
     
 // ✅ Correct Implementation for saving a teacher
 async function createTeacher() {
+
     const n = document.getElementById("t_name").value.trim();
     const e = document.getElementById("t_email").value.trim();
-    const sa = document.getElementById("t_salary").value; // Ensure this ID exists in HTML
+    const sa = document.getElementById("t_salary").value;
 
-    if (!n || !e) return alert("Enter Name and Email");
+    if (!n || !e) {
+        alert("Enter Name and Email");
+        return;
+    }
 
     try {
+
         await db.collection("teachers").add({
+
             name: n,
             email: e,
-            salary: Number(sa) || 0, // ✅ Correct: Forces numerical value
+            salary: Number(sa) || 0,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+
         });
+
         alert("Teacher Added Successfully");
-        location.reload(); // Refresh to update the list
+
+        // CLEAR INPUTS
+        document.getElementById("t_name").value = "";
+        document.getElementById("t_email").value = "";
+        document.getElementById("t_salary").value = "";
+
     } catch (err) {
+
         console.error("Save Error:", err);
+        alert(err.message);
+
     }
+
 }
-
-
 // =====================
 // ✅ LATE CHECK (FIXED)
 // =====================
