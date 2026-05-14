@@ -112,31 +112,53 @@
     const db = firebase.firestore();
 
     async function fetchAttendanceData() {
-        const email = document.getElementById("teacherEmail").value;
-        if (!email) return alert("Enter Teacher Email");
+    const email = document.getElementById("teacherEmail").value.trim().toLowerCase();
+    if (!email) return alert("Enter Teacher Email");
 
-        const today = new Date();
-        const month = (today.getMonth() + 1).toString().padStart(2, '0');
-        const year = today.getFullYear();
-        const pattern = `/${month}/${year}`;
+    const today = new Date();
+    // Get current month/year for filtering
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const year = today.getFullYear();
 
-        try {
-            const snap = await db.collection("attendance").where("teacher", "==", email).get();
-            let count = 0; let lates = 0;
+    try {
+        // Query by teacher email
+        const snap = await db.collection("attendance").where("teacherEmail", "==", email).get();
+        let count = 0; 
+        let lates = 0;
 
-            snap.forEach(doc => {
-                const d = doc.data();
-                if (d.date && d.date.includes(pattern)) {
+        snap.forEach(doc => {
+            const d = doc.data();
+            let attendanceDate;
+            
+            // Handle both Firebase Timestamps and String dates
+            if (d.time && d.time.toDate) {
+                attendanceDate = d.time.toDate();
+            } else if (d.fullTimestamp) {
+                attendanceDate = new Date(d.fullTimestamp);
+            }
+
+            if (attendanceDate) {
+                const aMonth = (attendanceDate.getMonth() + 1).toString().padStart(2, '0');
+                const aYear = attendanceDate.getFullYear();
+
+                // Only count records for the current month and year
+                if (aMonth === month && aYear === year && d.type === "IN") {
                     count++;
-                    if (d.time && d.time > "09:15:00") lates++;
+                    // Late check based on 08:30:00 (VGA Standard)
+                    const timeStr = attendanceDate.toLocaleTimeString('en-GB', { hour12: false });
+                    if (timeStr > "08:30:00") lates++;
                 }
-            });
+            }
+        });
 
-            document.getElementById("presentDays").value = count;
-            document.getElementById("lateMarks").value = lates;
-            alert(`Found ${count} days and ${lates} lates.`);
-        } catch (e) { alert(e.message); }
+        document.getElementById("presentDays").value = count;
+        document.getElementById("lateMarks").value = lates;
+        alert(`Records Found for ${month}/${year}:\nPresent: ${count} days\nLates: ${lates}`);
+    } catch (e) { 
+        alert("Error fetching data: " + e.message); 
     }
+}
+
 
     function generateSalarySlip() {
         const email = document.getElementById("teacherEmail").value;
