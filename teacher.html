@@ -1129,6 +1129,36 @@ function getStatusStyle(status) {
     if (status === 'Absent') return 'bg-red-100 text-red-700';
     return 'bg-blue-100 text-blue-700';
 }
+    
+import { db, auth } from "./firebase-config";
+import { collection, query, where, getDocs } from "firebase/firestore";
+
+async function getMonthlyAttendance() {
+    const teacherId = auth.currentUser.uid; // Get ID of logged-in teacher
+    const currentMonth = new Date().toISOString().slice(0, 7); // e.g., "2026-05"
+
+    const attendanceRef = collection(db, "attendance_logs");
+    
+    // Query: Only this teacher AND only records for the current month
+    const q = query(
+        attendanceRef, 
+        where("teacherId", "==", teacherId),
+        where("month", "==", currentMonth) 
+    );
+
+    const querySnapshot = await getDocs(q);
+    const logs = [];
+    
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        // Filter out "Present" on the client side to only show exceptions
+        if (data.status !== "Present") {
+            logs.push(data);
+        }
+    });
+
+    return logs;
+}
 
 
 // DARK MODE
