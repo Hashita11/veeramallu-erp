@@ -90,6 +90,15 @@
 
             <div class="section-title">💰 FEE SUMMARY</div>
             <div id="feeArea"></div>
+            
+            <div class="card mt-4" id="homeworkSection">
+            <div class="p-3 bg-primary text-white rounded-t-lg">
+            <h3 class="font-bold">📚 Today's Homework</h3>
+          </div>
+            <div id="homeworkDisplay" class="p-4 bg-white border rounded-b-lg shadow">
+            <p class="text-gray-500 italic">Fetching homework for your class...</p>
+    </div>
+</div>
 
             <button class="btn-action no-print" style="margin-top:20px; background: #4527a0;" onclick="downloadPDF()">📥 DOWNLOAD PDF REPORT</button>
             <button class="btn-action no-print" style="margin-top:10px; background:#555;" onclick="location.reload()">LOGOUT</button>
@@ -226,6 +235,60 @@ function downloadPDF() {
         pdf.save(`${currentStudent.name}_Report.pdf`);
     });
 }
+    // Function to load homework based on student's class
+async function loadClassHomework() {
+    const homeworkDisplay = document.getElementById('homeworkDisplay');
+    
+    // 1. Identify the student's class (Example: "Class 1")
+    // This should come from your login session/profile as seen in 221097.jpg
+    const studentClass = "Class 1"; 
+    
+    try {
+        // 2. Query Firestore for homework matching this class
+        const snapshot = await db.collection("homework")
+            .where("class", "==", studentClass)
+            .orderBy("timestamp", "desc") // Show newest first
+            .limit(10)
+            .get();
+
+        if (snapshot.empty) {
+            homeworkDisplay.innerHTML = "<p class='text-center text-gray-400'>No homework posted for today.</p>";
+            return;
+        }
+
+        // 3. Build the list as seen in 221096.jpg
+        let html = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            html += `
+                <div class="mb-4 border border-blue-900 rounded-lg overflow-hidden">
+                    <div class="bg-blue-900 text-white p-2 flex justify-between">
+                        <span class="font-bold">${studentClass}</span>
+                        <span class="text-xs">${data.date || 'Today'}</span>
+                    </div>
+                    <div class="flex border-t border-gray-200">
+                        <div class="w-1/3 bg-blue-50 p-2 font-bold text-blue-900 border-r border-gray-200">
+                            ${data.subject}
+                        </div>
+                        <div class="w-2/3 p-2 text-sm text-gray-800">
+                            ${data.content}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        homeworkDisplay.innerHTML = html;
+
+    } catch (error) {
+        console.error("Homework Error:", error);
+        homeworkDisplay.innerHTML = "<p class='text-red-500'>Error loading homework.</p>";
+    }
+}
+
+// Call this function when the Parent Portal loads
+document.addEventListener("DOMContentLoaded", loadClassHomework);
+
 </script>
 </body>
 </html>
