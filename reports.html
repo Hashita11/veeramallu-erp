@@ -1,81 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Financial Reports - Admin</title>
+    <title>VGA Financial Reports</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Arial; background:#f0f2f5; margin:0; }
+        body { font-family: 'Segoe UI', Arial; background:#f4f7f6; margin:0; }
         .header { text-align:center; padding:20px; background:#1a237e; color:white; }
-        .header img { height:70px; margin-bottom:10px; }
+        .header img { height:60px; }
         .container { padding:20px; max-width: 1000px; margin: auto; }
         
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #1a237e; }
-        .stat-card h4 { margin: 0; color: #666; font-size: 14px; }
-        .stat-card p { margin: 10px 0 0; font-size: 22px; font-weight: bold; color: #1a237e; }
-
-        .controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; justify-content: center; }
-        input, button { padding: 10px; border-radius: 5px; border: 1px solid #ddd; }
-        button { background: #1a237e; color: white; cursor: pointer; border: none; font-weight: bold; }
+        .controls { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .chart-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        table { width:100%; border-collapse:collapse; background:white; border-radius: 10px; overflow: hidden; }
-        th, td { padding:12px; border:1px solid #eee; text-align: left; }
-        th { background:#1a237e; color: white; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #1a237e; }
+        .stat-card h4 { margin: 0; color: #666; font-size: 13px; text-transform: uppercase; }
+        .stat-card p { margin: 10px 0 0; font-size: 20px; font-weight: bold; color: #1a237e; }
+
+        .chart-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        table { width:100%; border-collapse:collapse; background:white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding:12px; border-bottom:1px solid #eee; text-align: left; }
+        th { background:#1a237e; color: white; font-size: 14px; }
+        
+        button { padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-gen { background: #1a237e; color: white; }
+        .btn-pdf { background: #d32f2f; color: white; }
     </style>
 </head>
 
 <body>
 
 <div class="header">
-    <img src="logo.png" onerror="this.src='https://via.placeholder.com/70x70?text=VGA'">
+    <img src="logo.png" onerror="this.src='https://via.placeholder.com/60x60?text=VGA'">
     <h2>VEERAMALLU GLOBAL ACADEMY</h2>
-    <p>Financial Collection Dashboard</p>
+    <p>Financial Collection Report</p>
 </div>
 
-<div class="container" id="reportArea">
-
+<div class="container" id="captureArea">
     <div class="controls">
         <input type="date" id="reportDate">
-        <button onclick="loadReport()">Generate Report</button>
-        <button onclick="downloadReport()" style="background:#d32f2f;">Save as PDF</button>
+        <button class="btn-gen" onclick="loadReport()">Generate Report</button>
+        <button class="btn-pdf" onclick="downloadReport()">Save as Image</button>
     </div>
 
     <div class="stats-grid">
         <div class="stat-card">
-            <h4>Selected Day</h4>
+            <h4>Daily Collection</h4>
             <p>₹ <span id="dailyTotal">0</span></p>
         </div>
         <div class="stat-card">
-            <h4>Selected Month</h4>
+            <h4>Monthly Collection</h4>
             <p>₹ <span id="monthlyTotal">0</span></p>
         </div>
         <div class="stat-card">
-            <h4>Yearly Total</h4>
+            <h4>Yearly Collection</h4>
             <p>₹ <span id="yearlyTotal">0</span></p>
         </div>
     </div>
 
-    <div class="chart-container">
-        <canvas id="collectionChart"></canvas>
+    <div class="chart-box">
+        <canvas id="collectionChart" height="100"></canvas>
     </div>
 
-    <table id="table">
+    <table>
         <thead>
-            <tr><th>Student ID</th><th>Name</th><th>Campus</th><th>Amount Paid</th></tr>
+            <tr><th>Student ID</th><th>Name</th><th>Campus</th><th>Paid Amount</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
 <script>
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
   authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -87,81 +88,93 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Set default date to today
+// Chart Variable
+let myChart = null;
+
+// Initialize Date
 document.getElementById('reportDate').valueAsDate = new Date();
 
-let myChart;
-
 async function loadReport() {
-    const selectedDate = document.getElementById("reportDate").value; // YYYY-MM-DD
-    if (!selectedDate) return;
+    const reportDateInput = document.getElementById("reportDate");
+    const selectedDate = reportDateInput.value; 
+    
+    if (!selectedDate) return alert("Select a date!");
 
     const [year, month, day] = selectedDate.split("-");
-    const monthYear = `${year}-${month}`; // For Monthly filter
+    const monthKey = `${year}-${month}`; // YYYY-MM
 
     let dayAmt = 0, monthAmt = 0, yearAmt = 0;
     let tableHtml = "";
 
-    // IMPORTANT: We fetch all admissions to calculate totals based on their payment dates
-    // For a real app, you'd query a 'payments' collection
-    const snapshot = await db.collection("admissions").get();
+    try {
+        // Querying "admissions" collection
+        const snapshot = await db.collection("admissions").get();
 
-    snapshot.forEach(doc => {
-        const d = doc.data();
-        const paid = Number(d.paidAmount || 0);
-        const pDate = d.paymentDate || ""; // Assuming your admissions have a paymentDate field
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            
+            // Matches your likely field names: date (YYYY-MM-DD) and paidAmount
+            const pDate = d.date || d.paymentDate || ""; 
+            const paid = Number(d.paidAmount || d.totalBalance || 0);
 
-        // Daily Logic
-        if (pDate === selectedDate) {
-            dayAmt += paid;
-            tableHtml += `<tr><td>${d.id}</td><td>${d.name}</td><td>${d.campus}</td><td>₹${paid}</td></tr>`;
-        }
+            // Calculation
+            if (pDate.startsWith(selectedDate)) {
+                dayAmt += paid;
+                tableHtml += `<tr>
+                    <td>${d.id || d.admNo}</td>
+                    <td>${d.name}</td>
+                    <td>${d.campus}</td>
+                    <td>₹${paid.toLocaleString()}</td>
+                </tr>`;
+            }
 
-        // Monthly Logic
-        if (pDate.startsWith(monthYear)) {
-            monthAmt += paid;
-        }
+            if (pDate.startsWith(monthKey)) {
+                monthAmt += paid;
+            }
 
-        // Yearly Logic
-        if (pDate.startsWith(year)) {
-            yearAmt += paid;
-        }
-    });
+            if (pDate.startsWith(year)) {
+                yearAmt += paid;
+            }
+        });
 
-    document.getElementById("dailyTotal").innerText = dayAmt.toLocaleString();
-    document.getElementById("monthlyTotal").innerText = monthAmt.toLocaleString();
-    document.getElementById("yearlyTotal").innerText = yearAmt.toLocaleString();
-    document.getElementById("tableBody").innerHTML = tableHtml || "<tr><td colspan='4' style='text-align:center'>No payments on this date</td></tr>";
+        // Update UI
+        document.getElementById("dailyTotal").innerText = dayAmt.toLocaleString();
+        document.getElementById("monthlyTotal").innerText = monthAmt.toLocaleString();
+        document.getElementById("yearlyTotal").innerText = yearAmt.toLocaleString();
+        document.getElementById("tableBody").innerHTML = tableHtml || "<tr><td colspan='4' style='text-align:center'>No transactions on this date</td></tr>";
 
-    updateChart(dayAmt, monthAmt, yearAmt);
+        initChart(dayAmt, monthAmt, yearAmt);
+
+    } catch (e) {
+        console.error(e);
+        alert("Error fetching data");
+    }
 }
 
-function updateChart(d, m, y) {
+function initChart(d, m, y) {
     const ctx = document.getElementById('collectionChart').getContext('2d');
-    
     if (myChart) myChart.destroy();
 
     myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Selected Day', 'Selected Month', 'Selected Year'],
+            labels: ['Day', 'Month', 'Year'],
             datasets: [{
-                label: 'Collection Amount (₹)',
+                label: 'Collection (₹)',
                 data: [d, m, y],
-                backgroundColor: ['#1a237e', '#3949ab', '#7986cb'],
-                borderRadius: 8
+                backgroundColor: ['#1a237e', '#3949ab', '#7986cb']
             }]
         },
         options: {
             responsive: true,
-            scales: { y: { beginAtZero: true } }
+            plugins: { legend: { display: false } }
         }
     });
 }
 
 function downloadReport() {
-    const element = document.getElementById('reportArea');
-    html2canvas(element).then(canvas => {
+    const area = document.getElementById('captureArea');
+    html2canvas(area, { scale: 2 }).then(canvas => {
         const link = document.createElement('a');
         link.download = `VGA_Report_${document.getElementById('reportDate').value}.png`;
         link.href = canvas.toDataURL();
@@ -169,7 +182,7 @@ function downloadReport() {
     });
 }
 
-// Load initial report
+// Auto-run on load
 window.onload = loadReport;
 </script>
 
