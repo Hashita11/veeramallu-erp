@@ -657,47 +657,6 @@ function generateFinalSalary(teacherName, teachers, totalWorkingDays, attendance
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
-            // ===============================
-            // ✅ REPORT
-            // ===============================
-
-            report += `
-================================
-
-STAFF : ${teacherName}
-
-Monthly Salary : ₹${monthlySalary.toFixed(0)}
-
-Present Days : ${presentDays.size}
-
-Absent Days : ${absentDays}
-
-Late Count : ${lateCount}
-
-Late Penalty : ${latePenaltyDays} Day(s)
-
-Absent Penalty : ${absentPenaltyDays} Day(s)
-
-Holiday Sandwich Loss : ${sandwichLoss} Day(s)
-
---------------------------------
-
-TOTAL CUT DAYS : ${totalPenaltyDays}
-
-FINAL SALARY : ₹${finalSalary.toFixed(0)}
-
-================================
-
-`;
-
-        }
-
-        document.getElementById("output").innerText = report;
-
-    });
-
-}
-
 
 // =====================
 // ✅ MARKS (FINAL)
