@@ -11,11 +11,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
 <style>
 
 *{
@@ -339,18 +334,32 @@ tr:hover{
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script>
 
-/* FIREBASE */
+// ===================================
+// FIREBASE
+// ===================================
 
 const firebaseConfig = {
 
-  apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
-  authDomain: "veeramalluerp-6cac5.firebaseapp.com",
-  projectId: "veeramalluerp-6cac5",
-  storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
-  messagingSenderId: "379339569496",
-  appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+
+    projectId: "veeramalluerp-6cac5",
+
+    storageBucket: "veeramalluerp-6cac5.firebasestorage.app",
+
+    messagingSenderId: "379339569496",
+
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 
 };
 
@@ -358,264 +367,168 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
-/* VARIABLES */
 
-let collectionChart = null;
-let campusChart = null;
 
-/* TODAY DATE */
-
-document.getElementById("reportDate").valueAsDate = new Date();
-
-/* LOAD REPORT */
+// ===================================
+// LOAD REPORT
+// ===================================
 
 async function loadReport(){
 
-    const selectedDate =
-    document.getElementById("reportDate").value;
+    const tableBody =
+    document.getElementById("tableBody");
 
-    if(!selectedDate) return;
-
-    document.getElementById("reportTitle").innerText =
-    "Report Date : " + selectedDate;
-
-    const [year, month] = selectedDate.split("-");
-
-    const monthKey = `${year}-${month}`;
-
-    let dayAmt = 0;
-    let monthAmt = 0;
-    let yearAmt = 0;
-    let count = 0;
-
-    let campusData = {};
-
-    let tableHtml = "";
-
-    document.getElementById("tableBody").innerHTML =
-    "<tr><td colspan='4' style='text-align:center;padding:20px'>Loading...</td></tr>";
+    tableBody.innerHTML =
+    `
+    <tr>
+        <td colspan="4">
+            Loading...
+        </td>
+    </tr>
+    `;
 
     try{
 
-        const snapshot =
-        await db.collection("admissions").get();
+        const reportDate =
+        document.getElementById("reportDate").value;
 
-        snapshot.forEach(doc => {
+        const selectedDate =
+        new Date(reportDate);
+
+        const selectedMonth =
+        selectedDate.getMonth();
+
+        const selectedYear =
+        selectedDate.getFullYear();
+
+        let dailyTotal = 0;
+
+        let monthlyTotal = 0;
+
+        let yearlyTotal = 0;
+
+        let paymentCount = 0;
+
+        tableBody.innerHTML = "";
+
+        const snap =
+        await db.collection("fee_payments")
+        .orderBy("timestamp","desc")
+        .get();
+
+        snap.forEach(doc=>{
 
             const d = doc.data();
 
-            const pDate =
-            d.date ||
-            d.paymentDate ||
-            d.admissionDate ||
-            "";
+            if(!d.timestamp) return;
 
-            /* FIXED AMOUNT LOGIC */
+            const payDate =
+            d.timestamp.toDate();
 
-            const paid =
-            parseFloat(
-                d.paidAmount ||
-                d.totalPaid ||
-                0
-            );
+            const payDateOnly =
+            payDate.toISOString().split('T')[0];
 
-            /* DAILY */
+            // DAILY REPORT
+            if(payDateOnly === reportDate){
 
-            if(pDate.startsWith(selectedDate)){
+                dailyTotal +=
+                Number(d.amount || 0);
 
-                dayAmt += paid;
+                paymentCount++;
 
-                count++;
-
-                campusData[d.campus || "Unknown"] =
-                (campusData[d.campus || "Unknown"] || 0)
-                + paid;
-
-                tableHtml += `
+                tableBody.innerHTML +=
+                `
                 <tr>
-                    <td>${d.id || d.admNo || 'N/A'}</td>
-                    <td>${d.name || 'N/A'}</td>
-                    <td>${d.campus || 'N/A'}</td>
-                    <td>₹${paid.toLocaleString()}</td>
+
+                    <td>
+                        ${d.studentId || '-'}
+                    </td>
+
+                    <td>
+                        ${d.studentName || '-'}
+                    </td>
+
+                    <td>
+                        ${d.campus || '-'}
+                    </td>
+
+                    <td>
+                        ₹${Number(d.amount || 0)}
+                    </td>
+
                 </tr>
                 `;
+            }
+
+            // MONTHLY TOTAL
+            if(
+                payDate.getMonth() === selectedMonth &&
+                payDate.getFullYear() === selectedYear
+            ){
+
+                monthlyTotal +=
+                Number(d.amount || 0);
 
             }
 
-            /* MONTH */
+            // YEARLY TOTAL
+            if(
+                payDate.getFullYear() === selectedYear
+            ){
 
-            if(pDate.startsWith(monthKey)){
-                monthAmt += paid;
-            }
+                yearlyTotal +=
+                Number(d.amount || 0);
 
-            /* YEAR */
-
-            if(pDate.startsWith(year)){
-                yearAmt += paid;
             }
 
         });
 
-        /* UPDATE UI */
+        // NO DATA
+        if(tableBody.innerHTML === ""){
 
-        document.getElementById("dailyTotal").innerText =
-        dayAmt.toLocaleString();
+            tableBody.innerHTML =
+            `
+            <tr>
+                <td colspan="4">
+                    No data found for this date.
+                </td>
+            </tr>
+            `;
+        }
 
-        document.getElementById("monthlyTotal").innerText =
-        monthAmt.toLocaleString();
+        // UPDATE SUMMARY
+        document.getElementById("dailyCollection").innerText =
+        "₹ " + dailyTotal;
 
-        document.getElementById("yearlyTotal").innerText =
-        yearAmt.toLocaleString();
+        document.getElementById("monthlyCollection").innerText =
+        "₹ " + monthlyTotal;
 
-        document.getElementById("studentCount").innerText =
-        count;
+        document.getElementById("yearlyCollection").innerText =
+        "₹ " + yearlyTotal;
 
-        document.getElementById("tableBody").innerHTML =
-        tableHtml ||
-        `<tr>
-            <td colspan="4"
-            style="text-align:center;padding:20px;color:gray">
-            No data found for this date.
-            </td>
-        </tr>`;
-
-        /* CHARTS */
-
-        initCollectionChart(dayAmt, monthAmt, yearAmt);
-
-        initCampusChart(campusData);
+        document.getElementById("totalPayments").innerText =
+        paymentCount;
 
     }
 
     catch(error){
 
-        console.error(error);
+        console.log(error);
 
-        alert("Firebase Error / Internet Issue");
+        alert(error.message);
 
     }
 
 }
 
-/* BAR CHART */
 
-function initCollectionChart(dayAmt, monthAmt, yearAmt){
 
-    const ctx =
-    document.getElementById("collectionChart");
+// ===================================
+// SEARCH FILTER
+// ===================================
 
-    if(collectionChart){
-        collectionChart.destroy();
-    }
-
-    collectionChart = new Chart(ctx, {
-
-        type:'bar',
-
-        data:{
-
-            labels:[
-                'Daily',
-                'Monthly',
-                'Yearly'
-            ],
-
-            datasets:[{
-
-                label:'Collection',
-
-                data:[
-                    dayAmt,
-                    monthAmt,
-                    yearAmt
-                ],
-
-                backgroundColor:[
-                    '#1a237e',
-                    '#3949ab',
-                    '#7986cb'
-                ],
-
-                borderRadius:8
-
-            }]
-
-        },
-
-        options:{
-
-            responsive:true,
-
-            maintainAspectRatio:false,
-
-            plugins:{
-                legend:{
-                    display:false
-                }
-            },
-
-            scales:{
-                y:{
-                    beginAtZero:true
-                }
-            }
-
-        }
-
-    });
-
-}
-
-/* CAMPUS PIE CHART */
-
-function initCampusChart(dataObj){
-
-    const ctx =
-    document.getElementById("campusChart");
-
-    if(campusChart){
-        campusChart.destroy();
-    }
-
-    campusChart = new Chart(ctx, {
-
-        type:'pie',
-
-        data:{
-
-            labels:Object.keys(dataObj),
-
-            datasets:[{
-
-                data:Object.values(dataObj),
-
-                backgroundColor:[
-                    '#1a237e',
-                    '#3949ab',
-                    '#5c6bc0',
-                    '#7986cb',
-                    '#9fa8da'
-                ]
-
-            }]
-
-        },
-
-        options:{
-
-            responsive:true,
-
-            maintainAspectRatio:false
-
-        }
-
-    });
-
-}
-
-/* SEARCH */
-
-document.getElementById("searchBox")
+document
+.getElementById("searchInput")
 .addEventListener("keyup", function(){
 
     const value =
@@ -635,7 +548,11 @@ document.getElementById("searchBox")
 
 });
 
-/* DOWNLOAD PDF */
+
+
+// ===================================
+// DOWNLOAD PDF
+// ===================================
 
 async function downloadPDF(){
 
@@ -700,11 +617,28 @@ async function downloadPDF(){
 
 }
 
-/* AUTO LOAD */
 
-window.onload = loadReport;
+
+// ===================================
+// AUTO LOAD
+// ===================================
+
+window.onload = ()=>{
+
+    const today =
+    new Date().toISOString().split('T')[0];
+
+    document.getElementById("reportDate").value =
+    today;
+
+    loadReport();
+
+};
 
 </script>
 
 </body>
+
 </html>
+   
+
