@@ -18,18 +18,20 @@
         
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #1a237e; }
-        .stat-card h4 { margin: 0; color: #666; font-size: 13px; text-transform: uppercase; }
-        .stat-card p { margin: 10px 0 0; font-size: 20px; font-weight: bold; color: #1a237e; }
+        .stat-card h4 { margin: 0; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-card p { margin: 10px 0 0; font-size: 22px; font-weight: bold; color: #1a237e; }
 
-        .chart-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .chart-box { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); height: 300px; }
         
         table { width:100%; border-collapse:collapse; background:white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         th, td { padding:12px; border-bottom:1px solid #eee; text-align: left; }
-        th { background:#1a237e; color: white; font-size: 14px; }
+        th { background:#1a237e; color: white; font-size: 13px; font-weight: 500; }
         
-        button { padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        button { padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-gen { background: #1a237e; color: white; }
+        .btn-gen:hover { background: #0d165f; }
         .btn-pdf { background: #d32f2f; color: white; }
+        input[type="date"] { padding: 8px; border-radius: 5px; border: 1px solid #ddd; outline: none; }
     </style>
 </head>
 
@@ -38,7 +40,7 @@
 <div class="header">
     <img src="logo.png" onerror="this.src='https://via.placeholder.com/60x60?text=VGA'">
     <h2>VEERAMALLU GLOBAL ACADEMY</h2>
-    <p>Financial Collection Report</p>
+    <p>Financial Collection Report Dashboard</p>
 </div>
 
 <div class="container" id="captureArea">
@@ -64,19 +66,18 @@
     </div>
 
     <div class="chart-box">
-        <canvas id="collectionChart" height="100"></canvas>
+        <canvas id="collectionChart"></canvas>
     </div>
 
     <table>
         <thead>
-            <tr><th>Student ID</th><th>Name</th><th>Campus</th><th>Paid Amount</th></tr>
+            <tr><th>Student ID</th><th>Name</th><th>Campus</th><th>Amount (₹)</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
 </div>
 
 <script>
-// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
   authDomain: "veeramalluerp-6cac5.firebaseapp.com",
@@ -88,66 +89,63 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Chart Variable
 let myChart = null;
 
-// Initialize Date
+// Initialize to Today
 document.getElementById('reportDate').valueAsDate = new Date();
 
 async function loadReport() {
-    const reportDateInput = document.getElementById("reportDate");
-    const selectedDate = reportDateInput.value; 
-    
-    if (!selectedDate) return alert("Select a date!");
+    const selectedDate = document.getElementById("reportDate").value; 
+    if (!selectedDate) return;
 
     const [year, month, day] = selectedDate.split("-");
-    const monthKey = `${year}-${month}`; // YYYY-MM
+    const monthKey = `${year}-${month}`;
 
     let dayAmt = 0, monthAmt = 0, yearAmt = 0;
     let tableHtml = "";
 
     try {
-        // Querying "admissions" collection
         const snapshot = await db.collection("admissions").get();
 
         snapshot.forEach(doc => {
             const d = doc.data();
             
-            // Matches your likely field names: date (YYYY-MM-DD) and paidAmount
-            const pDate = d.date || d.paymentDate || ""; 
-            const paid = Number(d.paidAmount || d.totalBalance || 0);
+            // Checks multiple possible field names for dates and amounts
+            const pDate = d.date || d.paymentDate || d.admissionDate || ""; 
+            const paid = Number(d.paidAmount || d.totalPaid || d.totalBalance || 0);
 
-            // Calculation
+            // Daily Logic
             if (pDate.startsWith(selectedDate)) {
                 dayAmt += paid;
                 tableHtml += `<tr>
-                    <td>${d.id || d.admNo}</td>
-                    <td>${d.name}</td>
-                    <td>${d.campus}</td>
+                    <td>${d.id || d.admNo || 'N/A'}</td>
+                    <td>${d.name || 'N/A'}</td>
+                    <td>${d.campus || 'N/A'}</td>
                     <td>₹${paid.toLocaleString()}</td>
                 </tr>`;
             }
 
+            // Monthly Logic
             if (pDate.startsWith(monthKey)) {
                 monthAmt += paid;
             }
 
+            // Yearly Logic
             if (pDate.startsWith(year)) {
                 yearAmt += paid;
             }
         });
 
-        // Update UI
         document.getElementById("dailyTotal").innerText = dayAmt.toLocaleString();
         document.getElementById("monthlyTotal").innerText = monthAmt.toLocaleString();
         document.getElementById("yearlyTotal").innerText = yearAmt.toLocaleString();
-        document.getElementById("tableBody").innerHTML = tableHtml || "<tr><td colspan='4' style='text-align:center'>No transactions on this date</td></tr>";
+        document.getElementById("tableBody").innerHTML = tableHtml || "<tr><td colspan='4' style='text-align:center; padding:20px; color:gray;'>No data found for this date.</td></tr>";
 
         initChart(dayAmt, monthAmt, yearAmt);
 
     } catch (e) {
         console.error(e);
-        alert("Error fetching data");
+        alert("Check internet/Firebase permissions.");
     }
 }
 
@@ -162,11 +160,18 @@ function initChart(d, m, y) {
             datasets: [{
                 label: 'Collection (₹)',
                 data: [d, m, y],
-                backgroundColor: ['#1a237e', '#3949ab', '#7986cb']
+                backgroundColor: ['#1a237e', '#3949ab', '#7986cb'],
+                borderWidth: 0,
+                borderRadius: 5
             }]
         },
         options: {
+            maintainAspectRatio: false,
             responsive: true,
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            },
             plugins: { legend: { display: false } }
         }
     });
@@ -182,7 +187,7 @@ function downloadReport() {
     });
 }
 
-// Auto-run on load
+// Run on load
 window.onload = loadReport;
 </script>
 
