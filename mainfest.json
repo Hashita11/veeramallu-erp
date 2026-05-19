@@ -1,21 +1,14 @@
 {
-  "name": "Your App Full Name",
-  "short_name": "App Short Name",
-  "description": "Provide a clear description of what your app does here so PWABuilder accepts it.",
-  "start_url": "./index.html",
-  "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4A90E2",
-  "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Veeramallu Global Academy",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "VGA",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "com.VGA.app",
+  "description": "Educational ERP platform for students, staff, and school management"
 }
+
