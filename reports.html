@@ -367,7 +367,8 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
-
+let collectionChart;
+let campusChart;
 
 // ===================================
 // LOAD REPORT
@@ -381,7 +382,7 @@ async function loadReport(){
     tableBody.innerHTML =
     `
     <tr>
-        <td colspan="4">
+        <td colspan="4" style="text-align:center;">
             Loading...
         </td>
     </tr>
@@ -391,6 +392,14 @@ async function loadReport(){
 
         const reportDate =
         document.getElementById("reportDate").value;
+
+        if(!reportDate){
+
+            alert("Please select date");
+
+            return;
+
+        }
 
         const selectedDate =
         new Date(reportDate);
@@ -402,18 +411,19 @@ async function loadReport(){
         selectedDate.getFullYear();
 
         let dailyTotal = 0;
-
         let monthlyTotal = 0;
-
         let yearlyTotal = 0;
-
         let paymentCount = 0;
+
+        let monthlyLabels = [];
+        let monthlyAmounts = [];
+
+        let campusData = {};
 
         tableBody.innerHTML = "";
 
         const snap =
         await db.collection("fee_payments")
-        .orderBy("timestamp","desc")
         .get();
 
         snap.forEach(doc=>{
@@ -428,11 +438,16 @@ async function loadReport(){
             const payDateOnly =
             payDate.toISOString().split('T')[0];
 
+            const amount =
+            Number(d.amount || 0);
+
+            // =========================
             // DAILY REPORT
+            // =========================
+
             if(payDateOnly === reportDate){
 
-                dailyTotal +=
-                Number(d.amount || 0);
+                dailyTotal += amount;
 
                 paymentCount++;
 
@@ -453,61 +468,185 @@ async function loadReport(){
                     </td>
 
                     <td>
-                        ₹${Number(d.amount || 0)}
+                        ₹${amount}
                     </td>
 
                 </tr>
                 `;
+
             }
 
+            // =========================
             // MONTHLY TOTAL
+            // =========================
+
             if(
                 payDate.getMonth() === selectedMonth &&
                 payDate.getFullYear() === selectedYear
             ){
 
-                monthlyTotal +=
-                Number(d.amount || 0);
+                monthlyTotal += amount;
+
+                monthlyLabels.push(
+                    payDate.getDate()
+                );
+
+                monthlyAmounts.push(amount);
 
             }
 
+            // =========================
             // YEARLY TOTAL
+            // =========================
+
             if(
                 payDate.getFullYear() === selectedYear
             ){
 
-                yearlyTotal +=
-                Number(d.amount || 0);
+                yearlyTotal += amount;
 
             }
 
+            // =========================
+            // CAMPUS DATA
+            // =========================
+
+            const campus =
+            d.campus || "Unknown";
+
+            if(!campusData[campus]){
+
+                campusData[campus] = 0;
+
+            }
+
+            campusData[campus] += amount;
+
         });
 
+        // =========================
         // NO DATA
+        // =========================
+
         if(tableBody.innerHTML === ""){
 
             tableBody.innerHTML =
             `
             <tr>
-                <td colspan="4">
-                    No data found for this date.
+                <td colspan="4" style="text-align:center;">
+                    No data found
                 </td>
             </tr>
             `;
+
         }
 
+        // =========================
         // UPDATE SUMMARY
-        document.getElementById("dailyCollection").innerText =
-        "₹ " + dailyTotal;
+        // =========================
 
-        document.getElementById("monthlyCollection").innerText =
-        "₹ " + monthlyTotal;
+        document.getElementById("dailyTotal").innerText =
+        dailyTotal;
 
-        document.getElementById("yearlyCollection").innerText =
-        "₹ " + yearlyTotal;
+        document.getElementById("monthlyTotal").innerText =
+        monthlyTotal;
 
-        document.getElementById("totalPayments").innerText =
+        document.getElementById("yearlyTotal").innerText =
+        yearlyTotal;
+
+        document.getElementById("studentCount").innerText =
         paymentCount;
+
+        // =========================
+        // REPORT TITLE
+        // =========================
+
+        document.getElementById("reportTitle").innerText =
+        "Report Date : " + reportDate;
+
+        // =========================
+        // BAR CHART
+        // =========================
+
+        if(collectionChart){
+
+            collectionChart.destroy();
+
+        }
+
+        const ctx1 =
+        document.getElementById("collectionChart");
+
+        collectionChart =
+        new Chart(ctx1, {
+
+            type:'bar',
+
+            data:{
+
+                labels: monthlyLabels,
+
+                datasets:[{
+
+                    label:'Collection',
+
+                    data: monthlyAmounts,
+
+                    borderWidth:1
+
+                }]
+
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false
+
+            }
+
+        });
+
+        // =========================
+        // PIE CHART
+        // =========================
+
+        if(campusChart){
+
+            campusChart.destroy();
+
+        }
+
+        const ctx2 =
+        document.getElementById("campusChart");
+
+        campusChart =
+        new Chart(ctx2, {
+
+            type:'pie',
+
+            data:{
+
+                labels:Object.keys(campusData),
+
+                datasets:[{
+
+                    data:Object.values(campusData)
+
+                }]
+
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false
+
+            }
+
+        });
 
     }
 
@@ -521,14 +660,12 @@ async function loadReport(){
 
 }
 
-
-
 // ===================================
 // SEARCH FILTER
 // ===================================
 
 document
-.getElementById("searchInput")
+.getElementById("searchBox")
 .addEventListener("keyup", function(){
 
     const value =
@@ -547,8 +684,6 @@ document
     });
 
 });
-
-
 
 // ===================================
 // DOWNLOAD PDF
@@ -617,8 +752,6 @@ async function downloadPDF(){
 
 }
 
-
-
 // ===================================
 // AUTO LOAD
 // ===================================
@@ -636,6 +769,7 @@ window.onload = ()=>{
 };
 
 </script>
+
 
 </body>
 
