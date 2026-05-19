@@ -6,10 +6,11 @@
   "background_color": "#ffffff",
   "theme_color": "#1a237e",
   "orientation": "portrait",
+    "description": "Educational ERP platform for students, staff, and school management"
   "icons": [
     {
       "src": "logo.png",
-      "sizes": "192x192",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
