@@ -603,37 +603,175 @@ async function createTeacher() {
 
     try {
 
-        await db.collection("teachers").add({
+// Keep track of your unsubscriptions globally
+let unsubscribeTeachers = null;
+let unsubscribeAttendance = null;
+let teachers = []; // Global array holding teacher records
 
+function loadTeachers() {
+    if (!db) {
+        console.error("Firestore DB not initialized");
+        return;
+    }
+
+    // Clear previous listener if it exists
+    if (unsubscribeTeachers) unsubscribeTeachers();
+
+    unsubscribeTeachers = db.collection("teachers").onSnapshot((snap) => {
+        teachers = [];
+        snap.forEach((doc) => {
+            const d = doc.data();
+            teachers.push({
+                id: doc.id,
+                name: d.name || "Unknown",
+                email: d.email ? d.email.trim().toLowerCase() : "",
+                salary: Number(d.salary) || 0
+            });
+        });
+
+        console.log("Teachers Loaded:", teachers);
+        
+        // 🔥 CRITICAL FIX: Trigger an attendance re-render 
+        // so that "Unknown" rows convert to names once teachers load!
+        if (typeof load === "function") {
+            load();
+        }
+
+    }, (error) => {
+        console.error("Firestore Error:", error);
+    });
+}
+
+// =====================
+// ✅ ATTENDANCE LOAD WITH ACTIVE FILTERS
+// =====================
+function load() {
+    const searchQuery = document.getElementById("search")?.value.toLowerCase() || "";
+    const selectedCampus = document.getElementById("filterCampus")?.value || "All";
+    const startDate = document.getElementById("start")?.value || "";
+    const endDate = document.getElementById("end")?.value || "";
+
+    if (unsubscribeAttendance) unsubscribeAttendance();
+
+    unsubscribeAttendance = db.collection("attendance")
+        .orderBy("time", "desc")
+        .onSnapshot(snap => {
+            const list = document.getElementById("list");
+            if (!list) return;
+            
+            list.innerHTML = "";
+
+            snap.forEach(doc => {
+                const d = doc.data();
+                const fullName = resolveName(d);
+                const campus = d.campus || "";
+                
+                const dt = d.time ? d.time.toDate() : new Date();
+                const dateStr = dt.toISOString().split('T')[0]; 
+
+                // APPLY FILTERS LOGIC
+                const matchesSearch = fullName.toLowerCase().includes(searchQuery);
+                const matchesCampus = (selectedCampus === "All" || campus === selectedCampus);
+                const matchesDate = (!startDate || dateStr >= startDate) && (!endDate || dateStr <= endDate);
+
+                if (matchesSearch && matchesCampus && matchesDate) {
+                    const late = d.autoLate === true || d.late === true;
+
+                    list.innerHTML += `
+                    <tr>
+                        <td><b>${fullName}</b></td>
+                        <td>${campus || '-'}</td>
+                        <td>
+                            ${d.type || '-'}
+                            ${late ? '<div style="color:#d32f2f;font-weight:bold;">⬇ LATE</div>' : ''}
+                        </td>
+                        <td>
+                            ${dt.toLocaleDateString('en-IN')}<br>
+                            ${dt.toLocaleTimeString('en-IN')}
+                        </td>
+                    </tr>`;
+                }
+            });
+
+            if (list.innerHTML === "") {
+                list.innerHTML = `<tr><td colspan="4">No matching records found</td></tr>`;
+            }
+        });
+}
+
+// =====================
+// ✅ NAME FIX FINAL (ROBUST VERSION)
+// =====================
+function resolveName(d) {
+    // 1. If it's a clean pre-saved name string without an email format
+    if (d.name && !d.name.includes("@")) {
+        return d.name;
+    }
+
+    // 2. Try matching via teacherId
+    if (d.teacherId) {
+        let byId = teachers.find(t => t.id === d.teacherId);
+        if (byId && byId.name) return byId.name;
+    }
+
+    // 3. Try matching via emails safely normalized to lowercase
+    const recordEmail = (d.teacherEmail || d.teacher || d.name || "").trim().toLowerCase();
+    
+    if (recordEmail && teachers.length > 0) {
+        let byEmail = teachers.find(t => t.email === recordEmail);
+        if (byEmail && byEmail.name) return byEmail.name;
+    }
+
+    // 4. Fallback: Parse name out of email identifier strings if DB match hasn't loaded yet
+    if (recordEmail) {
+        // e.g., "sireesha@gmail.com" -> "sireesha"
+        const cleanName = recordEmail.split("@")[0];
+        // Capitalize first letter beautifully instead of just raw string
+        return cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+    }
+
+    return "Unknown";
+}
+
+// =====================
+// ✅ ADMIN ENTRY
+// ====================
+async function createTeacher() {
+    const n = document.getElementById("t_name").value.trim();
+    const e = document.getElementById("t_email").value.trim();
+    const sa = document.getElementById("t_salary").value;
+
+    if (!n || !e) {
+        alert("Enter Name and Email");
+        return;
+    }
+
+    try {
+        await db.collection("teachers").add({
             name: n,
-            email: e,
+            email: e.toLowerCase(), // Save normalized to prevent case-sensitive mismatches
             salary: Number(sa) || 0,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-
         });
 
         alert("Teacher Added Successfully");
 
-        // CLEAR INPUTS
         document.getElementById("t_name").value = "";
         document.getElementById("t_email").value = "";
         document.getElementById("t_salary").value = "";
 
     } catch (err) {
-
         console.error("Save Error:", err);
         alert(err.message);
-
     }
-
-}
-// =====================
-// ✅ LATE CHECK (FIXED)
-// =====================
-function checkLate(type, dt){
-    return type==="IN" && dt.toTimeString().slice(0,8) > LATE_TIME;
 }
 
+// =====================
+// ✅ LATE CHECK
+// =====================
+function checkLate(type, dt) {
+    return type === "IN" && dt.toTimeString().slice(0, 8) > LATE_TIME;
+}
 
 // ===============================
 // ✅ GENERATE PAYROLL REPORT
