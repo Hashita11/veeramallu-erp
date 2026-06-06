@@ -1002,12 +1002,13 @@ async function markAttendance(type) {
         btnOut.innerText = "Check OUT";
     }
 }
+
 // TODAY ATTENDANCE
 
 async function viewTodayAttendance(){
 
     const today =
-    new Date().toLocaleDateString("en-IN");
+    new Date().toISOString().split("T")[0];
 
     const snap =
     await db.collection("attendance")
@@ -1015,7 +1016,7 @@ async function viewTodayAttendance(){
     .where(
         "teacherEmail",
         "==",
-        auth.currentUser.email
+        auth.currentUser.email.toLowerCase()
     )
 
     .where(
@@ -1029,20 +1030,23 @@ async function viewTodayAttendance(){
     let msg =
     "Today's Attendance\n\n";
 
+    if(snap.empty){
+        msg += "No attendance marked today";
+    }
+
     snap.forEach(doc=>{
 
+        const data = doc.data();
+
         msg +=
-        doc.data().type +
+        data.type +
         " - " +
-        new Date(
-            doc.data().time.seconds*1000
-        ).toLocaleTimeString() +
+        data.time.toDate().toLocaleTimeString() +
         "\n";
     });
 
     alert(msg);
 }
-
 
 
 // ID CARD
@@ -1184,66 +1188,93 @@ function getStatusColor(status) {
 }
 
 async function getMonthlyAttendance() {
+
     const user = firebase.auth().currentUser;
+
     if (!user) return [];
 
-    const monthInput = document.getElementById('selectedMonth').value;
+    const monthInput =
+    document.getElementById('selectedMonth').value;
+
     if (!monthInput) {
+
         alert("Please select a month");
+
         return [];
     }
 
-    // monthInput is "2026-05"
-    const [year, month] = monthInput.split("-");
-    const monthInt = parseInt(month); // Turns "05" into 5
-
-    // Patterns to match "12/5/2026" or "12/05/2026"
-    const match1 = `/${monthInt}/${year}`; 
-    const match2 = `/${month}/${year}`;
-
     try {
-        const querySnapshot = await db.collection("attendance")
-            .where("teacherEmail", "==", user.email)
-            .get();
+
+        const querySnapshot =
+        await db.collection("attendance")
+
+        .where(
+            "teacherEmail",
+            "==",
+            user.email.toLowerCase()
+        )
+
+        .get();
 
         const logs = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const dateStr = data.dateOnly || "";
 
-            // Check if date belongs to the selected month/year
-            if (dateStr.includes(match1) || dateStr.includes(match2)) {
-                
-                // Identify Late marks or Absence/Leave exceptions
-                const isLate = (data.type === "IN" && data.late === true);
-                const isException = (data.status === "Absent" || data.status === "Leave");
+        querySnapshot.forEach((doc) => {
+
+            const data = doc.data();
+
+            const dateStr =
+            data.dateOnly || "";
+
+            // YYYY-MM check
+            if (dateStr.startsWith(monthInput)) {
+
+                const isLate =
+                    data.type === "IN" &&
+                    data.late === true;
+
+                const isException =
+                    data.status === "Absent" ||
+                    data.status === "Leave";
 
                 if (isLate || isException) {
+
                     let checkInTime = "N/A";
+
                     if (data.time) {
-                        // Handle both Firestore Timestamp and JS Date
-                        const d = data.time.toDate ? data.time.toDate() : new Date(data.time.seconds * 1000);
-                        checkInTime = d.toLocaleTimeString('en-IN');
+
+                        const d =
+                        data.time.toDate();
+
+                        checkInTime =
+                        d.toLocaleTimeString('en-IN');
                     }
 
                     logs.push({
+
                         date: dateStr,
+
                         checkIn: checkInTime,
-                        status: isLate ? "Late" : data.status
+
+                        status:
+                            isLate
+                            ? "Late"
+                            : data.status
                     });
                 }
             }
         });
 
-        // Simple sort by date string
-        return logs.sort((a, b) => b.date.localeCompare(a.date));
+        return logs.sort((a, b) =>
+            b.date.localeCompare(a.date)
+        );
 
     } catch (error) {
-        console.error("Error fetching logs:", error);
+
+        console.error(error);
+
         return [];
     }
 }
-
 
 
 // DARK MODE
