@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Teacher Portal | Veeramallu Global Academy</title>
 
 <style>
+
 :root{
     --primary:#1a237e;
     --success:#28a745;
@@ -198,10 +200,15 @@ button{
     color:white;
     border:1px solid white;
 }
-    #logList {
-    list-style-type: none; /* Removes the green dot */
-    padding: 0;
-    margin-top: 10px;
+
+.hidden{
+    display:none;
+}
+
+#logList{
+    list-style:none;
+    padding:0;
+    margin-top:10px;
 }
 
 </style>
@@ -220,188 +227,203 @@ style="background:#111;color:white;margin-bottom:15px;">
 🌙 Toggle Dark Mode
 </button>
 
-<!-- LOGIN SECTION -->
+<!-- LOGIN -->
 
 <div id="loginSection">
 
-    <h2>Teacher Login</h2>
+<h2>Teacher Login</h2>
 
-    <div class="form-group">
-        <label>Select Campus</label>
+<div class="form-group">
+<label>Select Campus</label>
 
-        <select id="campus">
-            <option value="Relangi">Relangi</option>
-            <option value="Velpur">Velpur</option>
-            <option value="Undrajavaram">Undrajavaram</option>
-        </select>
-    </div>
+<select id="campus">
+<option value="Relangi">Relangi</option>
+<option value="Velpur">Velpur</option>
+<option value="Undrajavaram">Undrajavaram</option>
+</select>
+</div>
 
-    <div class="form-group">
-        <label>Email</label>
+<div class="form-group">
+<label>Email</label>
 
-        <input type="email"
-        id="email"
-        placeholder="teacher@vga.com">
-    </div>
+<input type="email"
+id="email"
+placeholder="teacher@vga.com">
+</div>
 
-    <div class="form-group">
-        <label>Password</label>
+<div class="form-group">
+<label>Password</label>
 
-        <input type="password"
-        id="password"
-        placeholder="••••••••">
-    </div>
+<input type="password"
+id="password"
+placeholder="••••••••">
+</div>
 
-    <button class="btn-login"
-    onclick="handleLogin()">
-    Sign In
-    </button>
+<button class="btn-login"
+onclick="handleLogin()">
+Sign In
+</button>
 
-    <button class="btn-secondary"
-    onclick="registerTeacher()">
-    Create Account
-    </button>
+<button class="btn-secondary"
+onclick="registerTeacher()">
+Create Account
+</button>
 
-    <p id="loginError"
-    style="color:red;margin-top:10px;display:none;">
-    </p>
+<p id="loginError"
+style="color:red;margin-top:10px;display:none;">
+</p>
 
 </div>
 
-<!-- ATTENDANCE SECTION -->
+<!-- DASHBOARD -->
 
 <div id="attendanceSection">
 
-    <div class="teacher-info">
+<div class="teacher-info">
 
-        <div class="profile-wrapper">
+<div class="profile-wrapper">
 
-            <img id="profilePic"
-            class="profile-pic"
-            src="https://via.placeholder.com/150?text=User">
+<img id="profilePic"
+class="profile-pic"
+src="https://via.placeholder.com/150?text=User">
 
-            <label for="photoUpload"
-            class="camera-btn">📷</label>
+<label for="photoUpload"
+class="camera-btn">📷</label>
 
-            <input type="file"
-            id="photoUpload"
-            accept="image/*"
-            style="display:none"
-            onchange="uploadPhoto(this)">
+<input type="file"
+id="photoUpload"
+accept="image/*"
+style="display:none"
+onchange="uploadPhoto(this)">
 
-        </div>
+</div>
 
-        <h2 id="welcomeMsg"
-        style="margin-top:10px;">
-        Welcome!
-        </h2>
+<h2 id="welcomeMsg"
+style="margin-top:10px;">
+Welcome!
+</h2>
 
-        <p id="teacherEmailDisplay" class="small"></p>
+<p id="teacherEmailDisplay" class="small"></p>
 
-        <p id="campusDisplay"
-        class="small"
-        style="font-weight:bold;color:var(--primary);">
-        </p>
+<p id="campusDisplay"
+class="small"
+style="font-weight:bold;color:var(--primary);">
+</p>
 
-        <p id="onlineStatus"
-        style="color:green;font-weight:bold;margin-top:5px;">
-        🟢 Online
-        </p>
+<p id="onlineStatus"
+style="color:green;font-weight:bold;margin-top:5px;">
+🟢 Online
+</p>
 
-        <p id="currentTime" class="small"></p>
+<p id="currentTime" class="small"></p>
 
-    </div>
+</div>
 
-    <div class="status-box"
-    id="gpsStatus">
-    Checking GPS...
-    </div>
+<div class="status-box" id="gpsStatus">
+Checking GPS...
+</div>
 
-    <div class="btn-row">
+<div class="btn-row">
 
-        <button id="btnIn"
-        class="btn-in"
-        disabled
-        onclick="markAttendance('IN')">
-        Check IN
-        </button>
-
-        <button id="btnOut"
-        class="btn-out"
-        disabled
-        onclick="markAttendance('OUT')">
-        Check OUT
-        </button>
-
-    </div>
-
-    <button class="btn-secondary"
-    onclick="window.location.href='admissions.html'">
-    New Admission Portal
-    </button>
-
-    <button class="btn-secondary"
-    onclick="window.location.href='attendance.html'">
-    Student Attendance
-    </button>
-
-    <button class="btn-secondary"
-    onclick="goToAdmin()">
-    Admin Dashboard
-    </button>
-
-    <button class="btn-secondary"
-    onclick="window.location.href='marks-entry.html'">
-    📝 Marks Entry
-    </button>
-
-    <button class="btn-secondary"
-    onclick="window.location.href='homework.html'">
-    Homework Upload
-    </button>
-
-<button class="btn-secondary" onclick="checkSalaryAccess()">
-    Salary Slip
+<button id="btnIn"
+class="btn-in"
+disabled
+onclick="markAttendance('IN')">
+Check IN
 </button>
 
-
-    <button class="btn-secondary"
-    onclick="generateIDCard()">
-    Generate ID Card
-    </button>
-
-    <button class="btn-secondary"
-    onclick="window.location.href='bus-tracker.html'">
-    Bus Tracking
-    </button>
-    <div class="form-group" style="margin-top: 15px;">
-    <label>Select Month</label>
-    <input type="month" id="selectedMonth" class="form-control" value="2026-05">
-</div>
-<div class="p-6 text-center">
-    <button onclick="loadAttendance()" id="viewBtn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700">
-        View Monthly Exceptions
-    </button>
-</div>
-<div id="portalContent" class="hidden max-w-2xl mx-auto mt-4 p-4 border rounded shadow-lg bg-white">
-    <h3 class="font-bold border-b pb-2 mb-4">My Attendance (Late/Leave/Absent)</h3>
-    <div id="statsGrid" class="grid grid-cols-3 gap-2 mb-4"></div>
-    <ul id="logList" class="divide-y divide-gray-200"></ul>
-</div>
-
-    <button class="btn-purple"
-    onclick="viewTodayAttendance()">
-    Today's Attendance
-    </button>
-
-    <button onclick="logoutUser()"
-    style="background:#6c757d;color:white;">
-    Logout
-    </button>
+<button id="btnOut"
+class="btn-out"
+disabled
+onclick="markAttendance('OUT')">
+Check OUT
+</button>
 
 </div>
 
+<button class="btn-secondary"
+onclick="window.location.href='admissions.html'">
+New Admission Portal
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='attendance.html'">
+Student Attendance
+</button>
+
+<button class="btn-secondary"
+onclick="goToAdmin()">
+Admin Dashboard
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='marks-entry.html'">
+📝 Marks Entry
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='homework.html'">
+Homework Upload
+</button>
+
+<button class="btn-secondary"
+onclick="checkSalaryAccess()">
+Salary Slip
+</button>
+
+<button class="btn-secondary"
+onclick="generateIDCard()">
+Generate ID Card
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='bus-tracker.html'">
+Bus Tracking
+</button>
+
+<div class="form-group" style="margin-top:15px;">
+<label>Select Month</label>
+
+<input type="month"
+id="selectedMonth"
+value="2026-05">
 </div>
+
+<button onclick="loadAttendance()"
+id="viewBtn"
+class="btn-secondary">
+View Monthly Exceptions
+</button>
+
+<div id="portalContent"
+class="hidden"
+style="margin-top:15px;">
+
+<h3 style="margin-bottom:10px;">
+My Attendance
+</h3>
+
+<div id="statsGrid"></div>
+
+<ul id="logList"></ul>
+
+</div>
+
+<button class="btn-purple"
+onclick="viewTodayAttendance()">
+Today's Attendance
+</button>
+
+<button onclick="logoutUser()"
+style="background:#6c757d;color:white;">
+Logout
+</button>
+
+</div>
+
+</div>
+
+<!-- SCRIPTS -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -414,11 +436,17 @@ style="background:#111;color:white;margin-bottom:15px;">
 <script>
 
 const firebaseConfig = {
+
     apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+
     authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+
     projectId: "veeramalluerp-6cac5",
+
     storageBucket: "veeramalluerp-6cac5.appspot.com",
+
     messagingSenderId: "379339569496",
+
     appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
 };
 
@@ -431,40 +459,36 @@ const LATE_THRESHOLD = "08:30:00";
 
 const campusCoords = {
 
-    "Relangi": {
-        lat: 16.702710,
-        lng: 81.644140
+    "Relangi":{
+        lat:16.702710,
+        lng:81.644140
     },
 
-    "Velpur": {
-        lat: 16.719772,
-        lng: 81.662377
+    "Velpur":{
+        lat:16.719772,
+        lng:81.662377
     },
 
-    "Undrajavaram": {
-        lat: 16.791772,
-        lng: 81.701022
+    "Undrajavaram":{
+        lat:16.791772,
+        lng:81.701022
     }
 };
-
-
-
-// AUTO LOGIN CHECK
 
 auth.onAuthStateChanged(async(user)=>{
 
     if(!user){
 
-        document.getElementById("loginSection").style.display = "block";
+        document.getElementById("loginSection").style.display="block";
 
-        document.getElementById("attendanceSection").style.display = "none";
+        document.getElementById("attendanceSection").style.display="none";
 
         return;
     }
 
-    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("loginSection").style.display="none";
 
-    document.getElementById("attendanceSection").style.display = "block";
+    document.getElementById("attendanceSection").style.display="block";
 
     const campus =
     sessionStorage.getItem("activeCampus") || "";
@@ -481,97 +505,75 @@ auth.onAuthStateChanged(async(user)=>{
 
     loadTeacherPhoto();
 
-    startGPSCheck(campus);
+    startGPSCheck();
 });
-
-
-
-// LOGIN
 
 async function handleLogin(){
 
     const email =
-        document.getElementById("email").value.trim();
+    document.getElementById("email").value.trim();
 
     const password =
-        document.getElementById("password").value;
+    document.getElementById("password").value;
 
     const campus =
-        document.getElementById("campus").value;
+    document.getElementById("campus").value;
 
     const errorBox =
-        document.getElementById("loginError");
+    document.getElementById("loginError");
 
-    errorBox.style.display = "none";
+    errorBox.style.display="none";
 
     if(!email || !password){
 
-        errorBox.style.display = "block";
-        errorBox.innerText = "Enter Email and Password";
+        errorBox.style.display="block";
+
+        errorBox.innerText =
+        "Enter Email and Password";
 
         return;
     }
 
     try{
 
-        // LOGIN
         const userCredential =
-            await auth.signInWithEmailAndPassword(
-                email,
-                password
-            );
+        await auth.signInWithEmailAndPassword(
+            email,
+            password
+        );
 
-        // SAVE CAMPUS
         sessionStorage.setItem(
             "activeCampus",
             campus
         );
 
-        // HIDE LOGIN
-        document.getElementById(
-            "loginSection"
-        ).style.display = "none";
+        const user =
+        userCredential.user;
 
-        // SHOW DASHBOARD
-        document.getElementById(
-            "attendanceSection"
-        ).style.display = "block";
+        document.getElementById("welcomeMsg").innerText =
+        "Welcome, " +
+        user.email.split("@")[0].toUpperCase();
 
-        // USER DETAILS
-        const user = userCredential.user;
+        document.getElementById("teacherEmailDisplay").innerText =
+        user.email;
 
-        document.getElementById(
-            "welcomeMsg"
-        ).innerText =
-            "Welcome, " +
-            user.email.split("@")[0].toUpperCase();
+        document.getElementById("campusDisplay").innerText =
+        "Campus: " + campus;
 
-        document.getElementById(
-            "teacherEmailDisplay"
-        ).innerText = user.email;
-
-        document.getElementById(
-            "campusDisplay"
-        ).innerText =
-            "Campus: " + campus;
-
-        // LOAD PHOTO
         loadTeacherPhoto();
 
-        // START GPS
-        startGPSCheck(campus);
+        startGPSCheck();
 
         alert("✅ Login Successful");
 
-    } catch(error){
+    }catch(error){
 
-        errorBox.style.display = "block";
+        errorBox.style.display="block";
 
         errorBox.innerText =
-            error.message;
+        error.message;
     }
 }
-// REGISTER TEACHER
 
 async function registerTeacher(){
 
@@ -597,32 +599,28 @@ async function registerTeacher(){
         );
 
         await db.collection("teachers")
-.doc(userCred.user.uid)
-.set({
+        .doc(userCred.user.uid)
+        .set({
 
-    uid: userCred.user.uid,
+            uid:userCred.user.uid,
 
-    name: email.split("@")[0].toUpperCase(),
+            name:email.split("@")[0].toUpperCase(),
 
-    email: email.toLowerCase(),
+            email:email.toLowerCase(),
 
-    salary: 0,
+            salary:0,
 
-    createdAt: new Date()
+            createdAt:new Date()
 
-},{ merge:true });
+        },{merge:true});
 
-        alert("✅ Account Created Successfully");
+        alert("✅ Account Created");
 
     }catch(err){
 
         alert(err.message);
     }
 }
-
-
-
-// LOAD PHOTO
 
 async function loadTeacherPhoto(){
 
@@ -642,10 +640,6 @@ async function loadTeacherPhoto(){
     }
 }
 
-
-
-// UPLOAD PHOTO
-
 async function uploadPhoto(input){
 
     const file = input.files[0];
@@ -656,72 +650,26 @@ async function uploadPhoto(input){
 
     reader.onload = async(e)=>{
 
-        const img = new Image();
+        const compressedImage =
+        e.target.result;
 
-        img.onload = async()=>{
+        const user =
+        auth.currentUser;
 
-            const canvas =
-            document.createElement("canvas");
+        await db.collection("teachers")
+        .doc(user.uid)
+        .set({
+            photo:compressedImage
+        },{merge:true});
 
-            const ctx =
-            canvas.getContext("2d");
+        document.getElementById("profilePic").src =
+        compressedImage;
 
-            let width = img.width;
-            let height = img.height;
-
-            const MAX = 250;
-
-            if(width > height){
-
-                if(width > MAX){
-
-                    height *= MAX/width;
-
-                    width = MAX;
-                }
-
-            }else{
-
-                if(height > MAX){
-
-                    width *= MAX/height;
-
-                    height = MAX;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-
-            ctx.drawImage(img,0,0,width,height);
-
-            const compressedImage =
-            canvas.toDataURL("image/jpeg",0.7);
-
-            const user =
-            auth.currentUser;
-
-            await db.collection("teachers")
-            .doc(user.uid)
-            .set({
-                photo: compressedImage
-            }, { merge:true });
-
-            document.getElementById("profilePic").src =
-            compressedImage;
-
-            alert("✅ Photo Uploaded");
-        };
-
-        img.src = e.target.result;
+        alert("✅ Photo Uploaded");
     };
 
     reader.readAsDataURL(file);
 }
-
-
-
-// DISTANCE CALCULATOR
 
 function calculateDistance(lat1,lon1,lat2,lon2){
 
@@ -746,16 +694,12 @@ function calculateDistance(lat1,lon1,lat2,lon2){
     );
 }
 
-
-
-// GPS CHECK
-
 function startGPSCheck(){
 
     if(!navigator.geolocation){
 
         document.getElementById("gpsStatus").innerHTML =
-        "<span style='color:red;'>GPS Not Supported</span>";
+        "GPS Not Supported";
 
         return;
     }
@@ -804,40 +748,36 @@ function startGPSCheck(){
         const gpsStatus =
         document.getElementById("gpsStatus");
 
-        const btnIn =
-        document.getElementById("btnIn");
-
-        const btnOut =
-        document.getElementById("btnOut");
-
         if(nearestDistance <= 50){
 
             gpsStatus.innerHTML =
-            `✔ Inside ${nearestCampus}
-            (${Math.round(nearestDistance)}m)`;
+            "✔ Inside " +
+            nearestCampus +
+            " (" +
+            Math.round(nearestDistance) +
+            "m)";
 
             gpsStatus.style.color = "green";
 
-            btnIn.disabled = false;
-
-            btnOut.disabled = false;
+            document.getElementById("btnIn").disabled = false;
+            document.getElementById("btnOut").disabled = false;
 
         }else{
 
             gpsStatus.innerHTML =
-            `✖ Outside Campus
-            (${Math.round(nearestDistance)}m)`;
+            "✖ Outside Campus (" +
+            Math.round(nearestDistance) +
+            "m)";
 
             gpsStatus.style.color = "red";
 
-            btnIn.disabled = true;
-
-            btnOut.disabled = true;
+            document.getElementById("btnIn").disabled = true;
+            document.getElementById("btnOut").disabled = true;
         }
 
     },
 
-    (err)=>{
+    ()=>{
 
         document.getElementById("gpsStatus").innerHTML =
         "GPS Error";
@@ -848,162 +788,125 @@ function startGPSCheck(){
     });
 }
 
-// MARK ATTENDANCE
-async function markAttendance(type) {
+async function markAttendance(type){
 
-    const btnIn = document.getElementById("btnIn");
-    const btnOut = document.getElementById("btnOut");
+    try{
 
-    btnIn.disabled = true;
-    btnOut.disabled = true;
-
-    if(type === "IN"){
-        btnIn.innerText = "Processing...";
-    } else {
-        btnOut.innerText = "Processing...";
-    }
-
-    try {
-
-        const user = auth.currentUser;
+        const user =
+        auth.currentUser;
 
         if(!user){
+
             alert("Please login first");
+
             return;
         }
 
-        // ✅ LOAD TEACHER PROFILE
-        const teacherDoc = await db
-            .collection("teachers")
-            .doc(user.uid)
-            .get();
+        const teacherDoc =
+        await db.collection("teachers")
+        .doc(user.uid)
+        .get();
 
-        const teacherData = teacherDoc.data() || {};
+        const teacherData =
+        teacherDoc.data() || {};
 
-        // ✅ REAL NAME
         const teacherName =
-            teacherData.name ||
-            user.email.split("@")[0];
+        teacherData.name ||
+        user.email.split("@")[0];
 
-        // ✅ EMAIL
         const teacherEmail =
-            user.email.toLowerCase();
+        user.email.toLowerCase();
 
-        // ✅ UID
-        const teacherId =
-            user.uid;
-
-        // ✅ CAMPUS
         const campus =
-            sessionStorage.getItem("activeCampus");
+        sessionStorage.getItem("activeCampus");
 
         const now = new Date();
 
-        // ✅ FIXED DATE FORMAT
         const dateOnly =
-            now.toISOString().split("T")[0];
+        now.toISOString().split("T")[0];
 
         const timeStr =
-            now.toLocaleTimeString("en-GB", {
-                hour12:false
-            });
+        now.toLocaleTimeString("en-GB",{
+            hour12:false
+        });
 
-        // CHECK TODAY RECORDS
-        const snapshot = await db.collection("attendance")
-            .where("teacherEmail","==",teacherEmail)
-            .where("dateOnly","==",dateOnly)
-            .get();
+        const snapshot =
+        await db.collection("attendance")
+        .where("teacherEmail","==",teacherEmail)
+        .where("dateOnly","==",dateOnly)
+        .get();
 
         let alreadyIN = false;
         let alreadyOUT = false;
 
-        snapshot.forEach(doc => {
+        snapshot.forEach(doc=>{
 
             const data = doc.data();
 
-            if(data.type === "IN"){
+            if(data.type==="IN"){
                 alreadyIN = true;
             }
 
-            if(data.type === "OUT"){
+            if(data.type==="OUT"){
                 alreadyOUT = true;
             }
         });
 
-        // DUPLICATE IN
-        if(type === "IN" && alreadyIN){
-            alert("✅ IN already marked today");
+        if(type==="IN" && alreadyIN){
+
+            alert("Already IN marked");
+
             return;
         }
 
-        // OUT BEFORE IN
-        if(type === "OUT" && !alreadyIN){
-            alert("❌ First mark IN attendance");
+        if(type==="OUT" && !alreadyIN){
+
+            alert("First mark IN");
+
             return;
         }
 
-        // DUPLICATE OUT
-        if(type === "OUT" && alreadyOUT){
-            alert("✅ OUT already marked today");
+        if(type==="OUT" && alreadyOUT){
+
+            alert("Already OUT marked");
+
             return;
         }
 
-        // ✅ SAVE COMPLETE RECORD
         await db.collection("attendance").add({
 
-            teacherId: teacherId,
+            teacherId:user.uid,
 
-            teacherName: teacherName,
+            teacherName:teacherName,
 
-            teacherEmail: teacherEmail,
+            teacherEmail:teacherEmail,
 
-            teacher: teacherEmail,
+            campus:campus,
 
-            name: teacherName,
-
-            campus: campus,
-
-            type: type,
+            type:type,
 
             late:
-                type === "IN" &&
-                timeStr > LATE_THRESHOLD,
-
-            autoLate:
-                type === "IN" &&
-                timeStr > LATE_THRESHOLD,
+            type==="IN" &&
+            timeStr > LATE_THRESHOLD,
 
             time:
-                firebase.firestore.Timestamp.fromDate(now),
+            firebase.firestore.Timestamp.fromDate(now),
 
             fullTimestamp:
-                now.toISOString(),
+            now.toISOString(),
 
-            dateOnly:
-                dateOnly,
+            dateOnly:dateOnly,
 
-            method:
-                "Teacher App"
-
+            method:"Teacher App"
         });
 
-        alert("✅ " + type + " Marked Successfully");
+        alert("✅ " + type + " Marked");
 
-    } catch(error){
+    }catch(error){
 
-        alert("❌ " + error.message);
-
-    } finally {
-
-        btnIn.disabled = false;
-        btnOut.disabled = false;
-
-        btnIn.innerText = "Check IN";
-        btnOut.innerText = "Check OUT";
+        alert(error.message);
     }
 }
-
-// TODAY ATTENDANCE
 
 async function viewTodayAttendance(){
 
@@ -1012,26 +915,24 @@ async function viewTodayAttendance(){
 
     const snap =
     await db.collection("attendance")
-
     .where(
         "teacherEmail",
         "==",
         auth.currentUser.email.toLowerCase()
     )
-
     .where(
         "dateOnly",
         "==",
         today
     )
-
     .get();
 
     let msg =
     "Today's Attendance\n\n";
 
     if(snap.empty){
-        msg += "No attendance marked today";
+
+        msg += "No attendance today";
     }
 
     snap.forEach(doc=>{
@@ -1047,9 +948,6 @@ async function viewTodayAttendance(){
 
     alert(msg);
 }
-
-
-// ID CARD
 
 function generateIDCard(){
 
@@ -1067,11 +965,11 @@ function generateIDCard(){
     const div =
     document.createElement("div");
 
-    div.style.position = "fixed";
+    div.style.position="fixed";
 
-    div.style.left = "-9999px";
+    div.style.left="-9999px";
 
-    div.innerHTML = `
+    div.innerHTML=`
 
     <div id="tempID"
     style="
@@ -1080,8 +978,7 @@ function generateIDCard(){
     background:white;
     border:5px solid #1a237e;
     border-radius:20px;
-    text-align:center;
-    font-family:Arial;">
+    text-align:center;">
 
     <h2 style="color:#1a237e;">
     VGA
@@ -1135,140 +1032,198 @@ function generateIDCard(){
         document.body.removeChild(div);
     });
 }
-// This version uses the firebase object already in your code
-async function loadAttendance() {
-    const btn = document.getElementById('viewBtn');
-    const portal = document.getElementById('portalContent');
-    const logList = document.getElementById('logList');
-    
-    btn.innerText = "Loading...";
-    
-    try {
-        const logs = await getMonthlyAttendance(); 
-        
-        const totalLate = logs.filter(l => l.status === 'Late').length;
-const statsGrid = document.getElementById('statsGrid');
 
-statsGrid.innerHTML = `
-    <div style="text-align:center; background:#fff3e0; padding:10px; border-radius:8px;">
-        <span style="display:block; font-size:10px; font-weight:bold; color:#e65100;">TOTAL LATE</span>
-        <span style="font-size:18px; font-weight:bold;">${totalLate}</span>
-    </div>
-`;
-        portal.classList.remove('hidden'); // Ensure .hidden {display:none} is in your CSS
-        portal.style.display = "block"; // Backup display fix
-        
-        if (logs.length === 0) {
-            logList.innerHTML = "<li class='p-4 text-center' style='color:green'>No late marks or absences found for this month.</li>";
-        } else {
-            logList.innerHTML = logs.map(log => `
-                <li style="padding:10px 0; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left">
-                        <div style="font-weight:bold">${log.date}</div>
-                        <div style="font-size:11px; color:#666">${log.checkIn}</div>
-                    </div>
-                    <span style="padding:4px 8px; border-radius:5px; font-size:12px; font-weight:bold; ${getStatusColor(log.status)}">
-                        ${log.status}
-                    </span>
-                </li>
-            `).join('');
+async function loadAttendance(){
+
+    const btn =
+    document.getElementById("viewBtn");
+
+    const portal =
+    document.getElementById("portalContent");
+
+    const logList =
+    document.getElementById("logList");
+
+    btn.innerText = "Loading...";
+
+    try{
+
+        const logs =
+        await getMonthlyAttendance();
+
+        const totalLate =
+        logs.filter(l=>l.status==="Late").length;
+
+        document.getElementById("statsGrid").innerHTML = `
+
+        <div style="
+        text-align:center;
+        background:#fff3e0;
+        padding:10px;
+        border-radius:8px;">
+
+        <span style="
+        display:block;
+        font-size:10px;
+        font-weight:bold;
+        color:#e65100;">
+        TOTAL LATE
+        </span>
+
+        <span style="
+        font-size:18px;
+        font-weight:bold;">
+        ${totalLate}
+        </span>
+
+        </div>
+        `;
+
+        portal.classList.remove("hidden");
+
+        if(logs.length===0){
+
+            logList.innerHTML =
+            "<li style='padding:10px;color:green;'>No records found</li>";
+
+        }else{
+
+            logList.innerHTML =
+            logs.map(log=>`
+
+            <li style="
+            padding:10px;
+            border-bottom:1px solid #eee;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;">
+
+            <div style="text-align:left;">
+
+            <div style="font-weight:bold;">
+            ${log.date}
+            </div>
+
+            <div style="
+            font-size:11px;
+            color:#666;">
+            ${log.checkIn}
+            </div>
+
+            </div>
+
+            <span style="
+            padding:4px 8px;
+            border-radius:5px;
+            font-size:12px;
+            font-weight:bold;
+            ${getStatusColor(log.status)}">
+
+            ${log.status}
+
+            </span>
+
+            </li>
+
+            `).join("");
         }
-    } catch (err) {
+
+    }catch(err){
+
         console.error(err);
-        alert("Failed to load records.");
-    } finally {
-        btn.innerText = "Refresh Attendance";
+
+        alert("Failed to load");
+
+    }finally{
+
+        btn.innerText =
+        "Refresh Attendance";
     }
 }
 
-function getStatusColor(status) {
-    if (status === 'Late') return 'background:#fff3e0; color:#e65100;';
-    if (status === 'Absent') return 'background:#ffebee; color:#c62828;';
-    return 'background:#e3f2fd; color:#1565c0;';
+function getStatusColor(status){
+
+    if(status==="Late")
+    return "background:#fff3e0;color:#e65100;";
+
+    if(status==="Absent")
+    return "background:#ffebee;color:#c62828;";
+
+    return "background:#e3f2fd;color:#1565c0;";
 }
 
-async function getMonthlyAttendance() {
+async function getMonthlyAttendance(){
 
-    const user = firebase.auth().currentUser;
+    const user =
+    firebase.auth().currentUser;
 
-    if (!user) return [];
+    if(!user) return [];
 
     const monthInput =
-    document.getElementById('selectedMonth').value;
+    document.getElementById("selectedMonth").value;
 
-    if (!monthInput) {
-
-        alert("Please select a month");
-
-        return [];
-    }
-
-    try {
+    try{
 
         const querySnapshot =
         await db.collection("attendance")
-
         .where(
             "teacherEmail",
             "==",
             user.email.toLowerCase()
         )
-
         .get();
 
         const logs = [];
 
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach((doc)=>{
 
-            const data = doc.data();
+            const data =
+            doc.data();
 
             const dateStr =
             data.dateOnly || "";
 
-            // YYYY-MM check
-            if (dateStr.startsWith(monthInput)) {
+            if(dateStr.startsWith(monthInput)){
 
                 const isLate =
-                    data.type === "IN" &&
-                    data.late === true;
+                data.type==="IN" &&
+                data.late===true;
 
                 const isException =
-                    data.status === "Absent" ||
-                    data.status === "Leave";
+                data.status==="Absent" ||
+                data.status==="Leave";
 
-                if (isLate || isException) {
+                if(isLate || isException){
 
-                    let checkInTime = "N/A";
+                    let checkInTime =
+                    "N/A";
 
-                    if (data.time) {
-
-                        const d =
-                        data.time.toDate();
+                    if(data.time){
 
                         checkInTime =
-                        d.toLocaleTimeString('en-IN');
+                        data.time.toDate()
+                        .toLocaleTimeString("en-IN");
                     }
 
                     logs.push({
 
-                        date: dateStr,
+                        date:dateStr,
 
-                        checkIn: checkInTime,
+                        checkIn:checkInTime,
 
                         status:
-                            isLate
-                            ? "Late"
-                            : data.status
+                        isLate
+                        ? "Late"
+                        : data.status
                     });
                 }
             }
         });
 
-        return logs.sort((a, b) =>
-            b.date.localeCompare(a.date)
-        );
+        return logs.sort((a,b)=>
+        b.date.localeCompare(a.date));
 
-    } catch (error) {
+    }catch(error){
 
         console.error(error);
 
@@ -1276,17 +1231,10 @@ async function getMonthlyAttendance() {
     }
 }
 
-
-// DARK MODE
-
 function toggleDarkMode(){
 
     document.body.classList.toggle("darkMode");
 }
-
-
-
-// LIVE CLOCK
 
 function updateClock(){
 
@@ -1295,10 +1243,6 @@ function updateClock(){
 }
 
 setInterval(updateClock,1000);
-
-
-
-// LOGOUT
 
 function logoutUser(){
 
@@ -1309,10 +1253,6 @@ function logoutUser(){
         location.reload();
     });
 }
-
-
-
-// ADMIN PAGE
 
 function goToAdmin(){
 
@@ -1329,17 +1269,25 @@ function goToAdmin(){
         alert("Admin Only!");
     }
 }
-    function checkSalaryAccess() {
-    const user = firebase.auth().currentUser;
 
-    if (user && user.email === "admin@gmail.com") {
-        window.location.href = 'salary-slip.html';
-    } else {
-        // This creates the popup you requested
-        alert("🔒 Admin Only: You do not have permission to view salary slips.");
+function checkSalaryAccess(){
+
+    const user =
+    firebase.auth().currentUser;
+
+    if(
+        user &&
+        user.email === "admin@gmail.com"
+    ){
+
+        window.location.href =
+        "salary-slip.html";
+
+    }else{
+
+        alert("🔒 Admin Only");
     }
 }
-
 
 </script>
 
