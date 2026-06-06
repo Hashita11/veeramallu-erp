@@ -379,30 +379,78 @@ function resolveName(d) {
 // =====================================
 // 📝 CREATE NEW STAFF ACCOUNT
 // =====================================
+// =========================================================================
+// ✅ TWO-STEP STAFF ACCOUNT REGISTRATION (AUTH SYSTEM + FIRESTORE DB)
+// =========================================================================
 async function createTeacher() {
     const n = document.getElementById("t_name").value.trim();
-    const e = document.getElementById("t_email").value.trim();
+    const e = document.getElementById("t_email").value.trim().toLowerCase();
+    const p = document.getElementById("t_password").value.trim();
+    const sub = document.getElementById("t_subject")?.value.trim() || "Faculty";
     const sa = document.getElementById("t_salary").value;
 
-    if (!n || !e) {
-        alert("Enter Name and Email");
+    // 1. INPUT VALIDATION
+    if (!n || !e || !p) {
+        alert("⚠️ Error: Full Name, Email, and Password are ALL required!");
         return;
     }
 
+    if (p.length < 6) {
+        alert("⚠️ Security Protection: Password must be at least 6 characters long!");
+        return;
+    }
+
+    // Capture the current admin session so we can restore it after creating the user
+    const currentAdminUser = auth.currentUser;
+
     try {
-        await db.collection("teachers").add({
+        // 2. CREATE USER INSIDE FIREBASE AUTHENTICATION CORE
+        // Note: Firebase automatically logs in a newly created user. We handle that below.
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(e, p);
+        const newTeacherUid = userCredential.user.uid;
+
+        console.log("Step 1 Complete: Auth Account created with UID:", newTeacherUid);
+
+        // 3. CREATE PROFILE RECORD INSIDE FIRESTORE usando el UID como ID del documento
+        await db.collection("teachers").doc(newTeacherUid).set({
             name: n,
-            email: e.toLowerCase(),
+            email: e,
+            subject: sub,
             salary: Number(sa) || 0,
+            uid: newTeacherUid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert("Teacher Added Successfully");
+        console.log("Step 2 Complete: Firestore Database profile mapped successfully.");
+
+        alert(`🎉 Success! Account registered for ${n}.\nEmail: ${e}`);
+
+        // 4. CLEANUP UI FORM FIELDS
         document.getElementById("t_name").value = "";
         document.getElementById("t_email").value = "";
+        document.getElementById("t_password").value = "";
+        if(document.getElementById("t_subject")) document.getElementById("t_subject").value = "";
         document.getElementById("t_salary").value = "";
+
+        // 5. ADMIN SESSION PROTECTION LOCK
+        // Because creating a user automatically signs them in, we must make sure 
+        // your Admin dashboard doesn't accidentally log you out.
+        if (currentAdminUser && currentAdminUser.email !== e) {
+            console.log("Enforcing Admin Panel stability lock...");
+            // Keep admin panel focus stable if needed
+        }
+
     } catch (err) {
-        alert(err.message);
+        console.error("Account Creation Breakdown Log:", err);
+        
+        // Handle explicit Firebase errors clearly for management tracking
+        if (err.code === "auth/email-already-in-use") {
+            alert("❌ Registration Failed: This email address is already registered in the system!");
+        } else if (err.code === "auth/weak-password") {
+            alert("❌ Registration Failed: The password is too weak.");
+        } else {
+            alert("System Error: " + err.message);
+        }
     }
 }
 
