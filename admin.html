@@ -169,7 +169,7 @@
         </button>
     </div>
     
-    <div class="section-header" style="background: #6a1b9a;">⚙️ CENTRAL MASTER CONTROLS</div>
+    <div class="section-header" style="background: #6a1b9a;">⚙️ CENTRAL MASTER CONTROControls</div>
     <div style="background:#f3e5f5; padding:20px; border-radius:12px; border:1px solid #e1bee7; text-align:center;">
         <button class="btn" onclick="location.href='super-admin.html'" style="background:#4a148c; color:white; font-size: 1.1rem; padding:12px; border:none; border-radius:8px; font-weight:600; cursor:pointer; width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin:0;">
             <span>🔑</span> Open Super-Admin Dashboard Portal
@@ -226,11 +226,7 @@ function adminLogin(){
     })
     .catch((error)=>{
         console.error(error);
-        if(error.code==="auth/user-not-found" || error.code==="auth/wrong-password" || error.code==="auth/invalid-credential"){
-            alert("Invalid administrative email or password");
-        } else {
-            alert(error.message);
-        }
+        alert(error.message);
     });
 }
     
@@ -251,7 +247,6 @@ function logoutAdmin(){
 auth.onAuthStateChanged((user)=>{
     if(user && user.email === "admin@vga.com"){
         document.getElementById("adminLoginPage").style.display = "none";
-        // Initialize listeners upon verified admin entry
         loadTeachers();
     } else {
         document.getElementById("adminLoginPage").style.display = "flex";
@@ -259,11 +254,10 @@ auth.onAuthStateChanged((user)=>{
 });
 
 // =====================================
-// 👥 LOAD TEACHERS & MANAGE SELECT POPULATION
+// 👥 LOAD TEACHERS & SELECT MENU
 // =====================================
 function loadTeachers() {
     if (!db) return;
-
     if (unsubscribeTeachers) unsubscribeTeachers();
 
     unsubscribeTeachers = db.collection("teachers").onSnapshot((snap) => {
@@ -284,21 +278,20 @@ function loadTeachers() {
             };
             teachers.push(teacherObj);
 
-            // Dynamically populate drop-down array element
-            if(selectMenu && d.email) {
+            if(selectMenu && teacherObj.email) {
                 selectMenu.innerHTML += `<option value="${teacherObj.email}">${teacherObj.name} (${teacherObj.email})</option>`;
             }
         });
 
         console.log("Teachers Synchronized:", teachers);
-        load(); // Re-render table elements mapping resolved names correctly
+        load(); 
     }, (error) => {
         console.error("Firestore Teachers Sync Error:", error);
     });
 }
 
 // =====================================
-// 📋 ATTENDANCE LOG VIEW RENDERER
+// 📋 ATTENDANCE LOAD WITH FILTER METHODS
 // =====================================
 function load() {
     const searchQuery = document.getElementById("search")?.value.toLowerCase() || "";
@@ -317,7 +310,12 @@ function load() {
 
             snap.forEach(doc => {
                 const d = doc.data();
-                const fullName = resolveName(d);
+                
+                // 🛠️ DEBUG PIPELINE
+                console.log("Attendance Record:", d);
+
+                // 🛠️ CONDITIONAL ATTENDANCE RENDER MATCHING LOGIC
+                const fullName = d.teacherName || d.name || resolveName(d);
                 const campus = d.campus || "";
                 
                 const dt = d.time ? d.time.toDate() : new Date();
@@ -352,52 +350,34 @@ function load() {
         });
 }
 
-// =====================================
-// ✅ CASE-INSENSITIVE BULLETPROOF NAME RESOLVER
-// =====================================
 function resolveName(d) {
-    // 1. Create a lowercase key-value map of the document to defeat case-sensitivity issues
     const dataClean = {};
     for (let key in d) {
-        if (d.hasOwnProperty(key)) {
-            dataClean[key.toLowerCase()] = d[key];
-        }
+        if (d.hasOwnProperty(key)) dataClean[key.toLowerCase()] = d[key];
     }
-
-    // Extraction variables matching all variants across devices
     const dbName = dataClean["name"];
     const dbId = dataClean["teacherid"];
     const dbEmail = (dataClean["teacheremail"] || dataClean["teacher"] || dbName || "").toString().trim().toLowerCase();
 
-    // 2. Clear pre-saved name string check
-    if (dbName && !dbName.toString().includes("@")) {
-        return dbName.toString();
-    }
+    if (dbName && !dbName.toString().includes("@")) return dbName.toString();
 
-    // 3. Try matching via teacher ID registration
     if (dbId) {
         let byId = teachers.find(t => t.id === dbId.toString());
         if (byId && byId.name) return byId.name;
     }
-
-    // 4. Try matching via registered emails in the loaded teachers array
     if (dbEmail && teachers.length > 0) {
         let byEmail = teachers.find(t => t.email === dbEmail);
         if (byEmail && byEmail.name) return byEmail.name;
     }
-
-    // 5. CRITICAL FALLBACK: If array hasn't loaded yet, split email to recover name prefix
     if (dbEmail && dbEmail.includes("@")) {
         const fallbackName = dbEmail.split("@")[0];
         return fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1);
     }
-
-    // 6. Last resort display
     return "Unknown Staff";
 }
 
 // =====================================
-// 📝 STAFF CREATION MANAGEMENT
+// 📝 CREATE NEW STAFF ACCOUNT
 // =====================================
 async function createTeacher() {
     const n = document.getElementById("t_name").value.trim();
@@ -421,50 +401,60 @@ async function createTeacher() {
         document.getElementById("t_name").value = "";
         document.getElementById("t_email").value = "";
         document.getElementById("t_salary").value = "";
-        if(document.getElementById("t_password")) document.getElementById("t_password").value = "";
-        if(document.getElementById("t_subject")) document.getElementById("t_subject").value = "";
     } catch (err) {
-        console.error("Save Error:", err);
         alert(err.message);
     }
 }
 
 // =====================================
-// 🎛️ ADMINISTRATIVE MANUAL IN/OUT OVERRIDE
+// 🎛️ FIXED ADMIN MANUAL OVERRIDE ENTRY
 // =====================================
 async function adminForceAttendance(type) {
     const staffEmail = document.getElementById("manualStaffSelect").value;
     const campus = document.getElementById("manualCampusSelect").value;
 
-    if (!staffEmail) return alert("Please select a staff member first!");
+    if (!staffEmail) {
+        return alert("Select staff");
+    }
 
-    if (confirm(`Admin Action: Force ${type} for ${staffEmail}?`)) {
+    // Pull full, clean matching object from loaded global state array
+    const selectedTeacher = teachers.find(
+        t => t.email.toLowerCase() === staffEmail.toLowerCase()
+    );
+
+    if (!selectedTeacher) {
+        return alert("Teacher not found");
+    }
+
+    if (confirm(`Admin Override: Record ${type} for ${selectedTeacher.name}?`)) {
         try {
             const now = new Date();
             const timeStr = now.toLocaleTimeString("en-GB", { hour12: false });
             const isLate = (type === "IN" && timeStr > LATE_TIME);
 
+            // Write full complete payload structures safely targeting Firestore rules
             await db.collection("attendance").add({
-                teacher: staffEmail,
-                teacherEmail: staffEmail,
+                teacherId: selectedTeacher.id || "",
+                teacherName: selectedTeacher.name || "",
+                teacherEmail: selectedTeacher.email || "",
                 campus: campus,
                 type: type,
                 late: isLate,
-                time: firebase.firestore.Timestamp.fromDate(now),
+                time: firebase.firestore.Timestamp.now(),
                 fullTimestamp: now.toISOString(),
                 dateOnly: now.toISOString().split('T')[0],
                 method: "Admin Manual Entry"
             });
 
-            alert(`✅ Success: ${type} tracking log established`);
+            alert(`✅ Success: ${type} written smoothly for ${selectedTeacher.name}`);
         } catch (error) {
-            alert("Error running manual operation: " + error.message);
+            alert("Execution Error: " + error.message);
         }
     }
 }
 
 // =====================================
-// 💰 AUTOMATED PAYROLL ENGINE
+// 💰 PAYROLL SYSTEM ENGINE
 // =====================================
 async function generateSalary() {
     const output = document.getElementById("output");
@@ -472,7 +462,6 @@ async function generateSalary() {
     const endVal = document.getElementById("end").value;
 
     if (!startVal || !endVal) return alert("Select Start and End dates first!");
-    
     const extraDays = parseInt(prompt("Enter total Sundays/Holidays for this period:", "4")) || 0;
     output.innerText = "Processing VGA Payroll...";
 
@@ -485,7 +474,7 @@ async function generateSalary() {
         let allLogs = [];
         snap.forEach(doc => allLogs.push(doc.data()));
 
-        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n(Paid Holidays Added: ${extraDays})\n===============================\n\n`;
+        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
 
         teachers.forEach(t => {
             if (!t.name || t.name === "Unknown" || !t.email) return;
@@ -502,12 +491,12 @@ async function generateSalary() {
 
                 const finalPay = generateFinalSalary(t.name, totalDays, { lateCount: lateCount, absentDays: absentDays });
 
-                report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nLates Logged : ${lateCount}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
+                report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
             }
         });
 
         output.innerText = report;
-    } catch (e) { output.innerText = "Error parsing payroll metrics: " + e.message; }
+    } catch (e) { output.innerText = "Error parsing payroll: " + e.message; }
 }
 
 function generateFinalSalary(teacherName, totalWorkingDays, attendance) {
@@ -520,14 +509,12 @@ function generateFinalSalary(teacherName, totalWorkingDays, attendance) {
     const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
     const absentPenaltyDays = (attendance.absentDays || 0);          
 
-    const totalPenaltyDays = latePenaltyDays + absentPenaltyDays;
-    let finalSalary = monthlySalary - (totalPenaltyDays * perDaySalary);
-
+    let finalSalary = monthlySalary - ((latePenaltyDays + absentPenaltyDays) * perDaySalary);
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
 // =====================================
-// 📑 REPORT CARDS & EVALUATIONS SYSTEM
+// 📑 EVALUATIONS MANAGEMENT MODULE
 // =====================================
 async function fetchAdminMarks() {
     const admNo = document.getElementById('adminSearchId').value.trim();
@@ -549,48 +536,41 @@ async function fetchAdminMarks() {
         const studentName = data.studentName || "Name Not Found";
         
         let report = `VGA ACADEMY - MARKS REPORT\nNAME      : ${studentName.toUpperCase()}\nID        : ${admNo}\nEXAM      : ${exam}\n--------------------------------\nSUBJECT       MARKS    GRADE\n--------------------------------\n`;
-
         let total = 0, count = 0;
-        const getGrade = (per) => {
-            if (per >= 90) return "A1"; if (per >= 80) return "A2"; if (per >= 70) return "B1";
-            if (per >= 60) return "B2"; if (per >= 50) return "C1"; if (per >= 40) return "C2";
-            return "D";
-        };
-
-        const maxPerSub = exam.startsWith("SA") ? 100 : 50;
-
+        
         for (let s in subs) {
             let m = parseFloat(subs[s]) || 0; 
-            let subPer = (m / maxPerSub) * 100;
-            report += `${s.padEnd(12)} : ${m.toString().padEnd(5)} [${getGrade(subPer)}]\n`;
+            let subPer = (m / (exam.startsWith("SA") ? 100 : 50)) * 100;
+            let g = subPer >= 90 ? "A1" : subPer >= 80 ? "A2" : subPer >= 70 ? "B1" : subPer >= 60 ? "B2" : subPer >= 50 ? "C1" : subPer >= 40 ? "C2" : "D";
+            report += `${s.padEnd(12)} : ${m.toString().padEnd(5)} [${g}]\n`;
             total += m; count++;
         }
 
-        const totalMax = count * maxPerSub;
+        const totalMax = count * (exam.startsWith("SA") ? 100 : 50);
         const totalPer = count > 0 ? ((total / totalMax) * 100).toFixed(1) : 0;
+        let finalG = totalPer >= 90 ? "A1" : totalPer >= 80 ? "A2" : totalPer >= 70 ? "B1" : totalPer >= 60 ? "B2" : totalPer >= 50 ? "C1" : totalPer >= 40 ? "C2" : "D";
 
-        report += `--------------------------------\nGRAND TOTAL  : ${total} / ${totalMax}\nPERCENTAGE   : ${totalPer}%\nFINAL GRADE  : ${getGrade(totalPer)}\n--------------------------------`;
+        report += `--------------------------------\nGRAND TOTAL  : ${total} / ${totalMax}\nPERCENTAGE   : ${totalPer}%\nFINAL GRADE  : ${finalG}\n--------------------------------`;
         output.innerText = report;
-    } catch (e) { output.innerText = "Error fetching grade file metrics: " + e.message; }
+    } catch (e) { output.innerText = "Error loading marks: " + e.message; }
 }
 
 async function deleteMarksRecord() {
     const admNo = document.getElementById('adminSearchId').value.trim();
     const exam = document.getElementById('adminSearchExam').value;
+    if (!admNo) return alert("Enter Admission No.");
 
-    if (!admNo) return alert("Enter Admission No to delete.");
-
-    if (confirm(`⚠️ DELETE RECORD: Are you sure you want to permanently erase ${exam} marks for ${admNo}?`)) {
+    if (confirm(`⚠️ permanently erase ${exam} marks for ${admNo}?`)) {
         try {
             await db.collection("marks").doc(`${admNo}_${exam}`).delete();
-            alert("✅ Success: Record removed from cloud.");
+            alert("✅ Removed.");
             document.getElementById('adminMarksOutput').innerText = "Results will appear here...";
-        } catch (e) { alert("Delete failed: " + e.message); }
+        } catch (e) { alert("Fail: " + e.message); }
     }
 }
 
 // =====================================
-// 🏫 DAILY CLASS ATTENDANCE REPORTS
+// 🏫 DAILY CLASS ATTENDANCE ENGINE
 // =====================================
 async function checkClassAttendance() {
     const campus = document.getElementById('viewCampus').value;
@@ -616,43 +596,32 @@ async function checkClassAttendance() {
         let html = `<b>Total Present: ${presentMembers.length} / ${records.length}</b><br><hr>`;
         presentMembers.forEach((member, i) => { html += `${i + 1}. ${member.name}<br>`; });
         box.innerHTML = html;
-    } catch (error) {
-        alert("Error loading attendance data");
-    }
+    } catch (error) { alert("Error checking class array records."); }
 }
 
 // =====================================
-// 📢 MISCELLANEOUS, EXPORTS & BROADCASTS
+// 📢 UTILS & EXPORTS BROADCASTS
 // =====================================
 async function sendNotice(){
     let msg=document.getElementById("noticeMsg").value;
     if(!msg) return alert("Enter message");
-    await db.collection("notifications").doc("latest").set({
-        text:msg,
-        date:new Date().toLocaleDateString('en-IN')
-    });
+    await db.collection("notifications").doc("latest").set({ text:msg, date:new Date().toLocaleDateString('en-IN') });
     alert("Sent");
 }
 
 function exportCSV(){
     let csv="Name,Campus,Type,Time\n";
     document.querySelectorAll("#list tr").forEach(tr=>{
-        if(tr.children.length>1){
-            csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
-        }
+        if(tr.children.length>1) csv+=`"${tr.children[0].innerText}","${tr.children[1].innerText}","${tr.children[2].innerText}","${tr.children[3].innerText}"\n`;
     });
     let a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([csv]));
-    a.download="attendance.csv";
-    a.click();
+    a.download="attendance.csv"; a.click();
 }
 
 function saveWhatsAppImage(){
     html2canvas(document.getElementById("capture")).then(c=>{
-        let a=document.createElement("a");
-        a.href=c.toDataURL();
-        a.download="report.png";
-        a.click();
+        let a=document.createElement("a"); a.href=c.toDataURL(); a.download="report.png"; a.click();
     });
 }
     
@@ -665,11 +634,9 @@ function sendPayrollWhatsApp(){
 function printPayroll(){
     const payroll = document.getElementById("output").innerText;
     if(!payroll || payroll.includes("Salary results will appear here")) return alert("Generate payroll first");
-
     const win = window.open('', '', 'width=900,height=700');
     win.document.write(`<html><head><title>VGA Payroll Report</title><style>body{font-family:Arial;padding:30px;white-space:pre-wrap;line-height:1.6;}h1{text-align:center;color:#1a237e;}</style></head><body><h1>VEERAMALLU GLOBAL ACADEMY<br>PAYROLL REPORT</h1><hr>${payroll.replace(/\n/g,"<br>")}</body></html>`);
-    win.document.close();
-    win.print();
+    win.document.close(); win.print();
 }
 </script>
 </body>
