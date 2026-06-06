@@ -352,26 +352,48 @@ function load() {
         });
 }
 
-function resolveName(d){
-    if (d.name && !d.name.includes("@")) return d.name;
+// =====================================
+// ✅ CASE-INSENSITIVE BULLETPROOF NAME RESOLVER
+// =====================================
+function resolveName(d) {
+    // 1. Create a lowercase key-value map of the document to defeat case-sensitivity issues
+    const dataClean = {};
+    for (let key in d) {
+        if (d.hasOwnProperty(key)) {
+            dataClean[key.toLowerCase()] = d[key];
+        }
+    }
 
-    if (d.teacherId) {
-        let byId = teachers.find(t => t.id === d.teacherId);
+    // Extraction variables matching all variants across devices
+    const dbName = dataClean["name"];
+    const dbId = dataClean["teacherid"];
+    const dbEmail = (dataClean["teacheremail"] || dataClean["teacher"] || dbName || "").toString().trim().toLowerCase();
+
+    // 2. Clear pre-saved name string check
+    if (dbName && !dbName.toString().includes("@")) {
+        return dbName.toString();
+    }
+
+    // 3. Try matching via teacher ID registration
+    if (dbId) {
+        let byId = teachers.find(t => t.id === dbId.toString());
         if (byId && byId.name) return byId.name;
     }
 
-    const recordEmail = (d.teacherEmail || d.teacher || d.name || "").trim().toLowerCase();
-    if (recordEmail && teachers.length > 0) {
-        let byEmail = teachers.find(t => t.email === recordEmail);
+    // 4. Try matching via registered emails in the loaded teachers array
+    if (dbEmail && teachers.length > 0) {
+        let byEmail = teachers.find(t => t.email === dbEmail);
         if (byEmail && byEmail.name) return byEmail.name;
     }
 
-    if (recordEmail) {
-        const fallbackName = recordEmail.split("@")[0];
+    // 5. CRITICAL FALLBACK: If array hasn't loaded yet, split email to recover name prefix
+    if (dbEmail && dbEmail.includes("@")) {
+        const fallbackName = dbEmail.split("@")[0];
         return fallbackName.charAt(0).toUpperCase() + fallbackName.slice(1);
     }
 
-    return "Unknown";
+    // 6. Last resort display
+    return "Unknown Staff";
 }
 
 // =====================================
