@@ -844,10 +844,7 @@ function startGPSCheck(){
     });
 }
 
-
-
 // MARK ATTENDANCE
-
 async function markAttendance(type) {
 
     const btnIn = document.getElementById("btnIn");
@@ -871,15 +868,36 @@ async function markAttendance(type) {
             return;
         }
 
-        const teacher = user.email;
+        // ✅ LOAD TEACHER PROFILE
+        const teacherDoc = await db
+            .collection("teachers")
+            .doc(user.uid)
+            .get();
 
+        const teacherData = teacherDoc.data() || {};
+
+        // ✅ REAL NAME
+        const teacherName =
+            teacherData.name ||
+            user.email.split("@")[0];
+
+        // ✅ EMAIL
+        const teacherEmail =
+            user.email.toLowerCase();
+
+        // ✅ UID
+        const teacherId =
+            user.uid;
+
+        // ✅ CAMPUS
         const campus =
             sessionStorage.getItem("activeCampus");
 
         const now = new Date();
 
-        const today =
-            now.toLocaleDateString("en-IN");
+        // ✅ FIXED DATE FORMAT
+        const dateOnly =
+            now.toISOString().split("T")[0];
 
         const timeStr =
             now.toLocaleTimeString("en-GB", {
@@ -888,8 +906,8 @@ async function markAttendance(type) {
 
         // CHECK TODAY RECORDS
         const snapshot = await db.collection("attendance")
-            .where("teacherEmail","==",teacher)
-            .where("dateOnly","==",today)
+            .where("teacherEmail","==",teacherEmail)
+            .where("dateOnly","==",dateOnly)
             .get();
 
         let alreadyIN = false;
@@ -908,38 +926,36 @@ async function markAttendance(type) {
             }
         });
 
-        // RULES
-
         // DUPLICATE IN
         if(type === "IN" && alreadyIN){
-
             alert("✅ IN already marked today");
-
             return;
         }
 
         // OUT BEFORE IN
         if(type === "OUT" && !alreadyIN){
-
             alert("❌ First mark IN attendance");
-
             return;
         }
 
         // DUPLICATE OUT
         if(type === "OUT" && alreadyOUT){
-
             alert("✅ OUT already marked today");
-
             return;
         }
 
-        // SAVE ATTENDANCE
+        // ✅ SAVE COMPLETE RECORD
         await db.collection("attendance").add({
 
-            teacher: teacher,
+            teacherId: teacherId,
 
-            teacherEmail: teacher,
+            teacherName: teacherName,
+
+            teacherEmail: teacherEmail,
+
+            teacher: teacherEmail,
+
+            name: teacherName,
 
             campus: campus,
 
@@ -949,12 +965,21 @@ async function markAttendance(type) {
                 type === "IN" &&
                 timeStr > LATE_THRESHOLD,
 
+            autoLate:
+                type === "IN" &&
+                timeStr > LATE_THRESHOLD,
+
             time:
                 firebase.firestore.Timestamp.fromDate(now),
 
-            dateOnly: today,
+            fullTimestamp:
+                now.toISOString(),
 
-            method: "Teacher App"
+            dateOnly:
+                dateOnly,
+
+            method:
+                "Teacher App"
 
         });
 
@@ -973,7 +998,6 @@ async function markAttendance(type) {
         btnOut.innerText = "Check OUT";
     }
 }
-
 // TODAY ATTENDANCE
 
 async function viewTodayAttendance(){
