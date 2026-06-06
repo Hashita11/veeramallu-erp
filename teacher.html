@@ -597,16 +597,20 @@ async function registerTeacher(){
         );
 
         await db.collection("teachers")
-        .doc(userCred.user.uid)
-        .set({
+.doc(userCred.user.uid)
+.set({
 
-            uid: userCred.user.uid,
+    uid: userCred.user.uid,
 
-            email: email,
+    name: email.split("@")[0].toUpperCase(),
 
-            createdAt: new Date()
+    email: email.toLowerCase(),
 
-        },{ merge:true });
+    salary: 0,
+
+    createdAt: new Date()
+
+},{ merge:true });
 
         alert("✅ Account Created Successfully");
 
