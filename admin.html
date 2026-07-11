@@ -501,10 +501,6 @@ async function adminForceAttendance(type) {
     }
 }
 
-// =====================================
-// =====================================
-// 💰 PAYROLL SYSTEM ENGINE (UNIFIED & ROBUST)
-// =====================================
 async function generateSalary() {
     const output = document.getElementById("output");
     const startVal = document.getElementById("start").value;
@@ -522,57 +518,44 @@ async function generateSalary() {
 
         const allLogs = snap.docs.map(doc => doc.data());
         let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
+        let missingStaff = []; // Track who has 0 logs
 
-        // Process every staff member from your master list
         teachers.forEach(t => {
-            // Validate essential data
             if (!t.name || !t.email) return;
             
-            // 1. Normalize Email for case-insensitive matching
             const tEmail = t.email.trim().toLowerCase();
-
-            // 2. Match logs where teacherEmail OR teacher matches the normalized email
             const staffLogs = allLogs.filter(l => 
                 (l.teacherEmail && l.teacherEmail.trim().toLowerCase() === tEmail) || 
                 (l.teacher && l.teacher.trim().toLowerCase() === tEmail)
             );
 
-            // 3. Calculate metrics
+            // DEBUG: If no logs found, add to missing list
+            if (staffLogs.length === 0) {
+                missingStaff.push(t.name);
+            }
+
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             const presentCount = presentDates.length + extraDays;
             const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
             
-            // 4. Calculate Days
             const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
             const absentDays = Math.max(0, totalDays - presentCount);
 
-            // 5. Calculate Final Pay
             const finalPay = generateFinalSalary(t, totalDays, { lateCount, absentDays });
 
-            // 6. Generate Report line
             report += `STAFF : ${t.name}\nMonthly Salary : ₹${t.salary || 0}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
         });
+
+        // Add the Exception Report at the end
+        if (missingStaff.length > 0) {
+            report += `\n⚠️ ATTENTION: No attendance logs found for:\n${missingStaff.join(", ")}`;
+        }
 
         output.innerText = report;
     } catch (e) { 
         console.error("Payroll Error:", e);
         output.innerText = "Error parsing payroll: " + e.message; 
     }
-}
-
-function generateFinalSalary(teacher, totalWorkingDays, attendance) {
-    const monthlySalary = teacher.salary || 0;
-    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
-
-    // Rule: 3 Lates = 1 Day Loss
-    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
-    const absentPenaltyDays = (attendance.absentDays || 0);          
-
-    // Final Calculation
-    const totalDeduction = (latePenaltyDays + absentPenaltyDays) * perDaySalary;
-    let finalSalary = monthlySalary - totalDeduction;
-    
-    return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
 
