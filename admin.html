@@ -105,6 +105,10 @@
         <input type="date" id="start" onchange="load()">
         <input type="date" id="end" onchange="load()">
     </div>
+    <button class="btn" style="background:#d32f2f;color:white;"
+onclick="deleteTeacherAttendance()">
+🗑 Delete Selected Teacher Attendance
+</button>
     <div class="table-container">
         <table>
             <thead><tr><th>Name</th><th>Campus</th><th>Type</th><th>Time</th></tr></thead>
@@ -375,7 +379,40 @@ function resolveName(d) {
     }
     return "Unknown Staff";
 }
+// delete teacher function 
+    
+    async function deleteTeacherAttendance(){
 
+    const teacher = document.getElementById("search").value.trim().toLowerCase();
+
+    if(teacher==""){
+        alert("Search teacher first");
+        return;
+    }
+
+    if(!confirm("Delete all attendance of "+teacher+" ?")) return;
+
+    const snap = await db.collection("attendance").get();
+
+    const batch = db.batch();
+
+    snap.forEach(doc=>{
+
+        const d = doc.data();
+
+        const fullName = resolveName(d).toLowerCase();
+
+        if(fullName===teacher){
+            batch.delete(doc.ref);
+        }
+
+    });
+
+    await batch.commit();
+
+    alert("All attendance deleted successfully.");
+
+}
 // =====================================
 // 📝 CREATE NEW STAFF ACCOUNT
 // =====================================
