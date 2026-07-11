@@ -503,31 +503,112 @@ async function adminForceAttendance(type) {
 // =====================================
 // 💰 PAYROLL SYSTEM ENGINE (FINAL PRODUCTION VERSION)
 // =====================================
-// Replace the filter inside generateSalary() with this:
-// =====================================
-// 💰 FINAL SALARY CALCULATION
-// =====================================
 function generateFinalSalary(teacher, totalDays, stats) {
+async function generateSalary() {
 
-    const monthlySalary = Number(teacher.salary) || 0;
+    const output = document.getElementById("output");
 
-    const lateCount = Number(stats.lateCount) || 0;
-    const absentDays = Number(stats.absentDays) || 0;
+    const startVal = document.getElementById("start").value;
+    const endVal = document.getElementById("end").value;
 
-    // Every 3 lates = 1 extra absent day
-    const latePenaltyDays = Math.floor(lateCount / 3);
+    if (!startVal || !endVal) {
+        return alert("Please select Start Date and End Date");
+    }
 
-    const totalLossDays = absentDays + latePenaltyDays;
+    const holidays = parseInt(prompt("Enter Total Holidays", "4")) || 0;
 
-    const perDaySalary = monthlySalary / totalDays;
+    output.innerText = "Generating Payroll...";
 
-    let finalSalary = monthlySalary - (perDaySalary * totalLossDays);
+    try {
 
-    if (finalSalary < 0) finalSalary = 0;
+        const startDate = new Date(startVal);
+        const endDate = new Date(endVal + "T23:59:59");
 
-    return Math.round(finalSalary);
+        const totalDays =
+            Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+        const workingDays = totalDays - holidays;
+
+        const snap = await db.collection("attendance")
+            .where("time", ">=", firebase.firestore.Timestamp.fromDate(startDate))
+            .where("time", "<=", firebase.firestore.Timestamp.fromDate(endDate))
+            .get();
+
+        const logs = snap.docs.map(d => d.data());
+
+        let report = "";
+
+        report += "VEERAMALLU GLOBAL ACADEMY\n";
+        report += `PAYROLL : ${startVal} to ${endVal}\n`;
+        report += "====================================\n\n";
+
+        teachers.forEach(t => {
+
+            const salary = Number(t.salary || t.Salary) || 0;
+
+            const teacherLogs = logs.filter(l => {
+
+                const email =
+                    (l.teacherEmail || l.teacher || "")
+                        .toLowerCase()
+                        .trim();
+
+                return email === t.email.toLowerCase().trim();
+
+            });
+
+            const presentDays = [...new Set(
+                teacherLogs
+                    .filter(x => x.type === "IN")
+                    .map(x => x.time.toDate().toDateString())
+            )].length;
+
+            const lateCount =
+                teacherLogs.filter(x => x.late || x.autoLate).length;
+
+            const latePenalty = Math.floor(lateCount / 3);
+
+            const absentDays =
+                Math.max(0, workingDays - presentDays);
+
+            const totalLoss =
+                absentDays + latePenalty;
+
+            const perDay =
+                salary / workingDays;
+
+            let finalSalary =
+                salary - (perDay * totalLoss);
+
+            if (finalSalary < 0)
+                finalSalary = 0;
+
+            report += `STAFF : ${t.name}\n`;
+            report += `Monthly Salary : ₹${salary}\n`;
+            report += `Total Days : ${totalDays}\n`;
+            report += `Holidays : ${holidays}\n`;
+            report += `Working Days : ${workingDays}\n`;
+            report += `Present Days : ${presentDays}\n`;
+            report += `Late Count : ${lateCount}\n`;
+            report += `Late Penalty : ${latePenalty}\n`;
+            report += `Absent Days : ${absentDays}\n`;
+            report += `FINAL SALARY : ₹${Math.round(finalSalary)}\n`;
+            report += "------------------------------------------\n";
+
+        });
+
+        output.innerText = report;
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        output.innerText = err.message;
+
+    }
+
 }
-
 
 
 // =====================================
