@@ -500,31 +500,79 @@ async function adminForceAttendance(type) {
         }
     }
 }
+// =====================================
+// 💰 PAYROLL SYSTEM ENGINE (FINAL PRODUCTION VERSION)
+// =====================================
+async function generateSalary() {
+    const output = document.getElementById("output");
+    const startVal = document.getElementById("start").value;
+    const endVal = document.getElementById("end").value;
 
-function generateFinalSalary(teacher, totalDays, stats) {
-    // Debugging: See what the system is receiving
-    console.log(`Calculating for: ${teacher.name}`);
-    console.log(`Stats Received:`, stats);
-    console.log(`Total Days Provided:`, totalDays);
+    if (!startVal || !endVal) return alert("Select Start and End dates first!");
+    const extraDays = parseInt(prompt("Enter total holidays for this period:", "4")) || 0;
+    output.innerText = "Processing payroll... please wait...";
 
-    const monthlySalary = Number(teacher.salary) || 0;
-    const lateCount = Number(stats.lateCount) || 0;
-    const absentDays = Number(stats.absentDays) || 0;
+    try {
+        // Fetch all attendance for the selected date range
+        const snap = await db.collection("attendance")
+            .where("time", ">=", firebase.firestore.Timestamp.fromDate(new Date(startVal)))
+            .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
+            .get();
 
-    const latePenaltyDays = Math.floor(lateCount / 3);
-    const totalLossDays = absentDays + latePenaltyDays;
-    
-    // Safety check for division by zero
-    const perDaySalary = totalDays > 0 ? (monthlySalary / totalDays) : 0;
+        const allLogs = snap.docs.map(doc => doc.data());
+        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
 
-    const totalDeduction = perDaySalary * totalLossDays;
-    let finalSalary = monthlySalary - totalDeduction;
+        // Loop through master list
+        teachers.forEach(t => {
+            if (!t.name || !t.email) return;
+            
+            // CRITICAL: Force both strings to be lowercase and trim hidden spaces
+            const masterEmail = t.email.trim().toLowerCase();
 
-    console.log(`Deduction: ${totalDeduction}, Final: ${finalSalary}`);
+            // Filter logs using the cleaned email string
+            const staffLogs = allLogs.filter(l => {
+                const logEmail = (l.teacherEmail || l.teacher || "").trim().toLowerCase();
+                return logEmail === masterEmail;
+            });
 
-    return finalSalary < 0 ? 0 : Math.round(finalSalary);
+            // Calculate attendance days
+            const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
+            const presentCount = presentDates.length + extraDays;
+            
+            // Count lates
+            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
+            
+            // Calculate totals
+            const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
+            const absentDays = Math.max(0, totalDays - presentCount);
+
+            // Generate salary
+            const finalPay = generateFinalSalary(t, totalDays, { lateCount, absentDays });
+
+            report += `STAFF : ${t.name}\nMonthly Salary : ₹${t.salary || 0}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
+        });
+
+        output.innerText = report;
+    } catch (e) { 
+        console.error("Payroll Logic Error:", e);
+        output.innerText = "Error: " + e.message; 
+    }
 }
 
+function generateFinalSalary(teacher, totalWorkingDays, attendance) {
+    const monthlySalary = teacher.salary || 0;
+    const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
+
+    // Rule: 3 Lates = 1 Day Loss
+    const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
+    const absentPenaltyDays = (attendance.absentDays || 0);          
+
+    // Total deduction calculation
+    const totalDeduction = (latePenaltyDays + absentPenaltyDays) * perDaySalary;
+    let finalSalary = monthlySalary - totalDeduction;
+    
+    return finalSalary < 0 ? 0 : Math.round(finalSalary);
+}
 
 
 // =====================================
