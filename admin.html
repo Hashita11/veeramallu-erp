@@ -502,7 +502,7 @@ async function adminForceAttendance(type) {
 }
 
 // =====================================
-// 💰 PAYROLL SYSTEM ENGINE
+// 💰 PAYROLL SYSTEM ENGINE (COMPLETE)
 // =====================================
 async function generateSalary() {
     const output = document.getElementById("output");
@@ -519,47 +519,57 @@ async function generateSalary() {
             .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
             .get();
 
-        let allLogs = [];
-        snap.forEach(doc => allLogs.push(doc.data()));
-
+        const allLogs = snap.docs.map(doc => doc.data());
         let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
 
+        // Process every staff member from your master list
         teachers.forEach(t => {
-            if (!t.name || t.name === "Unknown" || !t.email) return;
+            if (!t.name || !t.email) return;
+            
+            const normalizedEmail = t.email.trim().toLowerCase();
 
-            const staffLogs = allLogs.filter(l => l.teacherEmail === t.email || l.teacher === t.email);
+            // Match logs by email (robust tally)
+            const staffLogs = allLogs.filter(l => 
+                (l.teacherEmail && l.teacherEmail.trim().toLowerCase() === normalizedEmail) || 
+                (l.teacher && l.teacher.trim().toLowerCase() === normalizedEmail)
+            );
+
+            // Calculate metrics
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             const presentCount = presentDates.length + extraDays;
+            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
+            
+            const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
+            const absentDays = Math.max(0, totalDays - presentCount);
 
-            if (presentDates.length > 0) {
-                const baseSalary = t.salary || 0;
-                const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
-                const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
-                const absentDays = Math.max(0, totalDays - presentCount);
+            // Calculate Pay
+            const finalPay = generateFinalSalary(t, totalDays, { lateCount, absentDays });
 
-                const finalPay = generateFinalSalary(t.name, totalDays, { lateCount: lateCount, absentDays: absentDays });
-
-                report += `STAFF : ${t.name}\nMonthly Salary : ₹${baseSalary}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
-            }
+            // Generate Report line
+            report += `STAFF : ${t.name}\nMonthly Salary : ₹${t.salary || 0}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
         });
 
         output.innerText = report;
-    } catch (e) { output.innerText = "Error parsing payroll: " + e.message; }
+    } catch (e) { 
+        output.innerText = "Error parsing payroll: " + e.message; 
+    }
 }
 
-function generateFinalSalary(teacherName, totalWorkingDays, attendance) {
-    const teacher = teachers.find(x => x.name.trim().toLowerCase() === teacherName.trim().toLowerCase());
-    if (!teacher) return 0;
-
+function generateFinalSalary(teacher, totalWorkingDays, attendance) {
     const monthlySalary = teacher.salary || 0;
     const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
 
+    // 3 Lates = 1 Day Loss
     const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
     const absentPenaltyDays = (attendance.absentDays || 0);          
 
-    let finalSalary = monthlySalary - ((latePenaltyDays + absentPenaltyDays) * perDaySalary);
+    // Total deduction
+    const totalDeduction = (latePenaltyDays + absentPenaltyDays) * perDaySalary;
+    let finalSalary = monthlySalary - totalDeduction;
+    
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
+
 
 // =====================================
 // 📑 EVALUATIONS MANAGEMENT MODULE
