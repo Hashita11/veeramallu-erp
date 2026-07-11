@@ -502,7 +502,8 @@ async function adminForceAttendance(type) {
 }
 
 // =====================================
-// 💰 PAYROLL SYSTEM ENGINE (COMPLETE)
+// =====================================
+// 💰 PAYROLL SYSTEM ENGINE (UNIFIED & ROBUST)
 // =====================================
 async function generateSalary() {
     const output = document.getElementById("output");
@@ -510,7 +511,7 @@ async function generateSalary() {
     const endVal = document.getElementById("end").value;
 
     if (!startVal || !endVal) return alert("Select Start and End dates first!");
-    const extraDays = parseInt(prompt("Enter total Sundays/Holidays for this period:", "4")) || 0;
+    const extraDays = parseInt(prompt("Enter total holidays for this period:", "4")) || 0;
     output.innerText = "Processing VGA Payroll...";
 
     try {
@@ -524,33 +525,37 @@ async function generateSalary() {
 
         // Process every staff member from your master list
         teachers.forEach(t => {
+            // Validate essential data
             if (!t.name || !t.email) return;
             
-            const normalizedEmail = t.email.trim().toLowerCase();
+            // 1. Normalize Email for case-insensitive matching
+            const tEmail = t.email.trim().toLowerCase();
 
-            // Match logs by email (robust tally)
+            // 2. Match logs where teacherEmail OR teacher matches the normalized email
             const staffLogs = allLogs.filter(l => 
-                (l.teacherEmail && l.teacherEmail.trim().toLowerCase() === normalizedEmail) || 
-                (l.teacher && l.teacher.trim().toLowerCase() === normalizedEmail)
+                (l.teacherEmail && l.teacherEmail.trim().toLowerCase() === tEmail) || 
+                (l.teacher && l.teacher.trim().toLowerCase() === tEmail)
             );
 
-            // Calculate metrics
+            // 3. Calculate metrics
             const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
             const presentCount = presentDates.length + extraDays;
             const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
             
+            // 4. Calculate Days
             const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
             const absentDays = Math.max(0, totalDays - presentCount);
 
-            // Calculate Pay
+            // 5. Calculate Final Pay
             const finalPay = generateFinalSalary(t, totalDays, { lateCount, absentDays });
 
-            // Generate Report line
+            // 6. Generate Report line
             report += `STAFF : ${t.name}\nMonthly Salary : ₹${t.salary || 0}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
         });
 
         output.innerText = report;
     } catch (e) { 
+        console.error("Payroll Error:", e);
         output.innerText = "Error parsing payroll: " + e.message; 
     }
 }
@@ -559,16 +564,17 @@ function generateFinalSalary(teacher, totalWorkingDays, attendance) {
     const monthlySalary = teacher.salary || 0;
     const perDaySalary = totalWorkingDays > 0 ? (monthlySalary / totalWorkingDays) : 0;
 
-    // 3 Lates = 1 Day Loss
+    // Rule: 3 Lates = 1 Day Loss
     const latePenaltyDays = Math.floor((attendance.lateCount || 0) / 3); 
     const absentPenaltyDays = (attendance.absentDays || 0);          
 
-    // Total deduction
+    // Final Calculation
     const totalDeduction = (latePenaltyDays + absentPenaltyDays) * perDaySalary;
     let finalSalary = monthlySalary - totalDeduction;
     
     return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
+
 
 
 // =====================================
