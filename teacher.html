@@ -1164,15 +1164,16 @@ async function getMonthlyAttendance(){
 
     try{
 
-        const querySnapshot =
-        await db.collection("attendance")
-        .where(
-            "teacherEmail",
-            "==",
-            user.email.toLowerCase()
-        )
-        .get();
+        const monthInput = document.getElementById("selectedMonth").value;
 
+const startDate = monthInput + "-01";
+const endDate = monthInput + "-31";
+
+const querySnapshot = await db.collection("attendance")
+.where("teacherEmail","==",user.email.toLowerCase())
+.where("dateOnly", ">=", startDate)
+.where("dateOnly", "<=", endDate)
+.get();
         const logs = [];
 
         querySnapshot.forEach((doc)=>{
@@ -1183,7 +1184,7 @@ async function getMonthlyAttendance(){
             const dateStr =
             data.dateOnly || "";
 
-            if(dateStr.startsWith(monthInput)){
+    
 
                 const isLate =
                 data.type==="IN" &&
@@ -1217,7 +1218,7 @@ async function getMonthlyAttendance(){
                         : data.status
                     });
                 }
-            }
+            
         });
 
         return logs.sort((a,b)=>
