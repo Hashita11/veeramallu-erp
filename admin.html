@@ -504,23 +504,29 @@ async function adminForceAttendance(type) {
 // 💰 PAYROLL SYSTEM ENGINE (FINAL PRODUCTION VERSION)
 // =====================================
 // Replace the filter inside generateSalary() with this:
-teachers.forEach(t => {
-    if (!t.name || !t.email) return;
-    
-    const masterEmail = t.email.trim().toLowerCase();
-    const masterName = t.name.trim().toLowerCase();
+// =====================================
+// 💰 FINAL SALARY CALCULATION
+// =====================================
+function generateFinalSalary(teacher, totalDays, stats) {
 
-    // The "Force Match" Filter
-    const staffLogs = allLogs.filter(l => {
-        const logEmail = (l.teacherEmail || l.teacher || "").trim().toLowerCase();
-        const logName = (l.teacherName || l.name || "").trim().toLowerCase();
-        
-        // Matches if EITHER the email OR the name matches
-        return logEmail === masterEmail || logName === masterName;
-    });
+    const monthlySalary = Number(teacher.salary) || 0;
 
-    // ... (rest of your calculation code)
-});
+    const lateCount = Number(stats.lateCount) || 0;
+    const absentDays = Number(stats.absentDays) || 0;
+
+    // Every 3 lates = 1 extra absent day
+    const latePenaltyDays = Math.floor(lateCount / 3);
+
+    const totalLossDays = absentDays + latePenaltyDays;
+
+    const perDaySalary = monthlySalary / totalDays;
+
+    let finalSalary = monthlySalary - (perDaySalary * totalLossDays);
+
+    if (finalSalary < 0) finalSalary = 0;
+
+    return Math.round(finalSalary);
+}
 
 
 
