@@ -501,61 +501,28 @@ async function adminForceAttendance(type) {
     }
 }
 
-async function generateSalary() {
-    const output = document.getElementById("output");
-    const startVal = document.getElementById("start").value;
-    const endVal = document.getElementById("end").value;
+function generateFinalSalary(teacher, totalDays, stats) {
+    // Debugging: See what the system is receiving
+    console.log(`Calculating for: ${teacher.name}`);
+    console.log(`Stats Received:`, stats);
+    console.log(`Total Days Provided:`, totalDays);
 
-    if (!startVal || !endVal) return alert("Select Start and End dates first!");
-    const extraDays = parseInt(prompt("Enter total holidays for this period:", "4")) || 0;
-    output.innerText = "Processing VGA Payroll...";
+    const monthlySalary = Number(teacher.salary) || 0;
+    const lateCount = Number(stats.lateCount) || 0;
+    const absentDays = Number(stats.absentDays) || 0;
 
-    try {
-        const snap = await db.collection("attendance")
-            .where("time", ">=", firebase.firestore.Timestamp.fromDate(new Date(startVal)))
-            .where("time", "<=", firebase.firestore.Timestamp.fromDate(new Date(endVal + "T23:59:59")))
-            .get();
+    const latePenaltyDays = Math.floor(lateCount / 3);
+    const totalLossDays = absentDays + latePenaltyDays;
+    
+    // Safety check for division by zero
+    const perDaySalary = totalDays > 0 ? (monthlySalary / totalDays) : 0;
 
-        const allLogs = snap.docs.map(doc => doc.data());
-        let report = `VEERAMALLU GLOBAL ACADEMY\nPAYROLL: ${startVal} to ${endVal}\n===============================\n\n`;
-        let missingStaff = []; // Track who has 0 logs
+    const totalDeduction = perDaySalary * totalLossDays;
+    let finalSalary = monthlySalary - totalDeduction;
 
-        teachers.forEach(t => {
-            if (!t.name || !t.email) return;
-            
-            const tEmail = t.email.trim().toLowerCase();
-            const staffLogs = allLogs.filter(l => 
-                (l.teacherEmail && l.teacherEmail.trim().toLowerCase() === tEmail) || 
-                (l.teacher && l.teacher.trim().toLowerCase() === tEmail)
-            );
+    console.log(`Deduction: ${totalDeduction}, Final: ${finalSalary}`);
 
-            // DEBUG: If no logs found, add to missing list
-            if (staffLogs.length === 0) {
-                missingStaff.push(t.name);
-            }
-
-            const presentDates = [...new Set(staffLogs.filter(l => l.type === "IN").map(l => l.time.toDate().toDateString()))];
-            const presentCount = presentDates.length + extraDays;
-            const lateCount = staffLogs.filter(l => l.late === true || l.autoLate === true).length;
-            
-            const totalDays = Math.ceil(Math.abs(new Date(endVal) - new Date(startVal)) / (1000 * 60 * 60 * 24)) + 1;
-            const absentDays = Math.max(0, totalDays - presentCount);
-
-            const finalPay = generateFinalSalary(t, totalDays, { lateCount, absentDays });
-
-            report += `STAFF : ${t.name}\nMonthly Salary : ₹${t.salary || 0}\nPresent Days : ${presentCount}\nAbsent Days  : ${absentDays}\nFINAL SALARY : ₹${finalPay}\n-------------------------------\n`;
-        });
-
-        // Add the Exception Report at the end
-        if (missingStaff.length > 0) {
-            report += `\n⚠️ ATTENTION: No attendance logs found for:\n${missingStaff.join(", ")}`;
-        }
-
-        output.innerText = report;
-    } catch (e) { 
-        console.error("Payroll Error:", e);
-        output.innerText = "Error parsing payroll: " + e.message; 
-    }
+    return finalSalary < 0 ? 0 : Math.round(finalSalary);
 }
 
 
