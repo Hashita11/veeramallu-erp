@@ -310,7 +310,85 @@ onerror="this.src='https://via.placeholder.com/100?text=VGA'">
 style="background:#111;color:white;">
 🌙 Toggle Dark Mode
 </button>
+New Admission Portal
+</button>
 
+<button class="btn-secondary"
+onclick="window.location.href='attendance.html'">
+Student Attendance
+</button>
+
+<button class="btn-secondary"
+onclick="goToAdmin()">
+Admin Dashboard
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='marks-entry.html'">
+📝 Marks Entry
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='homework.html'">
+Homework Upload
+</button>
+
+<button class="btn-secondary"
+onclick="checkSalaryAccess()">
+Salary Slip
+</button>
+
+<button class="btn-secondary"
+onclick="generateIDCard()">
+Generate ID Card
+</button>
+
+<button class="btn-secondary"
+onclick="window.location.href='bus-tracker.html'">
+Bus Tracking
+</button>
+
+<div class="form-group" style="margin-top:15px;">
+<label>Select Month</label>
+
+<input type="month"
+id="selectedMonth"
+value="2026-05">
+</div>
+
+<button onclick="loadAttendance()"
+id="viewBtn"
+class="btn-secondary">
+View Monthly Exceptions
+</button>
+
+<div id="portalContent"
+class="hidden"
+style="margin-top:15px;">
+
+<h3 style="margin-bottom:10px;">
+My Attendance
+</h3>
+
+<div id="statsGrid"></div>
+
+<ul id="logList"></ul>
+
+</div>
+
+<button class="btn-purple"
+onclick="viewTodayAttendance()">
+Today's Attendance
+</button>
+
+<button onclick="logoutUser()"
+style="background:#6c757d;color:white;">
+Logout
+</button>
+
+</div>
+
+</div>
 <!-- Continue with your existing LOGIN HTML from here exactly as it is -->
 
 <!-- Do not change the HTML below until Part 2 -->
