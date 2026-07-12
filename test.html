@@ -337,6 +337,13 @@ Homework Upload
 onclick="showSalarySummary()">
 Salary Slip
 </button>
+<button class="btn-secondary" onclick="showAttendanceCalendar()">
+📅 Attendance Calendar
+</button>
+
+<button class="btn-secondary" onclick="exportAttendancePDF()">
+📄 Export Attendance PDF
+</button>
 
 <button class="btn-secondary"
 onclick="generateIDCard()">
@@ -1411,6 +1418,220 @@ function getStatusColor(status){
     return "background:#e3f2fd;color:#1565c0;";
 }
     
+async function getMonthlyAttendance(){
+
+    const user = firebase.auth().currentUser;
+    if(!user) return [];
+
+    const monthInput = document.getElementById("selectedMonth").value;
+
+    const startDate = monthInput + "-01";
+    const endDate = monthInput + "-31";
+
+    try{
+
+        const querySnapshot = await db.collection("attendance")
+        .where("teacherEmail","==",user.email.toLowerCase())
+        .where("dateOnly",">=",startDate)
+        .where("dateOnly","<=",endDate)
+        .get();
+
+        const logs = [];
+
+        querySnapshot.forEach((doc)=>{
+
+            const data = doc.data();
+
+            logs.push({
+                date: data.dateOnly,
+                checkIn: data.time
+                    ? data.time.toDate().toLocaleTimeString("en-IN")
+                    : "N/A",
+                status: data.type==="IN"
+                    ? (data.late ? "Late" : "Present")
+                    : data.type
+            });
+
+        });
+
+        return logs.sort((a,b)=>b.date.localeCompare(a.date));
+
+    }catch(error){
+        console.error(error);
+        return [];
+    }
+}
+
+function toggleDarkMode(){
+
+    document.body.classList.toggle("darkMode");
+}
+
+function updateClock(){
+
+    document.getElementById("currentTime").innerText =
+    new Date().toLocaleString();
+}
+
+setInterval(updateClock,1000);
+
+function logoutUser(){
+
+    auth.signOut().then(()=>{
+
+        sessionStorage.clear();
+
+        location.reload();
+    });
+}
+
+function goToAdmin(){
+
+    if(
+        auth.currentUser &&
+        auth.currentUser.email === "admin@gmail.com"
+    ){
+
+        window.location.href =
+        "admin.html";
+
+    }else{
+
+        alert("Admin Only!");
+    }
+}
+
+function checkSalaryAccess(){
+
+    const user =
+    firebase.auth().currentUser;
+
+    if(
+        user &&
+        user.email === "admin@gmail.com"
+    ){
+
+        window.location.href =
+        "salary-slip.html";
+
+    }else{
+
+        alert("🔒 Admin Only");
+    }
+    /*=====================================
+PART 2D
+Attendance Calendar + PDF Export
+======================================*/
+
+async function showAttendanceCalendar(){
+
+    const logs = await getMonthlyAttendance();
+
+    if(logs.length==0){
+
+        alert("No attendance found.");
+
+        return;
+    }
+
+    let txt="MONTHLY ATTENDANCE\n\n";
+
+    logs.forEach(l=>{
+
+        txt+=
+        l.date+
+        "   "+
+        l.status+
+        "   "+
+        l.checkIn+
+        "\n";
+
+    });
+
+    alert(txt);
+
+}
+
+
+
+async function exportAttendancePDF(){
+
+    const logs=await getMonthlyAttendance();
+
+    if(logs.length==0){
+
+        alert("No attendance found.");
+
+        return;
+
+    }
+
+    const {jsPDF}=window.jspdf;
+
+    const pdf=new jsPDF();
+
+    pdf.setFontSize(18);
+
+    pdf.text("Veeramallu Global Academy",20,20);
+
+    pdf.setFontSize(13);
+
+    pdf.text(
+        "Teacher Attendance Report",
+        20,
+        30
+    );
+
+    pdf.text(
+        "Teacher : "+
+        auth.currentUser.email,
+        20,
+        40
+    );
+
+    pdf.text(
+        "Month : "+
+        document.getElementById("selectedMonth").value,
+        20,
+        50
+    );
+
+    let y=65;
+
+    logs.forEach((row,index)=>{
+
+        pdf.text(
+
+            (index+1)+". "+
+            row.date+
+            " | "+
+            row.status+
+            " | "+
+            row.checkIn,
+
+            20,
+
+            y
+
+        );
+
+        y+=8;
+
+        if(y>280){
+
+            pdf.addPage();
+
+            y=20;
+
+        }
+
+    });
+
+    pdf.save("Teacher_Attendance_Report.pdf");
+
+}
+    
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
