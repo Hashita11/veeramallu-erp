@@ -734,9 +734,57 @@ async function registerTeacher(){
 
         alert(err.message);
     }
-}
-    // old code        
+}   
         
+async function loadTeacherPhoto(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const doc =
+    await db.collection("teachers")
+    .doc(user.uid)
+    .get();
+
+    if(doc.exists && doc.data().photo){
+
+        document.getElementById("profilePic").src =
+        doc.data().photo;
+    }
+}
+
+async function uploadPhoto(input){
+
+    const file = input.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async(e)=>{
+
+        const compressedImage =
+        e.target.result;
+
+        const user =
+        auth.currentUser;
+
+        await db.collection("teachers")
+        .doc(user.uid)
+        .set({
+            photo:compressedImage
+        },{merge:true});
+
+        document.getElementById("profilePic").src =
+        compressedImage;
+
+        alert("✅ Photo Uploaded");
+    };
+
+    reader.readAsDataURL(file);
+}
+    // old code
     
 </script>
 </body>
