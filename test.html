@@ -784,7 +784,255 @@ async function uploadPhoto(input){
 
     reader.readAsDataURL(file);
 }
-    // old code
+
+    function calculateDistance(lat1,lon1,lat2,lon2){
+
+    const R = 6371e3;
+
+    const dLat =
+    (lat2-lat1)*Math.PI/180;
+
+    const dLon =
+    (lon2-lon1)*Math.PI/180;
+
+    const a =
+    Math.sin(dLat/2)*Math.sin(dLat/2)+
+    Math.cos(lat1*Math.PI/180)*
+    Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)*
+    Math.sin(dLon/2);
+
+    return R*2*Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1-a)
+    );
+}
+
+function startGPSCheck(){
+
+    if(!navigator.geolocation){
+
+        document.getElementById("gpsStatus").innerHTML =
+        "GPS Not Supported";
+
+        return;
+    }
+
+    navigator.geolocation.watchPosition(
+
+    (pos)=>{
+
+        const userLat =
+        pos.coords.latitude;
+
+        const userLng =
+        pos.coords.longitude;
+
+        let nearestCampus = "";
+
+        let nearestDistance = Infinity;
+
+        for(const [name,coords]
+        of Object.entries(campusCoords)){
+
+            const distance =
+            calculateDistance(
+                userLat,
+                userLng,
+                coords.lat,
+                coords.lng
+            );
+
+            if(distance < nearestDistance){
+
+                nearestDistance = distance;
+
+                nearestCampus = name;
+            }
+        }
+
+        sessionStorage.setItem(
+            "activeCampus",
+            nearestCampus
+        );
+
+        document.getElementById("campusDisplay").innerText =
+        "Campus: " + nearestCampus;
+
+        const gpsStatus =
+        document.getElementById("gpsStatus");
+
+        if(nearestDistance <= 50){
+
+            gpsStatus.innerHTML =
+            "✔ Inside " +
+            nearestCampus +
+            " (" +
+            Math.round(nearestDistance) +
+            "m)";
+
+            gpsStatus.style.color = "green";
+
+            document.getElementById("btnIn").disabled = false;
+            document.getElementById("btnOut").disabled = false;
+
+        }else{
+
+            gpsStatus.innerHTML =
+            "✖ Outside Campus (" +
+            Math.round(nearestDistance) +
+            "m)";
+
+            gpsStatus.style.color = "red";
+
+            document.getElementById("btnIn").disabled = true;
+            document.getElementById("btnOut").disabled = true;
+        }
+
+    },
+
+    ()=>{
+
+        document.getElementById("gpsStatus").innerHTML =
+        "GPS Error";
+    },
+
+    {
+        enableHighAccuracy:true
+    });
+}
+   
+    async function markAttendance(type){
+
+    try{
+
+        const photoVerified = await verifyTeacherPhoto();
+
+        if(!photoVerified){
+            return;
+        }
+
+        const user = auth.currentUser;
+
+        if(!user){
+            alert("Please login first");
+            return;
+        }
+
+        const teacherDoc = await db.collection("teachers")
+        .doc(user.uid)
+        .get();
+
+        const teacherData = teacherDoc.data() || {};
+
+        const teacherName =
+        teacherData.name ||
+        user.email.split("@")[0];
+
+        const teacherEmail =
+        user.email.toLowerCase();
+
+        const campus =
+        sessionStorage.getItem("activeCampus");
+
+        const now = new Date();
+
+        const dateOnly =
+        now.toISOString().split("T")[0];
+
+        const timeStr =
+        now.toLocaleTimeString("en-GB",{
+            hour12:false
+        });
+
+        const attendance =
+        await db.collection("attendance")
+        .where("teacherEmail","==",teacherEmail)
+        .where("dateOnly","==",dateOnly)
+        .get();
+
+        let alreadyIN=false;
+        let alreadyOUT=false;
+
+        attendance.forEach(doc=>{
+
+            const data=doc.data();
+
+            if(data.type==="IN") alreadyIN=true;
+
+            if(data.type==="OUT") alreadyOUT=true;
+
+        });
+
+        if(type==="IN" && alreadyIN){
+            alert("Today's Check-IN already completed.");
+            return;
+        }
+
+        if(type==="OUT" && !alreadyIN){
+            alert("Please Check-IN first.");
+            return;
+        }
+
+        if(type==="OUT" && alreadyOUT){
+            alert("Today's Check-OUT already completed.");
+            return;
+        }
+
+        const isLate =
+        type==="IN" &&
+        timeStr > LATE_THRESHOLD;
+
+        await db.collection("attendance").add({
+
+            teacherId:user.uid,
+
+            teacherName:teacherName,
+
+            teacherEmail:teacherEmail,
+
+            campus:campus,
+
+            type:type,
+
+            late:isLate,
+
+            status:
+            type==="IN"
+            ?(isLate?"Late":"Present")
+            :"Completed",
+
+            time:
+            firebase.firestore.Timestamp.fromDate(now),
+
+            fullTimestamp:
+            now.toISOString(),
+
+            dateOnly:dateOnly,
+
+            method:"Teacher App",
+
+            verifiedPhoto:true
+
+        });
+
+        if(isLate){
+
+            alert("⚠ Late Attendance Recorded");
+
+        }else{
+
+            alert("✅ "+type+" Successful");
+
+        }
+
+    }catch(error){
+
+        alert(error.message);
+
+    }
+
+}
     
 </script>
 </body>
