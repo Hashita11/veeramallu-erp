@@ -1355,62 +1355,8 @@ async function exportAttendancePDF(){
     window.print();
 
 }
-    // =====================================
-// AUTO MARK ABSENT (After 9:00 AM)
-// =====================================
 
-async function autoMarkAbsent(){
-
-    const today = new Date().toISOString().split("T")[0];
-
-    const teachersSnap = await db.collection("teachers").get();
-
-    for(const teacher of teachersSnap.docs){
-
-        const t = teacher.data();
-
-        const attendance = await db.collection("attendance")
-        .where("teacherEmail","==",t.email.toLowerCase())
-        .where("dateOnly","==",today)
-        .where("type","==","IN")
-        .get();
-
-        if(attendance.empty){
-
-            await db.collection("attendance").add({
-
-                teacherId:teacher.id,
-
-                teacherName:t.name,
-
-                teacherEmail:t.email.toLowerCase(),
-
-                campus:t.campus || "",
-
-                type:"ABSENT",
-
-                late:false,
-
-                autoAbsent:true,
-
-                time:firebase.firestore.Timestamp.now(),
-
-                fullTimestamp:new Date().toISOString(),
-
-                dateOnly:today,
-
-                method:"Principal Auto Absent"
-
-            });
-
-        }
-
-    }
-
-    alert("✅ Auto Absent Completed");
-
-}
-    // =====================================
+ // =====================================
 // 3 LATE = 1 CASUAL LEAVE
 // =====================================
 
