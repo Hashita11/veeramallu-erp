@@ -1293,7 +1293,123 @@ async function viewTodayAttendance(){
         document.body.removeChild(div);
     });
 }
+async function loadAttendance(){
 
+    const btn =
+    document.getElementById("viewBtn");
+
+    const portal =
+    document.getElementById("portalContent");
+
+    const logList =
+    document.getElementById("logList");
+
+    btn.innerText = "Loading...";
+
+    try{
+
+        const logs =
+        await getMonthlyAttendance();
+
+        const totalLate = logs.filter(log => log.status === "Late").length;
+
+        document.getElementById("statsGrid").innerHTML = `
+
+        <div style="
+        text-align:center;
+        background:#fff3e0;
+        padding:10px;
+        border-radius:8px;">
+
+        <span style="
+        display:block;
+        font-size:10px;
+        font-weight:bold;
+        color:#e65100;">
+        TOTAL LATE
+        </span>
+
+        <span style="
+        font-size:18px;
+        font-weight:bold;">
+        ${totalLate}
+        </span>
+
+        </div>
+        `;
+
+        portal.classList.remove("hidden");
+
+        if(logs.length===0){
+
+            logList.innerHTML =
+            "<li style='padding:10px;color:green;'>No records found</li>";
+
+        }else{
+
+            logList.innerHTML =
+            logs.map(log=>`
+
+            <li style="
+            padding:10px;
+            border-bottom:1px solid #eee;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;">
+
+            <div style="text-align:left;">
+
+            <div style="font-weight:bold;">
+            ${log.date}
+            </div>
+
+            <div style="
+            font-size:11px;
+            color:#666;">
+            ${log.checkIn}
+            </div>
+
+            </div>
+
+            <span style="
+            padding:4px 8px;
+            border-radius:5px;
+            font-size:12px;
+            font-weight:bold;
+            ${getStatusColor(log.status)}">
+
+            ${log.status}
+
+            </span>
+
+            </li>
+
+            `).join("");
+        }
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Failed to load");
+
+    }finally{
+
+        btn.innerText =
+        "Refresh Attendance";
+    }
+}
+
+function getStatusColor(status){
+
+    if(status==="Late")
+    return "background:#fff3e0;color:#e65100;";
+
+    if(status==="Absent")
+    return "background:#ffebee;color:#c62828;";
+
+    return "background:#e3f2fd;color:#1565c0;";
+}
     
 </script>
 </body>
