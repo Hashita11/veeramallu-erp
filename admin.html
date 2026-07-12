@@ -165,7 +165,63 @@ onclick="deleteTeacherAttendance()">
     <div class="section-header">NOTICE BOARD BROADCAST</div>
     <textarea id="noticeMsg" style="height:80px;" placeholder="Message for Teachers & Parents..."></textarea>
     <button class="btn" onclick="sendNotice()" style="background:#1a237e;color:white;">Send Push Notification</button>
-    
+    <!-- ============================= -->
+<!-- LEAVE APPROVAL MANAGEMENT -->
+<!-- ============================= -->
+
+<div class="section-header">
+📝 STAFF LEAVE APPROVAL
+</div>
+
+<div class="card">
+
+<select id="leaveTeacher">
+<option value="">Select Teacher</option>
+</select>
+
+<br><br>
+
+<textarea
+id="leaveReason"
+placeholder="Leave Reason"
+style="height:70px;">
+</textarea>
+
+<br><br>
+
+<input
+type="date"
+id="leaveDate">
+
+<br><br>
+
+<div style="display:flex;gap:10px;">
+
+<button
+class="btn"
+style="background:#2e7d32;color:white;"
+onclick="approveLeave()">
+✅ Approve Leave
+</button>
+
+<button
+class="btn"
+style="background:#c62828;color:white;"
+onclick="rejectLeave()">
+❌ Reject
+</button>
+
+</div>
+
+<div
+id="leaveStatus"
+style="
+margin-top:15px;
+font-weight:bold;
+color:#1a237e;">
+</div>
+
+</div>
     <div class="section-header">📊 ACCOUNTS & FINANCIAL REPORTS</div>
     <div style="background:#e0f2f1; padding:20px; border-radius:12px; border:1px solid #b2dfdb; text-align:center;">
         <button class="btn" onclick="location.href='reports.html'" style="background:#00695c; color:white; font-size: 1.1rem; padding:12px; border:none; border-radius:8px; font-weight:600; cursor:pointer; width:100%; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin:0;">
@@ -267,7 +323,14 @@ function loadTeachers() {
     unsubscribeTeachers = db.collection("teachers").onSnapshot((snap) => {
         teachers = [];
         const selectMenu = document.getElementById("manualStaffSelect");
-        
+        const leaveMenu = document.getElementById("leaveTeacher");
+
+if(leaveMenu){
+
+leaveMenu.innerHTML =
+'<option value="">Select Teacher</option>';
+
+}
         if(selectMenu) {
             selectMenu.innerHTML = '<option value="">Select Staff</option>';
         }
@@ -284,6 +347,9 @@ function loadTeachers() {
 
             if(selectMenu && teacherObj.email) {
                 selectMenu.innerHTML += `<option value="${teacherObj.email}">${teacherObj.name} (${teacherObj.email})</option>`;
+            }
+            if(leaveMenu){
+                leaveMenu.innerHTML += `<option value="${teacherObj.email}">${teacherObj.name}</option>`; 
             }
         });
 
@@ -593,6 +659,29 @@ async function generateSalary() {
                 return email === t.email.toLowerCase().trim();
 
             });
+// ===============================
+// APPROVED LEAVE COUNT
+// ===============================
+
+let approvedLeave = 0;
+
+const leaveSnap = await db.collection("leave_requests")
+.where("teacherEmail","==",t.email)
+.where("status","==","Approved")
+.get();
+
+leaveSnap.forEach(doc=>{
+
+    const d = doc.data();
+
+    if(
+        d.leaveDate >= startVal &&
+        d.leaveDate <= endVal
+    ){
+        approvedLeave++;
+    }
+
+});
 
             const presentDays = [...new Set(
                 teacherLogs
@@ -603,10 +692,11 @@ async function generateSalary() {
             const lateCount =
                 teacherLogs.filter(x => x.late || x.autoLate).length;
 
-            const latePenalty = Math.floor(lateCount / 3);
+            const casualLeaveLoss = Math.floor(lateCount / 3);
 
+const latePenalty = casualLeaveLoss;
             const absentDays =
-                Math.max(0, workingDays - presentDays);
+                Math.max(0, workingDays - presentDays - approvedLeave);
 
             const totalLoss =
                 absentDays + latePenalty;
@@ -627,7 +717,8 @@ async function generateSalary() {
             report += `Working Days : ${workingDays}\n`;
             report += `Present Days : ${presentDays}\n`;
             report += `Late Count : ${lateCount}\n`;
-            report += `Late Penalty : ${latePenalty}\n`;
+            report += `Approved Leave : ${approvedLeave}\n`;
+            report += `3 Late = CL Loss : ${casualLeaveLoss}\n`;
             report += `Absent Days : ${absentDays}\n`;
             report += `FINAL SALARY : ₹${Math.round(finalSalary)}\n`;
             report += "------------------------------------------\n";
@@ -733,7 +824,187 @@ async function checkClassAttendance() {
         box.innerHTML = html;
     } catch (error) { alert("Error checking class array records."); }
 }
+    
+// =====================================
+// STAFF LEAVE APPROVAL SYSTEM
+// =====================================
 
+async function approveLeave(){
+
+    const teacherEmail =
+    document.getElementById("leaveTeacher").value;
+
+    const reason =
+    document.getElementById("leaveReason").value.trim();
+
+    const leaveDate =
+    document.getElementById("leaveDate").value;
+
+    if(!teacherEmail || !leaveDate){
+
+        alert("Select Teacher and Date");
+
+        return;
+    }
+
+    try{
+
+        await db.collection("leave_requests")
+        .doc(teacherEmail + "_" + leaveDate)
+        .set({
+
+            teacherEmail:teacherEmail,
+
+            leaveDate:leaveDate,
+
+            reason:reason,
+
+            status:"Approved",
+
+            approvedBy:"Principal",
+
+            approvedTime:
+            firebase.firestore.FieldValue.serverTimestamp()
+
+        });
+
+        document.getElementById("leaveStatus").innerHTML =
+        "✅ Leave Approved";
+
+        alert("Leave Approved Successfully");
+
+    }catch(err){
+
+        alert(err.message);
+
+    }
+
+}
+
+async function rejectLeave(){
+
+    const teacherEmail =
+    document.getElementById("leaveTeacher").value;
+
+    const leaveDate =
+    document.getElementById("leaveDate").value;
+
+    if(!teacherEmail || !leaveDate){
+
+        alert("Select Teacher and Date");
+
+        return;
+    }
+
+    try{
+
+        await db.collection("leave_requests")
+        .doc(teacherEmail + "_" + leaveDate)
+        .set({
+
+            teacherEmail:teacherEmail,
+
+            leaveDate:leaveDate,
+
+            status:"Rejected",
+
+            rejectedBy:"Principal",
+
+            rejectedTime:
+            firebase.firestore.FieldValue.serverTimestamp()
+
+        });
+
+        document.getElementById("leaveStatus").innerHTML =
+        "❌ Leave Rejected";
+
+        alert("Leave Rejected Successfully");
+
+    }catch(err){
+
+        alert(err.message);
+
+    }
+
+}
+// =====================================
+// AUTO ABSENT SYSTEM
+// =====================================
+
+async function autoMarkAbsent(){
+
+    const today = new Date();
+
+    const currentTime =
+    today.toLocaleTimeString("en-GB",{hour12:false});
+
+    // Run only after 09:00 AM
+
+    if(currentTime < "09:00:00") return;
+
+    const dateOnly =
+    today.toISOString().split("T")[0];
+
+    for(const teacher of teachers){
+
+        // Check Leave Approval
+
+        const leaveDoc =
+        await db.collection("leave_requests")
+        .doc(teacher.email + "_" + dateOnly)
+        .get();
+
+        if(
+            leaveDoc.exists &&
+            leaveDoc.data().status==="Approved"
+        ){
+            continue;
+        }
+
+        // Check Attendance
+
+        const attendance =
+        await db.collection("attendance")
+        .where("teacherEmail","==",teacher.email)
+        .where("dateOnly","==",dateOnly)
+        .where("type","==","IN")
+        .get();
+
+        if(attendance.empty){
+
+            await db.collection("attendance").add({
+
+                teacherId:teacher.id,
+
+                teacherName:teacher.name,
+
+                teacherEmail:teacher.email,
+
+                campus:"",
+
+                type:"ABSENT",
+
+                late:false,
+
+                autoAbsent:true,
+
+                method:"Auto System",
+
+                dateOnly:dateOnly,
+
+                fullTimestamp:new Date().toISOString(),
+
+                time:firebase.firestore.Timestamp.now()
+
+            });
+
+        }
+
+    }
+
+    console.log("Auto Absent Completed");
+
+}
 // =====================================
 // 📢 UTILS & EXPORTS BROADCASTS
 // =====================================
@@ -773,6 +1044,13 @@ function printPayroll(){
     win.document.write(`<html><head><title>VGA Payroll Report</title><style>body{font-family:Arial;padding:30px;white-space:pre-wrap;line-height:1.6;}h1{text-align:center;color:#1a237e;}</style></head><body><h1>VEERAMALLU GLOBAL ACADEMY<br>PAYROLL REPORT</h1><hr>${payroll.replace(/\n/g,"<br>")}</body></html>`);
     win.document.close(); win.print();
 }
+    // Run every minute
+
+setInterval(autoMarkAbsent,60000);
+
+// Run immediately after Admin login
+
+setTimeout(autoMarkAbsent,5000);
 </script>
 </body>
 </html>
