@@ -275,6 +275,56 @@ color:#1a237e;">
             <span>🔑</span> Open Super-Admin Dashboard Portal
         </button>
     </div>
+    <div class="section-header">
+👨‍💼 PRINCIPAL CONTROL CENTER
+</div>
+
+<div class="card">
+
+<button class="btn btn-adm"
+onclick="lockAttendance()">
+🔒 Lock Attendance
+</button>
+
+<button class="btn btn-adm"
+onclick="unlockAttendance()">
+🔓 Unlock Attendance
+</button>
+
+<p id="lockStatus"
+style="margin-top:10px;font-weight:bold;color:#c62828;">
+Checking...
+</p>
+
+<hr style="margin:20px 0;">
+
+<button class="btn-action"
+style="background:#1565c0;"
+onclick="runAutoAbsent()">
+🚫 Auto Mark Absent (After 9 AM)
+</button>
+
+<button class="btn-action"
+style="background:#6a1b9a;"
+onclick="runLatePenalty()">
+⏰ Calculate 3 Late = 1 Casual Leave
+</button>
+
+<button class="btn-action"
+style="background:#ef6c00;"
+onclick="calculateMonthlySalary()">
+💰 Generate Monthly Salary
+</button>
+
+<button class="btn-action"
+style="background:#00897b;"
+onclick="exportAttendancePDF()">
+📄 Export Attendance PDF
+</button>
+
+</div>
+
+</div>
 
     <div style="width:100%; margin-top:30px; display:flex; justify-content:center; align-items:center;">
         <button onclick="logoutAdmin()" style="width:100%; max-width:350px; background:linear-gradient(135deg,#d32f2f,#b71c1c); color:white; border:none; padding:16px; border-radius:12px; font-size:17px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.2);">🚪 LOGOUT ADMIN PANEL</button>
@@ -1242,6 +1292,174 @@ async function downloadAttendancePDF(){
         month +
         "_Attendance.pdf"
     );
+
+}
+ // =====================================
+// PRINCIPAL CONTROL CENTER
+// =====================================
+
+// Lock Attendance
+async function lockAttendance(){
+
+    await db.collection("settings")
+    .doc("attendance")
+    .set({
+        locked:true
+    },{merge:true});
+
+    alert("🔒 Attendance Locked");
+
+}
+
+// Unlock Attendance
+async function unlockAttendance(){
+
+    await db.collection("settings")
+    .doc("attendance")
+    .set({
+        locked:false
+    },{merge:true});
+
+    alert("🔓 Attendance Unlocked");
+
+}
+
+// Auto Absent
+async function runAutoAbsent(){
+
+    await autoMarkAbsent();
+
+    alert("✅ Auto Absent Completed");
+
+}
+
+// 3 Late = 1 Casual Leave
+async function runLatePenalty(){
+
+    await calculateLatePenalty();
+
+    alert("✅ Late Penalty Applied");
+
+}
+
+// Monthly Salary
+async function calculateMonthlySalary(){
+
+    generateSalary();
+
+}
+
+// Attendance PDF
+async function exportAttendancePDF(){
+
+    window.print();
+
+}
+    // =====================================
+// AUTO MARK ABSENT (After 9:00 AM)
+// =====================================
+
+async function autoMarkAbsent(){
+
+    const today = new Date().toISOString().split("T")[0];
+
+    const teachersSnap = await db.collection("teachers").get();
+
+    for(const teacher of teachersSnap.docs){
+
+        const t = teacher.data();
+
+        const attendance = await db.collection("attendance")
+        .where("teacherEmail","==",t.email.toLowerCase())
+        .where("dateOnly","==",today)
+        .where("type","==","IN")
+        .get();
+
+        if(attendance.empty){
+
+            await db.collection("attendance").add({
+
+                teacherId:teacher.id,
+
+                teacherName:t.name,
+
+                teacherEmail:t.email.toLowerCase(),
+
+                campus:t.campus || "",
+
+                type:"ABSENT",
+
+                late:false,
+
+                autoAbsent:true,
+
+                time:firebase.firestore.Timestamp.now(),
+
+                fullTimestamp:new Date().toISOString(),
+
+                dateOnly:today,
+
+                method:"Principal Auto Absent"
+
+            });
+
+        }
+
+    }
+
+    alert("✅ Auto Absent Completed");
+
+}
+    // =====================================
+// 3 LATE = 1 CASUAL LEAVE
+// =====================================
+
+async function calculateLatePenalty(){
+
+    const month =
+    new Date().toISOString().substring(0,7);
+
+    const teachers =
+    await db.collection("teachers").get();
+
+    for(const teacher of teachers.docs){
+
+        const t = teacher.data();
+
+        const lateSnap =
+        await db.collection("attendance")
+        .where("teacherEmail","==",t.email.toLowerCase())
+        .where("late","==",true)
+        .get();
+
+        let lateCount = 0;
+
+        lateSnap.forEach(doc=>{
+
+            const d = doc.data();
+
+            if(d.dateOnly.startsWith(month)){
+                lateCount++;
+            }
+
+        });
+
+        const clDeduction =
+        Math.floor(lateCount/3);
+
+        await db.collection("teachers")
+        .doc(teacher.id)
+        .set({
+
+            lateCount:lateCount,
+
+            casualLeaveDeduction:clDeduction
+
+        },{merge:true});
+
+    }
+
+    alert("✅ Late Penalty Updated");
 
 }
     // Run every minute
