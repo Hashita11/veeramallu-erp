@@ -392,8 +392,91 @@ Logout
 <!-- Continue with your existing LOGIN HTML from here exactly as it is -->
 
 <!-- Do not change the HTML below until Part 2 -->
+<!-- SCRIPTS -->
 
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+
+    apiKey: "AIzaSyCn7jBoFFpu2HTmQvPtXZx6h-2MzAD1piE",
+
+    authDomain: "veeramalluerp-6cac5.firebaseapp.com",
+
+    projectId: "veeramalluerp-6cac5",
+
+    storageBucket: "veeramalluerp-6cac5.appspot.com",
+
+    messagingSenderId: "379339569496",
+
+    appId: "1:379339569496:web:5c2becb98190b4e43a8d2d"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const LATE_THRESHOLD = "08:30:00";
+
+const campusCoords = {
+
+    "Relangi":{
+        lat:16.702710,
+        lng:81.644140
+    },
+
+    "Velpur":{
+        lat:16.719772,
+        lng:81.662377
+    },
+
+    "Undrajavaram":{
+        lat:16.791772,
+        lng:81.701022
+    }
+};
+
+auth.onAuthStateChanged(async(user)=>{
+
+    if(!user){
+
+        document.getElementById("loginSection").style.display="block";
+
+        document.getElementById("attendanceSection").style.display="none";
+
+        return;
+    }
+
+    document.getElementById("loginSection").style.display="none";
+
+    document.getElementById("attendanceSection").style.display="block";
+
+    const campus =
+    sessionStorage.getItem("activeCampus") || "";
+
+    document.getElementById("welcomeMsg").innerText =
+    "Welcome, " +
+    user.email.split("@")[0].toUpperCase();
+
+    document.getElementById("teacherEmailDisplay").innerText =
+    user.email;
+
+    document.getElementById("campusDisplay").innerText =
+    "Campus: " + campus;
+
+    loadTeacherPhoto();
+
+    startGPSCheck();
+});
+
+</script>
 </body>
 </html>
