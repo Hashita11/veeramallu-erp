@@ -621,7 +621,69 @@ auth.onAuthStateChanged(async(user)=>{
 
     startGPSCheck();
 });
+    //old code
+    
 
+            if(distance < nearestDistance){
+
+                nearestDistance = distance;
+
+                nearestCampus = name;
+            }
+        }
+
+        sessionStorage.setItem(
+            "activeCampus",
+            nearestCampus
+        );
+
+        document.getElementById("campusDisplay").innerText =
+        "Campus: " + nearestCampus;
+
+        const gpsStatus =
+        document.getElementById("gpsStatus");
+
+        if(nearestDistance <= 50){
+
+            gpsStatus.innerHTML =
+            "✔ Inside " +
+            nearestCampus +
+            " (" +
+            Math.round(nearestDistance) +
+            "m)";
+
+            gpsStatus.style.color = "green";
+
+            document.getElementById("btnIn").disabled = false;
+            document.getElementById("btnOut").disabled = false;
+
+        }else{
+
+            gpsStatus.innerHTML =
+            "✖ Outside Campus (" +
+            Math.round(nearestDistance) +
+            "m)";
+
+            gpsStatus.style.color = "red";
+
+            document.getElementById("btnIn").disabled = true;
+            document.getElementById("btnOut").disabled = true;
+        }
+
+    },
+
+    ()=>{
+
+        document.getElementById("gpsStatus").innerHTML =
+        "GPS Error";
+    },
+
+    {
+        enableHighAccuracy:true
+    });
+}
+
+    
 </script>
 </body>
 </html>
