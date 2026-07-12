@@ -435,7 +435,28 @@ border-radius:10px;
 border:1px solid #ddd;
 text-align:left;">
 </div>
-    
+    <button class="btn-secondary" onclick="loadPendingLeaves()">
+📝 Pending Leave Requests
+</button>
+
+<button class="btn-secondary" onclick="toggleAttendanceLock()">
+🔒 Lock / Unlock Attendance
+</button>
+
+<button class="btn-secondary" onclick="sendTeacherNotice()">
+📢 Send Notice
+</button>
+
+<div id="principalPanel"
+style="
+display:none;
+margin-top:15px;
+padding:15px;
+background:#ffffff;
+border-radius:10px;
+border:1px solid #ddd;">
+</div>
+ 
 <button onclick="logoutUser()"
 style="background:#6c757d;color:white;">
 Logout
@@ -956,7 +977,8 @@ function startGPSCheck(){
         enableHighAccuracy:true
     });
 }
-   
+
+ 
     async function markAttendance(type){
 
     try{
@@ -966,7 +988,18 @@ function startGPSCheck(){
         if(!photoVerified){
             return;
         }
+     
+const lockDoc=await db.collection("settings")
+.doc("attendance")
+.get();
 
+if(lockDoc.exists && lockDoc.data().locked){
+
+    alert("Attendance is locked by Principal.");
+
+    return;
+
+}
         const user = auth.currentUser;
 
         if(!user){
@@ -1425,7 +1458,7 @@ workingDays==0
 `;
 
         portal.classList.remove("hidden");
-
+        await calculateMonthlySalary();
         if(logs.length===0){
 
             logList.innerHTML =
@@ -1539,6 +1572,94 @@ async function getMonthlyAttendance(){
         console.error(error);
         return [];
     }
+}
+ // ===============================
+// MONTHLY SALARY CALCULATION
+// ===============================
+
+async function calculateMonthlySalary(){
+
+    const user = auth.currentUser;
+
+    if(!user){
+        return;
+    }
+
+    const teacherDoc = await db.collection("teachers")
+    .doc(user.uid)
+    .get();
+
+    const teacher = teacherDoc.data() || {};
+
+    const monthlySalary = teacher.salary || 0;
+
+    const month = document.getElementById("selectedMonth").value;
+
+    const logs = await getMonthlyAttendance();
+
+    let present = 0;
+    let late = 0;
+    let absent = 0;
+    let leave = 0;
+
+    logs.forEach(log=>{
+
+        if(log.status==="Present") present++;
+
+        if(log.status==="Late"){
+            present++;
+            late++;
+        }
+
+        if(log.status==="Absent") absent++;
+
+        if(log.status==="Leave") leave++;
+
+    });
+
+    const lateDeduction = Math.floor(late/3);
+
+    const totalAbsent = absent + lateDeduction;
+
+    const workingDays = 30;
+
+    const perDaySalary = monthlySalary / workingDays;
+
+    const deduction = perDaySalary * totalAbsent;
+
+    const payable = monthlySalary - deduction;
+
+    document.getElementById("statsGrid").innerHTML += `
+
+    <div style="
+        margin-top:15px;
+        background:#e8f5e9;
+        padding:15px;
+        border-radius:10px;
+        text-align:left;">
+
+        <h3>Salary Summary</h3>
+
+        <p><b>Month :</b> ${month}</p>
+
+        <p><b>Salary :</b> ₹${monthlySalary}</p>
+
+        <p><b>Present :</b> ${present}</p>
+
+        <p><b>Late :</b> ${late}</p>
+
+        <p><b>Absent :</b> ${absent}</p>
+
+        <p><b>Late Deduction :</b> ${lateDeduction} Day</p>
+
+        <hr>
+
+        <h3>Payable Salary : ₹${payable.toFixed(0)}</h3>
+
+    </div>
+
+    `;
+
 }
 
 function toggleDarkMode(){
@@ -1962,7 +2083,162 @@ loadAttendance();
     }
 
 }
-    
+    // ===============================
+// PRINCIPAL CONTROLS
+// ===============================
+
+let attendanceLocked=false;
+
+async function toggleAttendanceLock(){
+
+    if(auth.currentUser.email!="admin@gmail.com"){
+
+        alert("Admin Only");
+        return;
+
+    }
+
+    attendanceLocked=!attendanceLocked;
+
+    await db.collection("settings")
+    .doc("attendance")
+    .set({
+
+        locked:attendanceLocked
+
+    },{merge:true});
+
+    alert(attendanceLocked?
+    "Attendance Locked":
+    "Attendance Unlocked");
+
+}
+ async function loadPendingLeaves(){
+
+    if(auth.currentUser.email!="admin@gmail.com"){
+
+        alert("Admin Only");
+        return;
+
+    }
+
+    const panel=document.getElementById("principalPanel");
+
+    panel.style.display="block";
+
+    panel.innerHTML="Loading...";
+
+    const snap=await db.collection("leaveRequests")
+    .where("status","==","Pending")
+    .get();
+
+    if(snap.empty){
+
+        panel.innerHTML="<b>No Pending Leaves</b>";
+
+        return;
+
+    }
+
+    let html="<h3>Pending Leave Requests</h3><hr>";
+
+    snap.forEach(doc=>{
+
+        const d=doc.data();
+
+        html+=`
+
+        <div style="
+        border-bottom:1px solid #ddd;
+        padding:10px;">
+
+        <b>${d.teacherName}</b><br>
+
+        ${d.date}<br>
+
+        ${d.reason}<br><br>
+
+        <button onclick="approveLeave('${doc.id}')">
+        ✅ Approve
+        </button>
+
+        <button onclick="rejectLeave('${doc.id}')">
+        ❌ Reject
+        </button>
+
+        </div>
+
+        `;
+
+    });
+
+    panel.innerHTML=html;
+
+}
+ async function approveLeave(id){
+
+    await db.collection("leaveRequests")
+    .doc(id)
+    .update({
+
+        status:"Approved"
+
+    });
+
+    alert("Leave Approved");
+
+    loadPendingLeaves();
+
+}
+
+async function rejectLeave(id){
+
+    await db.collection("leaveRequests")
+    .doc(id)
+    .update({
+
+        status:"Rejected"
+
+    });
+
+    alert("Leave Rejected");
+
+    loadPendingLeaves();
+
+}
+ async function sendTeacherNotice(){
+
+    if(auth.currentUser.email!="admin@gmail.com"){
+
+        alert("Admin Only");
+
+        return;
+
+    }
+
+    const title=prompt("Notice Title");
+
+    if(!title) return;
+
+    const message=prompt("Notice Message");
+
+    if(!message) return;
+
+    await db.collection("teacherNotices")
+    .add({
+
+        title:title,
+
+        message:message,
+
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+
+    });
+
+    alert("Notice Sent Successfully");
+
+}
+ 
     
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
