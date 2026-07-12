@@ -1169,7 +1169,47 @@ async function showSalarySummary(){
 
 }
 
+async function viewTodayAttendance(){
 
+    const today =
+    new Date().toISOString().split("T")[0];
+
+    const snap =
+    await db.collection("attendance")
+    .where(
+        "teacherEmail",
+        "==",
+        auth.currentUser.email.toLowerCase()
+    )
+    .where(
+        "dateOnly",
+        "==",
+        today
+    )
+    .get();
+
+    let msg =
+    "Today's Attendance\n\n";
+
+    if(snap.empty){
+
+        msg += "No attendance today";
+    }
+
+    snap.forEach(doc=>{
+
+        const data = doc.data();
+
+        msg +=
+        data.type +
+        " - " +
+        data.time.toDate().toLocaleTimeString() +
+        "\n";
+    });
+
+    alert(msg);
+}
+    
     
     
 </script>
