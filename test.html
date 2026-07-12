@@ -337,6 +337,10 @@ Homework Upload
 onclick="showSalarySummary()">
 Salary Slip
 </button>
+<button class="btn-secondary"
+onclick="requestLeave()">
+📝 Apply Leave
+</button>
 <button class="btn-secondary" onclick="showAttendanceCalendar()">
 📅 Attendance Calendar
 </button>
@@ -367,6 +371,10 @@ value="2026-05">
 id="viewBtn"
 class="btn-secondary">
 View Monthly Exceptions
+</button>
+ <button class="btn-secondary"
+onclick="exportAttendancePDF()">
+📄 Export Attendance PDF
 </button>
 
 <div id="portalContent"
@@ -1661,6 +1669,208 @@ async function calculateMonthlySalary(){
     `;
 
 }
+ // ===============================
+// LEAVE REQUEST SYSTEM
+// ===============================
+
+async function requestLeave(){
+
+    const user = auth.currentUser;
+
+    if(!user){
+        return;
+    }
+
+    const leaveDate = prompt("Enter Leave Date (YYYY-MM-DD)");
+
+    if(!leaveDate) return;
+
+    const reason = prompt("Reason for Leave");
+
+    if(!reason) return;
+
+    await db.collection("leaveRequests").add({
+
+        teacherId:user.uid,
+
+        teacherEmail:user.email.toLowerCase(),
+
+        date:leaveDate,
+
+        reason:reason,
+
+        status:"Pending",
+
+        appliedOn:firebase.firestore.Timestamp.now()
+
+    });
+
+    alert("✅ Leave Request Sent to Principal.");
+
+}
+ // ===============================
+// AUTO ABSENT AFTER 9:00 AM
+// ===============================
+
+async function autoMarkAbsent(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const now = new Date();
+
+    const currentTime = now.toLocaleTimeString("en-GB",{hour12:false});
+
+    if(currentTime < "09:00:00") return;
+
+    const today = now.toISOString().split("T")[0];
+
+    const attendance = await db.collection("attendance")
+    .where("teacherEmail","==",user.email.toLowerCase())
+    .where("dateOnly","==",today)
+    .get();
+
+    if(!attendance.empty) return;
+
+    await db.collection("attendance").add({
+
+        teacherId:user.uid,
+
+        teacherEmail:user.email.toLowerCase(),
+
+        teacherName:user.email.split("@")[0].toUpperCase(),
+
+        campus:sessionStorage.getItem("activeCampus"),
+
+        type:"ABSENT",
+
+        late:false,
+
+        dateOnly:today,
+
+        time:firebase.firestore.Timestamp.fromDate(now),
+
+        fullTimestamp:now.toISOString(),
+
+        method:"Auto Absent"
+
+    });
+
+    alert("❌ Absent marked automatically (No Check-IN before 9:00 AM)");
+
+}
+ async function exportAttendancePDF(){
+
+    const user = auth.currentUser;
+
+    if(!user){
+        alert("Login First");
+        return;
+    }
+
+    const month =
+    document.getElementById("selectedMonth").value;
+
+    const startDate = month + "-01";
+    const endDate = month + "-31";
+
+    const snap =
+    await db.collection("attendance")
+    .where("teacherEmail","==",user.email.toLowerCase())
+    .where("dateOnly",">=",startDate)
+    .where("dateOnly","<=",endDate)
+    .orderBy("dateOnly")
+    .get();
+
+    let html = `
+    <html>
+    <head>
+    <title>Attendance Report</title>
+
+    <style>
+
+    body{
+        font-family:Arial;
+        padding:20px;
+    }
+
+    h2{
+        text-align:center;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    th,td{
+        border:1px solid black;
+        padding:8px;
+        text-align:center;
+    }
+
+    th{
+        background:#1a237e;
+        color:white;
+    }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <h2>
+    Veeramallu Global Academy
+    </h2>
+
+    <h3>
+    Teacher Attendance Report
+    </h3>
+
+    <p><b>Teacher :</b> ${user.email}</p>
+    <p><b>Month :</b> ${month}</p>
+
+    <table>
+
+    <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Time</th>
+        <th>Status</th>
+    </tr>
+    `;
+
+    snap.forEach(doc=>{
+
+        const d = doc.data();
+
+        html += `
+        <tr>
+            <td>${d.dateOnly}</td>
+            <td>${d.type}</td>
+            <td>${d.time.toDate().toLocaleTimeString()}</td>
+            <td>${d.late ? "Late" : "Present"}</td>
+        </tr>
+        `;
+    });
+
+    html += `
+    </table>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "_blank");
+
+    win.document.write(html);
+
+    win.document.close();
+
+    win.print();
+
+}
 
 function toggleDarkMode(){
 
@@ -1673,7 +1883,13 @@ function updateClock(){
     new Date().toLocaleString();
 }
 
-setInterval(updateClock,1000);
+setInterval(()=>{
+
+    updateClock();
+
+    autoMarkAbsent();
+
+},60000);
 
 function logoutUser(){
 
@@ -1718,6 +1934,67 @@ function checkSalaryAccess(){
 
         alert("🔒 Admin Only");
     }
+
+// ==============================
+// AUTO ABSENT AFTER 9:00 AM
+// ==============================
+
+async function autoMarkAbsent(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const now = new Date();
+
+    const currentTime =
+        now.toTimeString().substring(0,8);
+
+    if(currentTime < "09:00:00") return;
+
+    const today =
+        now.toISOString().split("T")[0];
+
+    const teacherEmail =
+        user.email.toLowerCase();
+
+    const attendance =
+        await db.collection("attendance")
+        .where("teacherEmail","==",teacherEmail)
+        .where("dateOnly","==",today)
+        .get();
+
+    if(attendance.empty){
+
+        await db.collection("attendance").add({
+
+            teacherId:user.uid,
+            teacherEmail:teacherEmail,
+            teacherName:user.email.split("@")[0].toUpperCase(),
+
+            campus:sessionStorage.getItem("activeCampus"),
+
+            type:"ABSENT",
+
+            dateOnly:today,
+
+            time:firebase.firestore.Timestamp.fromDate(now),
+
+            fullTimestamp:now.toISOString(),
+
+            late:false,
+
+            method:"Auto Absent"
+
+        });
+
+        alert("Absent marked automatically after 9:00 AM");
+    }
+}
+
+// Run every minute
+setInterval(autoMarkAbsent,60000);
+ 
     /*=====================================
 PART 2D
 Attendance Calendar + PDF Export
