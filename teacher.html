@@ -1051,8 +1051,7 @@ async function loadAttendance(){
         const logs =
         await getMonthlyAttendance();
 
-        const totalLate =
-        logs.filter(l=>l.status==="Late").length;
+        const totalLate = logs.filter(log => log.status === "Late").length;
 
         document.getElementById("statsGrid").innerHTML = `
 
@@ -1154,80 +1153,44 @@ function getStatusColor(status){
 
 async function getMonthlyAttendance(){
 
-    const user =
-    firebase.auth().currentUser;
-
+    const user = firebase.auth().currentUser;
     if(!user) return [];
 
-    const monthInput =
-    document.getElementById("selectedMonth").value;
+    const monthInput = document.getElementById("selectedMonth").value;
+
+    const startDate = monthInput + "-01";
+    const endDate = monthInput + "-31";
 
     try{
 
-        const monthInput = document.getElementById("selectedMonth").value;
+        const querySnapshot = await db.collection("attendance")
+        .where("teacherEmail","==",user.email.toLowerCase())
+        .where("dateOnly",">=",startDate)
+        .where("dateOnly","<=",endDate)
+        .get();
 
-const startDate = monthInput + "-01";
-const endDate = monthInput + "-31";
-
-const querySnapshot = await db.collection("attendance")
-.where("teacherEmail","==",user.email.toLowerCase())
-.where("dateOnly", ">=", startDate)
-.where("dateOnly", "<=", endDate)
-.get();
         const logs = [];
 
         querySnapshot.forEach((doc)=>{
 
-            const data =
-            doc.data();
+            const data = doc.data();
 
-            const dateStr =
-            data.dateOnly || "";
+            logs.push({
+                date: data.dateOnly,
+                checkIn: data.time
+                    ? data.time.toDate().toLocaleTimeString("en-IN")
+                    : "N/A",
+                status: data.type==="IN"
+                    ? (data.late ? "Late" : "Present")
+                    : data.type
+            });
 
-    
-
-                const isLate =
-                data.type==="IN" &&
-                data.late===true;
-
-                const isException =
-                data.status==="Absent" ||
-                data.status==="Leave";
-
-                if(isLate || isException){
-
-                    let checkInTime =
-                    "N/A";
-
-                    if(data.time){
-
-                        checkInTime =
-                        data.time.toDate()
-                        .toLocaleTimeString("en-IN");
-                    }
-
-                    logs.push({
-
-                        date:dateStr,
-
-                        checkIn:checkInTime,
-
-                        status:
-                        isLate
-                        ? "Late"
-                        : data.status
-                    });
-                }
-            
         });
 
-        return logs.sort((a,b)=>
-        b.date.localeCompare(a.date));
+        return logs.sort((a,b)=>b.date.localeCompare(a.date));
 
     }catch(error){
-
         console.error(error);
-
         return [];
     }
 }
