@@ -293,7 +293,12 @@ onclick="unlockAttendance()">
 
 <p id="lockStatus"
 style="margin-top:10px;font-weight:bold;color:#c62828;">
-Checking...
+alert("🔒 Attendance Locked");
+    document.getElementById("lockStatus").innerHTML =
+"🔒 Attendance Locked";
+    alert("🔓 Attendance Unlocked");
+    document.getElementById("lockStatus").innerHTML =
+"🟢 Attendance Open";
 </p>
 
 <hr style="margin:20px 0;">
@@ -321,15 +326,11 @@ style="background:#00897b;"
 onclick="exportAttendancePDF()">
 📄 Export Attendance PDF
 </button>
-
-</div>
-
 </div>
 
     <div style="width:100%; margin-top:30px; display:flex; justify-content:center; align-items:center;">
         <button onclick="logoutAdmin()" style="width:100%; max-width:350px; background:linear-gradient(135deg,#d32f2f,#b71c1c); color:white; border:none; padding:16px; border-radius:12px; font-size:17px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.2);">🚪 LOGOUT ADMIN PANEL</button>
     </div>
-</div>
 
 <script>
 // ✅ FIREBASE APP CONFIGURATION
@@ -1408,6 +1409,26 @@ async function calculateLatePenalty(){
     alert("✅ Late Penalty Updated");
 
 }
+
+window.onload = async function(){
+
+const doc = await db.collection("settings")
+.doc("attendance")
+.get();
+
+if(doc.exists && doc.data().locked){
+
+document.getElementById("lockStatus").innerHTML =
+"🔒 Attendance Locked";
+
+}else{
+
+document.getElementById("lockStatus").innerHTML =
+"🟢 Attendance Open";
+
+}
+
+};
     // Run every minute
 
 setInterval(autoMarkAbsent,60000);
