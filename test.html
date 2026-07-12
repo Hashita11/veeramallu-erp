@@ -393,7 +393,49 @@ margin-bottom:15px;">
 onclick="viewTodayAttendance()">
 Today's Attendance
 </button>
+<button class="btn-secondary" onclick="loadNotifications()">
+🔔 Notifications
+</button>
 
+<div id="notificationBox"
+style="
+display:none;
+margin-top:15px;
+background:#fff;
+padding:10px;
+border-radius:10px;
+border:1px solid #ddd;
+text-align:left;">
+</div>
+ <button class="btn-secondary" onclick="loadAnalytics()">
+📊 My Performance Analytics
+</button>
+
+<div id="analyticsBox"
+style="
+display:none;
+margin-top:15px;
+background:white;
+padding:15px;
+border-radius:10px;
+border:1px solid #ddd;
+text-align:left;">
+</div>
+ <button class="btn-secondary" onclick="loadLeaderboard()">
+🏆 Teacher Leaderboard
+</button>
+
+<div id="leaderboardBox"
+style="
+display:none;
+margin-top:15px;
+background:white;
+padding:15px;
+border-radius:10px;
+border:1px solid #ddd;
+text-align:left;">
+</div>
+    
 <button onclick="logoutUser()"
 style="background:#6c757d;color:white;">
 Logout
@@ -1672,6 +1714,255 @@ async function exportAttendancePDF(){
 loadAttendance();
 
 }
+    async function loadNotifications(){
+
+    const box=document.getElementById("notificationBox");
+
+    box.style.display="block";
+    box.innerHTML="Loading...";
+
+    try{
+
+        const snap=await db.collection("notifications")
+        .orderBy("time","desc")
+        .limit(20)
+        .get();
+
+        if(snap.empty){
+
+            box.innerHTML="<b>No Notifications</b>";
+            return;
+
+        }
+
+        let html="";
+
+        snap.forEach(doc=>{
+
+            const n=doc.data();
+
+            html+=`
+            <div style="
+            padding:10px;
+            border-bottom:1px solid #eee;">
+
+            <b>${n.title}</b><br>
+
+            <small>${n.message}</small>
+
+            </div>`;
+
+        });
+
+        box.innerHTML=html;
+
+    }catch(err){
+
+        box.innerHTML="Unable to load notifications.";
+
+    }
+
+}
+    async function loadAnalytics(){
+
+    const box=document.getElementById("analyticsBox");
+
+    box.style.display="block";
+    box.innerHTML="Loading Analytics...";
+
+    try{
+
+        const user=auth.currentUser;
+
+        if(!user){
+            box.innerHTML="Login Required";
+            return;
+        }
+
+        const email=user.email.toLowerCase();
+
+        const attendanceSnap=await db.collection("attendance")
+        .where("teacherEmail","==",email)
+        .get();
+
+        let present=0;
+        let late=0;
+        let absent=0;
+        let leave=0;
+        let total=0;
+
+        attendanceSnap.forEach(doc=>{
+
+            const d=doc.data();
+
+            total++;
+
+            if(d.type==="IN"){
+
+                if(d.late){
+
+                    late++;
+
+                }else{
+
+                    present++;
+
+                }
+
+            }
+
+            if(d.type==="Absent")
+                absent++;
+
+            if(d.type==="Leave")
+                leave++;
+
+        });
+
+        const attendancePercent=
+        total===0
+        ?0
+        :Math.round(((present+late)/total)*100);
+
+        box.innerHTML=`
+
+        <h3 style="color:#1a237e;">
+        Teacher Performance
+        </h3>
+
+        <hr><br>
+
+        <b>Present Days :</b> ${present}<br><br>
+
+        <b>Late Days :</b> ${late}<br><br>
+
+        <b>Absent Days :</b> ${absent}<br><br>
+
+        <b>Leave Days :</b> ${leave}<br><br>
+
+        <b>Total Records :</b> ${total}<br><br>
+
+        <b>Attendance :</b>
+        ${attendancePercent}%<br><br>
+
+        <progress
+        value="${attendancePercent}"
+        max="100"
+        style="width:100%;height:25px;">
+        </progress>
+
+        `;
+
+    }catch(e){
+
+        console.log(e);
+
+        box.innerHTML="Unable to load analytics.";
+
+    }
+
+}
+    async function loadLeaderboard(){
+
+    const box=document.getElementById("leaderboardBox");
+
+    box.style.display="block";
+    box.innerHTML="Loading Leaderboard...";
+
+    try{
+
+        const snap=await db.collection("attendance").get();
+
+        const teachers={};
+
+        snap.forEach(doc=>{
+
+            const d=doc.data();
+
+            const email=d.teacherEmail;
+
+            if(!teachers[email]){
+
+                teachers[email]={
+                    name:d.teacherName || email,
+                    present:0,
+                    late:0
+                };
+
+            }
+
+            if(d.type==="IN"){
+
+                if(d.late){
+
+                    teachers[email].late++;
+
+                }else{
+
+                    teachers[email].present++;
+
+                }
+
+            }
+
+        });
+
+        let ranking=Object.values(teachers);
+
+        ranking.sort((a,b)=>{
+
+            const scoreA=(a.present*2)-a.late;
+            const scoreB=(b.present*2)-b.late;
+
+            return scoreB-scoreA;
+
+        });
+
+        let html="<h3 style='color:#1a237e;'>🏆 Teacher Ranking</h3><hr>";
+
+        ranking.forEach((t,index)=>{
+
+            let medal="";
+
+            if(index===0) medal="🥇";
+            else if(index===1) medal="🥈";
+            else if(index===2) medal="🥉";
+            else medal="⭐";
+
+            const score=(t.present*2)-t.late;
+
+            html+=`
+
+            <div style="
+            padding:10px;
+            border-bottom:1px solid #eee;">
+
+            <b>${medal} ${index+1}. ${t.name}</b><br>
+
+            Present : ${t.present}<br>
+
+            Late : ${t.late}<br>
+
+            Score : <b>${score}</b>
+
+            </div>
+
+            `;
+
+        });
+
+        box.innerHTML=html;
+
+    }catch(err){
+
+        console.log(err);
+
+        box.innerHTML="Unable to load leaderboard.";
+
+    }
+
+}
+    
     
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
