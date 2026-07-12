@@ -377,7 +377,13 @@ style="margin-top:15px;">
 My Attendance
 </h3>
 
-<div id="statsGrid"></div>
+<div id="statsGrid"
+style="
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:10px;
+margin-bottom:15px;">
+</div>
 
 <ul id="logList"></ul>
 
@@ -1319,31 +1325,62 @@ async function loadAttendance(){
         await getMonthlyAttendance();
 
         const totalLate = logs.filter(log => log.status === "Late").length;
+        
+const totalPresent =
+logs.filter(log=>log.status==="Present").length;
 
-        document.getElementById("statsGrid").innerHTML = `
+const totalAbsent =
+logs.filter(log=>log.status==="Absent").length;
 
-        <div style="
-        text-align:center;
-        background:#fff3e0;
-        padding:10px;
-        border-radius:8px;">
+const totalLeave =
+logs.filter(log=>log.status==="Leave").length;
 
-        <span style="
-        display:block;
-        font-size:10px;
-        font-weight:bold;
-        color:#e65100;">
-        TOTAL LATE
-        </span>
+const totalHalfDay =
+logs.filter(log=>log.status==="Half Day").length;
 
-        <span style="
-        font-size:18px;
-        font-weight:bold;">
-        ${totalLate}
-        </span>
+const workingDays =
+logs.length;
 
-        </div>
-        `;
+const attendancePercent =
+workingDays==0
+?0
+:Math.round(
+((totalPresent+totalLate)/workingDays)*100
+);
+        
+        document.getElementById("statsGrid").innerHTML=`
+
+<div style="background:#e8f5e9;padding:12px;border-radius:10px;">
+<b>Present</b><br>
+<h2>${totalPresent}</h2>
+</div>
+
+<div style="background:#fff8e1;padding:12px;border-radius:10px;">
+<b>Late</b><br>
+<h2>${totalLate}</h2>
+</div>
+
+<div style="background:#ffebee;padding:12px;border-radius:10px;">
+<b>Absent</b><br>
+<h2>${totalAbsent}</h2>
+</div>
+
+<div style="background:#e3f2fd;padding:12px;border-radius:10px;">
+<b>Leave</b><br>
+<h2>${totalLeave}</h2>
+</div>
+
+<div style="background:#ede7f6;padding:12px;border-radius:10px;">
+<b>Half Day</b><br>
+<h2>${totalHalfDay}</h2>
+</div>
+
+<div style="background:#f3e5f5;padding:12px;border-radius:10px;">
+<b>Attendance %</b><br>
+<h2>${attendancePercent}%</h2>
+</div>
+
+`;
 
         portal.classList.remove("hidden");
 
@@ -1628,6 +1665,11 @@ async function exportAttendancePDF(){
     });
 
     pdf.save("Teacher_Attendance_Report.pdf");
+
+}
+ function openTeacherDashboard(){
+
+loadAttendance();
 
 }
     
