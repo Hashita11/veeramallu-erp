@@ -327,6 +327,34 @@ onclick="exportAttendancePDF()">
 📄 Export Attendance PDF
 </button>
 </div>
+    <div class="section-header">
+📊 TODAY'S SCHOOL SUMMARY
+</div>
+
+<div class="card">
+
+<p><b>👨‍🏫 Teachers Present :</b>
+<span id="todayPresent">0</span></p>
+
+<p><b>🚫 Teachers Absent :</b>
+<span id="todayAbsent">0</span></p>
+
+<p><b>⏰ Late Teachers :</b>
+<span id="todayLate">0</span></p>
+
+<p><b>📝 Approved Leaves :</b>
+<span id="todayLeave">0</span></p>
+
+<button
+class="btn-action"
+style="background:#3949ab;"
+onclick="loadTodaySummary()">
+
+🔄 Refresh Summary
+
+</button>
+
+</div>
 
     <div style="width:100%; margin-top:30px; display:flex; justify-content:center; align-items:center;">
         <button onclick="logoutAdmin()" style="width:100%; max-width:350px; background:linear-gradient(135deg,#d32f2f,#b71c1c); color:white; border:none; padding:16px; border-radius:12px; font-size:17px; font-weight:bold; cursor:pointer; box-shadow:0 5px 15px rgba(0,0,0,0.2);">🚪 LOGOUT ADMIN PANEL</button>
@@ -458,6 +486,7 @@ calendarMenu.innerHTML=
 
         console.log("Teachers Synchronized:", teachers);
         load(); 
+        loadTodaySummary();
     }, (error) => {
         console.error("Firestore Teachers Sync Error:", error);
     });
@@ -1429,6 +1458,51 @@ document.getElementById("lockStatus").innerHTML =
 }
 
 };
+// =====================================
+// TODAY SUMMARY
+// =====================================
+
+async function loadTodaySummary(){
+
+const today =
+new Date().toISOString().split("T")[0];
+
+const teachersSnap =
+await db.collection("teachers").get();
+
+const attendanceSnap =
+await db.collection("attendance")
+.where("dateOnly","==",today)
+.get();
+
+const leaveSnap =
+await db.collection("leave_requests")
+.where("leaveDate","==",today)
+.where("status","==","Approved")
+.get();
+
+let present = 0;
+let absent = 0;
+let late = 0;
+
+attendanceSnap.forEach(doc=>{
+
+const d = doc.data();
+
+if(d.type=="IN") present++;
+
+if(d.type=="ABSENT") absent++;
+
+if(d.late===true) late++;
+
+});
+
+document.getElementById("todayPresent").innerHTML = present;
+document.getElementById("todayAbsent").innerHTML = absent;
+document.getElementById("todayLate").innerHTML = late;
+document.getElementById("todayLeave").innerHTML = leaveSnap.size;
+
+}
     // Run every minute
 
 setInterval(autoMarkAbsent,60000);
