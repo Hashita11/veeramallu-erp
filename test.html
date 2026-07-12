@@ -423,7 +423,152 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+    
+/* =====================================================
+   VGA ADVANCED ATTENDANCE SYSTEM
+   PART 2A
+===================================================== */
 
+const SCHOOL_START_TIME = "09:00:00";
+
+/* Face Photo Verification */
+
+async function verifyTeacherPhoto(){
+
+    const user = auth.currentUser;
+
+    if(!user) return false;
+
+    const doc = await db.collection("teachers")
+    .doc(user.uid)
+    .get();
+
+    if(!doc.exists){
+        alert("Teacher profile not found.");
+        return false;
+    }
+
+    const data = doc.data();
+
+    if(!data.photo){
+
+        alert("Please upload your profile photo before marking attendance.");
+
+        return false;
+    }
+
+    return true;
+}
+
+/* Leave Request */
+
+async function applyLeave(){
+
+    const reason = prompt("Enter Leave Reason");
+
+    if(!reason) return;
+
+    const date = prompt("Leave Date (YYYY-MM-DD)");
+
+    if(!date) return;
+
+    const user = auth.currentUser;
+
+    await db.collection("leaveRequests").add({
+
+        teacherId:user.uid,
+
+        teacherEmail:user.email.toLowerCase(),
+
+        reason:reason,
+
+        leaveDate:date,
+
+        status:"Pending",
+
+        appliedOn:new Date()
+
+    });
+
+    alert("✅ Leave Request Submitted");
+}
+
+/* Check Leave */
+
+async function isApprovedLeave(date){
+
+    const user = auth.currentUser;
+
+    const snap =
+    await db.collection("leaveRequests")
+    .where("teacherEmail","==",user.email.toLowerCase())
+    .where("leaveDate","==",date)
+    .where("status","==","Approved")
+    .get();
+
+    return !snap.empty;
+}
+
+/* Auto Absent */
+
+async function autoAbsentCheck(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const now = new Date();
+
+    const time =
+    now.toLocaleTimeString("en-GB",{hour12:false});
+
+    if(time < SCHOOL_START_TIME) return;
+
+    const today =
+    now.toISOString().split("T")[0];
+
+    const approved =
+    await isApprovedLeave(today);
+
+    if(approved) return;
+
+    const attendance =
+    await db.collection("attendance")
+    .where("teacherEmail","==",user.email.toLowerCase())
+    .where("dateOnly","==",today)
+    .get();
+
+    if(!attendance.empty) return;
+
+    await db.collection("attendance").add({
+
+        teacherId:user.uid,
+
+        teacherEmail:user.email.toLowerCase(),
+
+        teacherName:user.email.split("@")[0],
+
+        campus:sessionStorage.getItem("activeCampus"),
+
+        type:"Absent",
+
+        late:false,
+
+        dateOnly:today,
+
+        time:firebase.firestore.Timestamp.fromDate(now),
+
+        method:"System Auto"
+
+    });
+
+    console.log("Absent Automatically Marked");
+}
+
+/* Start Automatic Absent Checker */
+
+setInterval(autoAbsentCheck,60000);
+    // Pasted 
 const LATE_THRESHOLD = "08:30:00";
 
 const campusCoords = {
