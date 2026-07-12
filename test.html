@@ -623,65 +623,120 @@ auth.onAuthStateChanged(async(user)=>{
 });
     //old code
     
+async function handleLogin(){
 
-            if(distance < nearestDistance){
+    const email =
+    document.getElementById("email").value.trim();
 
-                nearestDistance = distance;
+    const password =
+    document.getElementById("password").value;
 
-                nearestCampus = name;
-            }
-        }
+    const campus =
+    document.getElementById("campus").value;
+
+    const errorBox =
+    document.getElementById("loginError");
+
+    errorBox.style.display="none";
+
+    if(!email || !password){
+
+        errorBox.style.display="block";
+
+        errorBox.innerText =
+        "Enter Email and Password";
+
+        return;
+    }
+
+    try{
+
+        const userCredential =
+        await auth.signInWithEmailAndPassword(
+            email,
+            password
+        );
 
         sessionStorage.setItem(
             "activeCampus",
-            nearestCampus
+            campus
         );
 
+        const user =
+        userCredential.user;
+
+        document.getElementById("welcomeMsg").innerText =
+        "Welcome, " +
+        user.email.split("@")[0].toUpperCase();
+
+        document.getElementById("teacherEmailDisplay").innerText =
+        user.email;
+
         document.getElementById("campusDisplay").innerText =
-        "Campus: " + nearestCampus;
+        "Campus: " + campus;
 
-        const gpsStatus =
-        document.getElementById("gpsStatus");
+        loadTeacherPhoto();
 
-        if(nearestDistance <= 50){
+        startGPSCheck();
 
-            gpsStatus.innerHTML =
-            "✔ Inside " +
-            nearestCampus +
-            " (" +
-            Math.round(nearestDistance) +
-            "m)";
+        alert("✅ Login Successful");
 
-            gpsStatus.style.color = "green";
+    }catch(error){
 
-            document.getElementById("btnIn").disabled = false;
-            document.getElementById("btnOut").disabled = false;
+        errorBox.style.display="block";
 
-        }else{
-
-            gpsStatus.innerHTML =
-            "✖ Outside Campus (" +
-            Math.round(nearestDistance) +
-            "m)";
-
-            gpsStatus.style.color = "red";
-
-            document.getElementById("btnIn").disabled = true;
-            document.getElementById("btnOut").disabled = true;
-        }
-
-    },
-
-    ()=>{
-
-        document.getElementById("gpsStatus").innerHTML =
-        "GPS Error";
-    },
-
-    {
-        enableHighAccuracy:true
-    });
+        errorBox.innerText =
+        error.message;
+    }
 }
+
+async function registerTeacher(){
+
+    const email =
+    document.getElementById("email").value.trim();
+
+    const password =
+    document.getElementById("password").value;
+
+    if(!email || !password){
+
+        alert("Enter email & password");
+
+        return;
+    }
+
+    try{
+
+        const userCred =
+        await auth.createUserWithEmailAndPassword(
+            email,
+            password
+        );
+
+        await db.collection("teachers")
+        .doc(userCred.user.uid)
+        .set({
+
+            uid:userCred.user.uid,
+
+            name:email.split("@")[0].toUpperCase(),
+
+            email:email.toLowerCase(),
+
+            salary:0,
+
+            createdAt:new Date()
+
+        },{merge:true});
+
+        alert("✅ Account Created");
+
+    }catch(err){
+
+        alert(err.message);
+    }
+}
+            
 
     
 </script>
