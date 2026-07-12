@@ -34,6 +34,7 @@
         .btn-action { padding:12px; border:none; border-radius:8px; background:var(--primary); color:white; font-weight:bold; cursor:pointer; width:100%; margin-bottom:10px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: left; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -130,7 +131,46 @@ onclick="deleteTeacherAttendance()">
             <button onclick="adminForceAttendance('OUT')" style="background:#f44336; color:white; flex:1; padding:12px; border-radius:8px; border:none; cursor:pointer; font-weight:bold;">FORCE OUT</button>
         </div>
     </div>
+<div class="section-header">
+📅 TEACHER ATTENDANCE CALENDAR
+</div>
 
+<div class="card">
+
+<select id="calendarTeacher">
+<option value="">Select Teacher</option>
+</select>
+
+<br><br>
+
+<input
+type="month"
+id="calendarMonth">
+
+<br><br>
+
+<button
+class="btn"
+style="background:#1565c0;color:white;"
+onclick="loadTeacherCalendar()">
+View Calendar
+</button>
+    <button
+class="btn"
+style="background:#d32f2f;color:white;margin-top:10px;"
+onclick="downloadAttendancePDF()">
+📄 Download Attendance PDF
+</button>
+
+<div id="calendarResult"
+style="
+margin-top:20px;
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:6px;">
+</div>
+
+</div>
     <div class="section-header">PAYROLL (3 Lates = 1 Day Loss)</div>
     <div class="salary-box" style="background:#e3f2fd; border-color:#bbdefb;">
         <p style="margin:0 0 10px 0; font-weight:bold;">1. Select Date Range above | 2. Click Generate</p>
@@ -331,9 +371,18 @@ leaveMenu.innerHTML =
 '<option value="">Select Teacher</option>';
 
 }
+        const calendarMenu = document.getElementById("calendarTeacher");
+
+if(calendarMenu){
+
+calendarMenu.innerHTML=
+'<option value="">Select Teacher</option>';
+
+}
         if(selectMenu) {
             selectMenu.innerHTML = '<option value="">Select Staff</option>';
         }
+        
 
         snap.forEach((doc) => {
             const d = doc.data();
@@ -350,6 +399,9 @@ leaveMenu.innerHTML =
             }
             if(leaveMenu){
                 leaveMenu.innerHTML += `<option value="${teacherObj.email}">${teacherObj.name}</option>`; 
+            }
+            if(calendarMenu){
+                calendarMenu.innerHTML += `<option value="${teacherObj.email}">${teacherObj.name}</option>`;
             }
         });
 
@@ -1005,6 +1057,91 @@ async function autoMarkAbsent(){
     console.log("Auto Absent Completed");
 
 }
+    async function loadTeacherCalendar(){
+
+const email=
+document.getElementById("calendarTeacher").value;
+
+const month=
+document.getElementById("calendarMonth").value;
+
+if(!email || !month){
+
+alert("Select Teacher and Month");
+
+return;
+
+}
+
+const result=
+document.getElementById("calendarResult");
+
+result.innerHTML="Loading...";
+
+const snap=
+await db.collection("attendance")
+.where("teacherEmail","==",email)
+.where("dateOnly",">=",month+"-01")
+.where("dateOnly","<=",month+"-31")
+.get();
+
+const map={};
+
+snap.forEach(doc=>{
+
+const d=doc.data();
+
+map[d.dateOnly]=d.type;
+
+});
+
+result.innerHTML="";
+
+for(let i=1;i<=31;i++){
+
+const day=String(i).padStart(2,"0");
+
+const date=month+"-"+day;
+
+let status="Absent";
+
+let color="#ffcdd2";
+
+if(map[date]=="IN"){
+
+status="Present";
+
+color="#c8e6c9";
+
+}
+
+if(map[date]=="OUT"){
+
+continue;
+
+}
+
+result.innerHTML+=`
+
+<div style="
+padding:10px;
+border-radius:8px;
+background:${color};
+text-align:center;
+font-size:12px;">
+
+<b>${day}</b><br>
+
+${status}
+
+</div>
+
+`;
+
+}
+
+}
+    
 // =====================================
 // 📢 UTILS & EXPORTS BROADCASTS
 // =====================================
@@ -1043,6 +1180,69 @@ function printPayroll(){
     const win = window.open('', '', 'width=900,height=700');
     win.document.write(`<html><head><title>VGA Payroll Report</title><style>body{font-family:Arial;padding:30px;white-space:pre-wrap;line-height:1.6;}h1{text-align:center;color:#1a237e;}</style></head><body><h1>VEERAMALLU GLOBAL ACADEMY<br>PAYROLL REPORT</h1><hr>${payroll.replace(/\n/g,"<br>")}</body></html>`);
     win.document.close(); win.print();
+}
+// =====================================
+// DOWNLOAD ATTENDANCE PDF
+// =====================================
+
+async function downloadAttendancePDF(){
+
+    const teacher =
+    document.getElementById("calendarTeacher");
+
+    const month =
+    document.getElementById("calendarMonth").value;
+
+    if(teacher.selectedIndex==0 || !month){
+
+        alert("Select Teacher and Month");
+
+        return;
+
+    }
+
+    const teacherName =
+    teacher.options[teacher.selectedIndex].text;
+
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF();
+
+    pdf.setFontSize(18);
+    pdf.text("VEERAMALLU GLOBAL ACADEMY",20,20);
+
+    pdf.setFontSize(14);
+    pdf.text("Teacher Attendance Report",20,32);
+
+    pdf.setFontSize(11);
+    pdf.text("Teacher : " + teacherName,20,45);
+    pdf.text("Month : " + month,20,55);
+
+    let y = 70;
+
+    document.querySelectorAll("#calendarResult div").forEach(box=>{
+
+        pdf.text(box.innerText,20,y);
+
+        y += 10;
+
+        if(y>270){
+
+            pdf.addPage();
+
+            y = 20;
+
+        }
+
+    });
+
+    pdf.save(
+        teacherName.replace(/ /g,"_") +
+        "_" +
+        month +
+        "_Attendance.pdf"
+    );
+
 }
     // Run every minute
 
