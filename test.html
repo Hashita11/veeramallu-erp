@@ -334,7 +334,7 @@ Homework Upload
 </button>
 
 <button class="btn-secondary"
-onclick="checkSalaryAccess()">
+onclick="showSalarySummary()">
 Salary Slip
 </button>
 
@@ -1033,6 +1033,144 @@ function startGPSCheck(){
     }
 
 }
+    /* =====================================================
+   VGA ADVANCED ATTENDANCE SYSTEM
+   PART 2C
+   Salary + Late Deduction
+===================================================== */
+
+async function calculateMonthlySalary(){
+
+    const user = auth.currentUser;
+
+    if(!user) return;
+
+    const month =
+    document.getElementById("selectedMonth").value;
+
+    const teacher =
+    await db.collection("teachers")
+    .doc(user.uid)
+    .get();
+
+    if(!teacher.exists){
+
+        alert("Teacher Record Not Found");
+
+        return;
+    }
+
+    const teacherData = teacher.data();
+
+    const monthlySalary =
+    Number(teacherData.salary || 0);
+
+    const startDate = month + "-01";
+
+    const endDate = month + "-31";
+
+    const snap =
+    await db.collection("attendance")
+    .where("teacherEmail","==",user.email.toLowerCase())
+    .where("dateOnly",">=",startDate)
+    .where("dateOnly","<=",endDate)
+    .get();
+
+    let present=0;
+    let absent=0;
+    let late=0;
+    let leave=0;
+
+    snap.forEach(doc=>{
+
+        const data = doc.data();
+
+        if(data.type=="IN"){
+
+            present++;
+
+            if(data.late)
+                late++;
+
+        }
+
+        if(data.type=="Absent")
+            absent++;
+
+        if(data.type=="Leave")
+            leave++;
+
+    });
+
+    /* 3 Late = 1 Casual Leave */
+
+    const lateDeduction =
+    Math.floor(late/3);
+
+    absent += lateDeduction;
+
+    const dailySalary =
+    monthlySalary/30;
+
+    const deduction =
+    absent*dailySalary;
+
+    const payable =
+    monthlySalary-deduction;
+
+    return{
+
+        salary:monthlySalary,
+
+        payable:Math.round(payable),
+
+        deduction:Math.round(deduction),
+
+        present,
+
+        absent,
+
+        leave,
+
+        late,
+
+        casualLeaveDeduction:lateDeduction
+
+    };
+
+}
+
+async function showSalarySummary(){
+
+    const data =
+    await calculateMonthlySalary();
+
+    if(!data) return;
+
+    alert(
+
+"Monthly Salary : ₹"+data.salary+
+
+"\n\nPresent : "+data.present+
+
+"\nLate : "+data.late+
+
+"\nAbsent : "+data.absent+
+
+"\nLeave : "+data.leave+
+
+"\n\n3 Late = "+data.casualLeaveDeduction+" CL Deduction"+
+
+"\nSalary Deduction : ₹"+data.deduction+
+
+"\n\nNet Salary : ₹"+data.payable
+
+    );
+
+}
+
+
+    
     
 </script>
 </body>
